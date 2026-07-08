@@ -14,7 +14,7 @@ import (
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 )
 
-const defaultApiUrl = "[Default api url]"
+const defaultApiUrl = "https://api.stellwerk.dev"
 
 var versionCheckResult <-chan *internal.VersionCheckResult
 

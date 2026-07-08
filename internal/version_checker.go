@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 	"github.com/fatih/color"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 	versionCheckInterval      = 24 * time.Hour
 	versionCheckLastCheckFile = "last-version-check"
 	versionCheckDebugPrefix   = "version checker:"
-	versionCheckDocsURL       = "[Documentation url]"
+	versionCheckDocsURL       = "https://docs.stellwerk.dev"
 
 	versionCheckSpacer   = "═════════════════════════════════════════════════════════════════════════════════"
 	versionCheckTemplate = `
