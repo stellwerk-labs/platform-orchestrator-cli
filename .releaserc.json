@@ -1,0 +1,4 @@
+{
+  "extends": "/action/default.releaserc.json",
+  "tagFormat": "v${version}"
+}

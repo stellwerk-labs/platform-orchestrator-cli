@@ -1,0 +1,112 @@
+# Check the documentation at https://goreleaser.com
+version: 2
+
+builds:
+  - id: octl
+    binary: octl
+    main: .
+    ldflags:
+      - -s -w
+      - -X github.com/stellwerk-labs/platform-orchestrator-cli/internal.ModuleVersion={{ .Version }}
+    env:
+      - CGO_ENABLED=0
+    targets:
+      - linux_amd64_v1
+      - linux_arm64
+      - windows_amd64_v1
+      - darwin_amd64_v1
+      - darwin_arm64
+
+archives:
+  - format_overrides:
+      - goos: windows
+        formats: ['zip']
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - '--oidc-provider=github-actions'
+      - '--output-certificate=${certificate}'
+      - '--output-signature=${signature}'
+      - '${artifact}'
+      - --yes
+    artifacts: all
+    output: true
+
+# FIXME: Add back when tap and scoop will be configured.
+# brews:
+#   - name: octl
+#     homepage: "[Documentation url]"
+#     description: "The CLI for Stellwerk, octl."
+#     repository:
+#       owner: stellwerk-labs
+#       name: homebrew-tap
+#       token: "{{ .Env.GITHUB_TOKEN }}"
+#     commit_author:
+#       name: stellwerk-labs
+#       email: [Support email]
+
+# scoops:
+#   - name: octl
+#     homepage: "[Documentation url]"
+#     description: "The CLI for Stellwerk, octl."
+#     repository:
+#       owner: stellwerk-labs
+#       name: scoop-bucket
+#       token: "{{ .Env.GITHUB_TOKEN }}"
+#     commit_author:
+#       name: stellwerk-labs
+#       email: [Support email]
+
+dockers:
+  - dockerfile: goreleaser.Dockerfile
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:{{ .Version }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:latest-amd64"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.CommitDate}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--platform=linux/amd64"
+    goarch: amd64
+  - dockerfile: goreleaser.Dockerfile
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:{{ .Version }}-arm64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}-arm64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/stellwerk-labs/octl:latest-arm64"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.created={{.CommitDate}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--platform=linux/arm64"
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "ghcr.io/stellwerk-labs/octl:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:{{ .Version }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/stellwerk-labs/octl:{{ .Major }}"
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}-arm64"
+  - name_template: "ghcr.io/stellwerk-labs/octl:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/stellwerk-labs/octl:{{ .Major }}.{{ .Minor }}-arm64"
+  - name_template: "ghcr.io/stellwerk-labs/octl:latest"
+    image_templates:
+      - "ghcr.io/stellwerk-labs/octl:latest-amd64"
+      - "ghcr.io/stellwerk-labs/octl:latest-arm64"

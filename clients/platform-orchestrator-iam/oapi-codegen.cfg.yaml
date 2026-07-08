@@ -1,0 +1,7 @@
+# Config used for generating the API models and server stubs based on the openapi/spec.yaml
+package: iam
+generate:
+  models: true
+  client: true
+  echo-server: false
+output: client.gen.go

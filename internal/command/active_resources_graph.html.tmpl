@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Active Resource Graph for {{ .project_id }} {{ .env_id }}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #body { height: 100%; }
+      #main { height: 100%; }
+    </style>
+  </head>
+  <body id="body">
+    <div id="main">
+
+    </div>
+    <script>
+      const nodeData = {{ safeJson .nodes }};
+      const linkData = {{ safeJson .links }};
+
+      const simulation = d3.forceSimulation(nodeData)
+          .force("link", d3.forceLink(linkData)
+              .id(d => d.id)
+              .distance(100)
+          )
+          .force("charge", d3.forceManyBody())
+          .force("x", d3.forceX())
+          .force("y", d3.forceY());
+
+      const svg = d3
+          .select("#main")
+          .append("svg")
+          .attr("style", "width: 100%; height: 100%;")
+          .call(
+              d3.zoom()
+              .scaleExtent([0.5, 5]) // Limit zoom scale (from 50% to 500%)
+              .on("zoom", (event) => {
+                  zoomGroup.attr("transform", event.transform); // Apply transformations on zoom
+              })
+          );
+
+      // Add a <defs> element to define arrow markers
+      svg.append("defs").append("marker")
+          .attr("id", "arrowhead")
+          .attr("viewBox", "0 -5 10 10") // Define the marker viewBox
+          .attr("refX", 15) // Adjust the x offset for the arrow
+          .attr("refY", 0)
+          .attr("markerWidth", 6) // Size of the arrowhead
+          .attr("markerHeight", 6)
+          .attr("orient", "auto") // Auto-orient the arrow
+          .append("path")
+          .attr("d", "M0,-5L10,0L0,5") // Define the arrowhead shape
+          .attr("fill", "#999"); // Arrowhead color
+
+
+      // Add a <g> group to hold all graph elements (links and nodes)
+      const zoomGroup = svg.append("g");
+
+      const link = zoomGroup.append("g")
+          .attr("stroke", "#999").attr("stroke-opacity", 0.6)
+          .selectAll("line")
+          .data(linkData)
+          .join("line")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", (d) => {
+              if (d.aliasType == "anonymous") return "4 6";
+              return "";
+          })
+          .attr("marker-end", "url(#arrowhead)");
+
+      const linkLabels = zoomGroup.append("g")
+          .selectAll("text")
+          .data(linkData)
+          .join("text")
+          .attr("dy", "-0.25em") // Slightly offset for better readability
+          .style("font-size", "10px")
+          .style("fill", "#555")
+          .text((d) => {
+              if (d.aliasType == "anonymous") return "";
+              return d.alias;
+          }); // Only display the label if it exists
+
+      const color = d3.scaleOrdinal(d3.schemeCategory10);
+      const node = zoomGroup.append("g")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 1.5)
+          .selectAll("circle")
+          .data(nodeData)
+          .join("circle")
+          .attr("r", 10)
+          .attr("fill", d => color(d.type));
+
+      // Add labels to the nodes
+      const labels = zoomGroup.append("g")
+          .selectAll("text")
+          .data(nodeData)
+          .join("text")
+          .attr("x", d => d.x)
+          .attr("y", d => d.y)
+          .attr("dy", "-1.2em") // Position the label above the node
+          .attr("text-anchor", "middle")
+          .style("font-size", "12px")
+          .style("fill", "#000")
+          .text(d => d.coordinate);
+
+      node.call(d3.drag()
+          .on("start", (event) => {
+              if (!event.active) simulation.alphaTarget(0.3).restart();
+              event.subject.fx = event.subject.x;
+              event.subject.fy = event.subject.y;
+          })
+          .on("drag", (event) => {
+              event.subject.fx = event.x;
+              event.subject.fy = event.y;
+          })
+          .on("end", (event) => {
+              if (!event.active) simulation.alphaTarget(0);
+              event.subject.fx = null;
+              event.subject.fy = null;
+          }));
+
+      // Set the position attributes of links and nodes each time the simulation ticks.
+      simulation.on("tick", () => {
+          link
+              .attr("x1", d => d.source.x)
+              .attr("y1", d => d.source.y)
+              .attr("x2", d => d.target.x)
+              .attr("y2", d => d.target.y);
+
+          // Update edge labels (position them at the midpoint of links)
+          linkLabels
+              .attr("x", d => (d.source.x + d.target.x) / 2)
+              .attr("y", d => (d.source.y + d.target.y) / 2);
+
+          node
+              .attr("cx", d => d.x)
+              .attr("cy", d => d.y);
+          labels
+              .attr("x", d => d.x)
+              .attr("y", d => d.y - 12); // Update label position relative to the node
+      });
+
+
+      // Handle window resizing
+      function resize() {
+          const width = document.getElementById("main").clientWidth;
+          const height = document.getElementById("main").clientHeight;
+
+          // Dynamically update the SVG's viewBox to reflect new dimensions
+          svg
+              .attr("viewBox", [-width / 2, -height / 2, width, height]);
+      }
+
+      // Add an event listener for window resizing
+      window.addEventListener("resize", resize);
+
+      // Call resize initially to set the correct viewBox at the start
+      resize();
+
+    </script>
+  </body>
+<html>

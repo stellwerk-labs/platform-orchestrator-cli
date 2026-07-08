@@ -1,0 +1,1651 @@
+openapi: 3.0.0
+info:
+  title: ""
+  version: ""
+paths:
+  /orgs/{orgId}/deployments:
+    get:
+      operationId: listDeployments
+      tags:
+        - Deployment
+      summary: List deployments in the organization
+      security:
+        - userIdHeader: []
+      parameters:
+        # path
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdQueryParam"
+        - $ref: "#/components/parameters/envIdQueryParam"
+        # pagination
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        # filter params
+        - $ref: "#/components/parameters/byModeQueryParam"
+        - $ref: "#/components/parameters/byStatusQueryParam"
+      responses:
+        "200":
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentPage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    post:
+      operationId: createDeployment
+      tags:
+        - Deployment
+      summary: Create a new deployment in the target project and environment.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: |
+            Ensures that the deployment request is only accepted once per idempotency key per 24 hours. A uuid or similar is recommended.
+            When the key matches the key in last deployment and the environment and manifest is the same, this will return the last deployment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentCreateBody"
+      responses:
+        "200":
+          description: Successful dry run create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentDryRun"
+        "201":
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+  /orgs/{orgId}/last-deployments:
+    get:
+      operationId: listLastDeployments
+      tags:
+        - Deployment
+      summary: List the last deployment for each project_id and env_id combination
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdQueryParam"
+        - $ref: "#/components/parameters/envIdQueryParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - name: state_change_only
+          in: query
+          description: Whether to return the last state change (apply or destroy) deployment for the target environment.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentPage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/deployments/{deploymentId}:
+    get:
+      operationId: getDeployment
+      tags:
+        - Deployment
+      summary: Get a deployment by id in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/deployments/{deploymentId}/actions/wait-for-complete:
+    get:
+      operationId: waitForDeploymentComplete
+      tags:
+        - Deployment
+      summary: Long-poll wait for the deployment to be completed. Either a 200 OK is returned indicating that the deployment is complete, or a 408 will indicate that the client must continue waiting.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: timeout_in_seconds
+          description: Sets a maximum timeout before the HTTP-408 response is returned.
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 2
+      responses:
+        "200":
+          description: Completed deployment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "408":
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /orgs/{orgId}/deployments/{deploymentId}/actions/diff:
+    post:
+      operationId: calculateDeploymentDiff
+      tags:
+        - Deployment
+      summary: Calculate the diff from another deployment to this one.
+      description: |
+        Returns the diff from another deployment to this one. The deployments must both be in the same environment.
+        The diff details the nodes that have been added, removed, or changed.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: fromDeploymentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: |
+            The id of the previous deployment in the same environment. If this is not specified, the diff
+            will be calculated from the previous stateful deployment.
+      responses:
+        "200":
+          description: Successful diff response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentDiff"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs:
+    get:
+      operationId: getDeploymentLogs
+      tags:
+        - Deployment
+      summary: Get the logs produced by the runner execution during the deployment.
+      description: |
+        These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
+        decryption key query parameter.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: DecryptKey
+          description: The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
+          in: header
+          required: false
+          schema:
+            type: string
+            example: "AGE-SECRET-KEY-1SGKT64UHNGURNZUQSAJ9J0C65R2F2PXDCZQVVGRUPN98L33G2HFSUC24EJ"
+            pattern: ^AGE-SECRET-KEY-[A-Z0-9]+$
+      responses:
+        "200":
+          description: The logs produced by the runner execution.
+          content:
+            text/plain:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              description: Suggests the filename for the downloaded file.
+              schema:
+                type: string
+                example: 'attachment; filename="depId.log"'
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/deployments/{deploymentId}/encrypted-outputs:
+    get:
+      operationId: getDeploymentEncryptedOutputs
+      tags:
+        - Deployment
+      summary: Get the encrypted outputs produced by the deployment.
+      description: |
+        These outputs are only stored and available for a short time after the deployment completes and are returned encrypted by the private key
+        that was given when the deployment was created. If no private key was provided, no outputs are available.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Successful get response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentEncryptedOutputs"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/deployments/{deploymentId}/bundle:
+    get:
+      operationId: getDeploymentBundle
+      tags:
+        - Deployment
+      summary: Get a bundle archive for a deployment. This API is called by the runner during execution and is not intended for public consumption.
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: X-Deployment-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/x-gzip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/deployments/{deploymentId}/results:
+    post:
+      summary: Return the runner outcome for a specific deployment.
+      description: |
+        This receives the runner outcome for a specific deployment, eventually along with encrypted outputs and logs.
+      operationId: updateDeploymentResults
+      tags:
+        - Deployment
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: X-Deployment-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentResultsUpdateBody"
+      responses:
+        "204":
+          description: Results successfully received.
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/deployments/{deploymentId}/tf:
+    get:
+      summary: Returns the compiled TF file associated with a deployment.
+      description: |
+        This returns the compiled TF file associated with a deployment. This is intended for debugging purposes.
+        This does not return the contents of any inline modules.
+      operationId: getDeploymentTf
+      tags:
+        - Deployment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/deployments/{deploymentId}/actions/force-failure:
+    post:
+      operationId: internalForceFailDeployment
+      tags:
+        - internal
+        - Deployment
+      summary: Emergency API for force failing a deployment.
+      description: |
+        This should only be used once you have confirmed that the underlying runner job has stopped, failed, or will
+        never execute.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Force failed deployment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentSummary"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/remote-runners/{runnerId}/actions/poll-requests:
+    post:
+      security:
+        - jwtAuth: []
+      summary: Long-poll wait for pending messages for a remote runner
+      description: |
+        Remote runners should poll this endpoint to receive pending messages.
+      operationId: waitForRemoteRunnerMessages
+      tags:
+        - RemoteRunnerMessages
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/runnerIdPathParam"
+      responses:
+        "200":
+          description: Successfully polled for requests.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemoteRunnerMessage"
+        "204":
+          description: No messages for the runner.
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/deployments/{deploymentId}/resources:
+    get:
+      operationId: listDeploymentResourceNodes
+      tags:
+        - Deployment
+      summary: List resource nodes for a deployment
+      description: |
+        Returns the resource graph calculated for this deployment. Works for all
+        deployment types including plan-only and historical deployments. Unlike
+        active-resources, this endpoint returns graph nodes without runtime metadata.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        200:
+          description: Resource nodes retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceNodesPage"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/active-resources:
+    get:
+      operationId: listActiveResourceNodes
+      tags:
+        - ActiveResource
+      summary: List active resource nodes
+      description: |
+        List active resource nodes matching the query. At the moment, project_id and env_id are required.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdQueryParam"
+        - $ref: "#/components/parameters/envIdQueryParam"
+      responses:
+        200:
+          description: Active resources retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListActiveResourceNodesPage"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/modules/{moduleId}/actions/check-usage:
+    post:
+      summary: Check whether a given module is in use in a resource graph.
+      description: |
+        This is a simple and efficient API. It returns only the project environments which are using this module.
+        A more complex public api should be created to list each individual resource node usage.
+      operationId: internalCheckModuleUsage
+      tags:
+        - internal
+        - Modules
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: moduleId
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: module_version
+          in: query
+          schema:
+            type: string
+          required: false
+      responses:
+        200:
+          description: The module usage report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalModuleUsage"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/remote-runners/{runnerId}/actions/push-message:
+    post:
+      summary: Push a message to a remote runner
+      description: |
+        Sends a message to a specific remote runner for processing.
+      operationId: internalPushMessageToRemoteRunner
+      tags:
+        - internal
+        - RemoteRunnerMessages
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/runnerIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoteRunnerMessage"
+      responses:
+        204:
+          description: Message pushed successfully.
+        503:
+          description: Runner is not connected.
+
+  /orgs/{orgId}/metadata-keys:
+    get:
+      summary: List metadata keys for an organization
+      description: |
+        Returns a list of metadata keys for the specified organization. Each key is represented as a JSON object
+        containing the key name, type, and other attributes.
+      operationId: listMetadataKeys
+      tags:
+        - MetadataKey
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        200:
+          description: Metadata keys retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataKeyPage"
+        404:
+          $ref: "#/components/responses/404NotFound"
+    post:
+      summary: Create a new metadata key for an organization
+      description: |
+        Creates a new metadata key for the specified organization. The request body should contain the key name,
+        type, and other attributes.
+      operationId: createMetadataKey
+      tags:
+        - MetadataKey
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MetadataKeyCreateBody"
+      responses:
+        201:
+          description: Metadata key created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataKey"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        409:
+          $ref: "#/components/responses/409Conflict"
+        404:
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/metadata-keys/{metadataKeyName}:
+    get:
+      summary: Get a metadata key for an organization
+      description: |
+        Returns the details of a specific metadata key for the specified organization. The response includes
+        the key name, type, and other attributes.
+      operationId: getMetadataKey
+      tags:
+        - MetadataKey
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/metadataKeyNamePathParam"
+      responses:
+        200:
+          description: Metadata key retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataKey"
+        404:
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      summary: Delete a metadata key for an organization
+      description: |
+        Deletes a specific metadata key for the specified organization. The request body should contain the key name.
+      operationId: deleteMetadataKey
+      tags:
+        - MetadataKey
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/metadataKeyNamePathParam"
+      responses:
+        204:
+          description: Metadata key deleted successfully.
+        404:
+          $ref: "#/components/responses/404NotFound"
+    patch:
+      summary: Update a metadata key for an organization
+      description: |
+        Updates a specific metadata key for the specified organization. The request body should contain the updated
+        attributes of the metadata key.
+      operationId: updateMetadataKey
+      tags:
+        - MetadataKey
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/metadataKeyNamePathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MetadataKeyUpdateBody"
+      responses:
+        200:
+          description: Metadata key updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataKey"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/deployments:
+    delete:
+      operationId: internalDeleteDeployments
+      tags:
+        - internal
+        - Deployment
+      summary: Delete all the deployments for an project_id, env_id combination. The last deployment must be a successful destroy.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdQueryParam"
+        - $ref: "#/components/parameters/envIdQueryParam"
+        - name: force
+          description: Whether to ignore the requirement for the last deployment to be a successful destroy. This should only be used in exceptional circumstances.
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "204":
+          description: Successful delete response.
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  "/.well-known/openid-configuration":
+    get:
+      operationId: getOpenidConfiguration
+      tags:
+        - WellKnown
+      summary: Show OIDC discovery configuration.
+      responses:
+        "200":
+          description: OIDC discovery configuration.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OpenidConfiguration"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  "/.well-known/jwks":
+    get:
+      operationId: getJwks
+      tags:
+        - WellKnown
+      summary: Show JSON Web Keys Set (JWKS).
+      responses:
+        "200":
+          description: JSON Web Keys Set (JWKS).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Jwks"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+components:
+  securitySchemes:
+    userIdHeader:
+      type: apiKey
+      in: header
+      name: From
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    400BadRequest:
+      description: The request was invalid. More detail can be found in the error body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    404NotFound:
+      description: Either the resource or a related resource could not be found. More detail can be found in the error body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    409Conflict:
+      description: The request conflicts with existing state in the system.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  parameters:
+    orgIdPathParam:
+      name: orgId
+      in: path
+      description: The Organization ID
+      example: "sample-org"
+      required: true
+      schema:
+        type: string
+    projectIdQueryParam:
+      name: project_id
+      in: query
+      description: The Project ID
+      example: "sample-project"
+      required: false
+      schema:
+        type: string
+    envIdQueryParam:
+      name: env_id
+      in: query
+      description: The Environment ID
+      example: "sample-env"
+      required: false
+      schema:
+        type: string
+    deploymentIdPathParam:
+      name: deploymentId
+      in: path
+      description: A Deployment ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    metadataKeyNamePathParam:
+      name: metadataKeyName
+      in: path
+      description: The Metadata Key ID.
+      required: true
+      schema:
+        type: string
+    runnerIdPathParam:
+      name: runnerId
+      in: path
+      description: The Runner ID
+      example: "sample-runner"
+      required: true
+      schema:
+        type: string
+    perPageQueryParam:
+      name: per_page
+      in: query
+      description: The maximum number of items to return in a page of results
+      required: false
+      example: 50
+      schema:
+        type: integer
+    pageTokenQueryParam:
+      name: page
+      in: query
+      description: The page token to request from
+      required: false
+      example: "AAAAAAAAAA=="
+      schema:
+        type: string
+    byModeQueryParam:
+      name: by_mode
+      in: query
+      description: Filter deployments by mode
+      required: false
+      schema:
+        type: array
+        items:
+          # todo: make this enum reusable?
+          type: string
+          enum:
+            - plan_only
+            - deploy
+            - rollback
+            - rollback_plan
+            - destroy
+    byStatusQueryParam:
+      name: by_status
+      in: query
+      description: Filter deployments by status
+      required: false
+      schema:
+        type: array
+        items:
+          # todo: make this enum reusable?
+          type: string
+          enum:
+            - executing
+            - failed
+            - succeeded
+
+  schemas:
+    Error:
+      description: A standard error response
+      properties:
+        error:
+          description: |
+            A short code representing the class of error. This code can be used for tracking and observability or to
+            find appropriate troubleshooting documentation.
+          type: string
+          example: API-000
+        message:
+          description: A human-readable explanation of the error.
+          type: string
+          example: "Something happened!"
+        details:
+          description: An optional payload of metadata associated with the error.
+          additionalProperties: true
+          type: object
+      required:
+        - error
+        - message
+      type: object
+
+    OrganizationId:
+      description: The Organization ID
+      type: string
+      minLength: 2
+      example: my-org
+
+    DeploymentId:
+      description: The unique deployment id
+      type: string
+      format: uuid
+      example: 01234567-89ab-cdef-0123-4566789abcdef
+
+    ResourceClass:
+      description: A resource class requested by the resource graph. 'default' is the default value.
+      type: string
+      minLength: 1
+      maxLength: 63
+      pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
+      x-pattern-error: resource class must be a valid identifier of alphanumerics and hyphens
+      example: classic
+
+    ResourceId:
+      description: A specific resource id requested by the resource graph
+      type: string
+      example: standard.common-postgres
+      minLength: 1
+      maxLength: 63
+      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
+      x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
+
+    DeploymentResultsUpdateBody:
+      description: The outcome of the runner execution.
+      type: object
+      properties:
+        outputs:
+          type: string
+          format: base64
+          description: The encrypted outputs produced by the runner.
+        status:
+          type: string
+          enum:
+            - success
+            - failure
+          description: The overall status of the runner execution.
+        error:
+          $ref: "#/components/schemas/Error"
+        tf_resource_counts:
+          $ref: "#/components/schemas/DeploymentTFResourceCounts"
+        metadata:
+          $ref: "#/components/schemas/DeploymentResultMetadata"
+      required:
+        - status
+
+    DeploymentResultMetadata:
+      x-go-type-skip-optional-pointer: true
+      description: The metadata produced by the resources involved in the deployment.
+      type: array
+      items:
+        $ref: "#/components/schemas/DeploymentResultMetadataPerNode"
+
+    DeploymentResultMetadataPerNode:
+      description: The metadata produced by a specific resource identified by its hash.
+      type: object
+      required:
+        - node_id
+        - metadata
+      properties:
+        node_id:
+          type: string
+          description: The hash of the active resource node.
+          example: 302731e5b8b5594426a5602f7006ed8e046580b6db472e222a9d60b7d7045c66
+        metadata:
+          type: object
+          additionalProperties: true
+          description: The metadata output by the module which provisioned the resource.
+          example:
+            k8s_namespace: test-namespace
+            gcp_project: test-gcp-project
+
+    DeploymentTFResourceCounts:
+      type: object
+      x-go-type-skip-optional-pointer: true
+      description: Details about the Terraform resources added / removed / changed .
+      properties:
+        num_resources:
+          type: integer
+          description: Number of Terraform resources involved in the deployment.
+        num_resources_added:
+          type: integer
+          description: Number of Terraform resources added by this deployment run.
+        num_resources_removed:
+          type: integer
+          description: Number of Terraform resources removed by this deployment run.
+        num_resources_changed:
+          type: integer
+          description: Number of Terraform resources changed by this deployment run.
+      required:
+        - num_resources
+        - num_resources_added
+        - num_resources_removed
+        - num_resources_changed
+
+    DeploymentMetrics:
+      type: object
+      description: Metrics resulting from a deployment.
+      required:
+        - num_workloads
+        - num_resource_nodes
+      properties:
+        num_workloads:
+          type: integer
+          description: The number of workloads in the deployment.
+        num_resource_nodes:
+          type: integer
+          description: The number of resource nodes in the graph.
+        num_tf_resources:
+          type: integer
+          description: The number of terraformed resources. Only known after deployment.
+        num_tf_resources_added:
+          type: integer
+          description: The number of terraformed resources added. Only known after deployment.
+        num_tf_resources_removed:
+          type: integer
+          description: The number of terraformed resources removed. Only known after deployment.
+        num_tf_resources_changed:
+          type: integer
+          description: The number of terraformed resources changed. Only known after deployment.
+
+    DeploymentSummary:
+      description: Summary information for a deployment, more information can be retrieved through the GetDeployment APIs.
+      type: object
+      required:
+        - org_id
+        - project_id
+        - env_id
+        - id
+        - created_at
+        - created_by
+        - mode
+        - plan_only
+        - status
+        - status_message
+        - metrics
+      properties:
+        org_id:
+          $ref: "#/components/schemas/OrganizationId"
+        project_id:
+          description: The Project id which the environment exists in
+          type: string
+          example: my-project
+        env_id:
+          description: The Environment id in the project which is being deployed
+          type: string
+          example: development-01
+        id:
+          $ref: "#/components/schemas/DeploymentId"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-02T03:04:05Z"
+          description: The time the deployment was created
+        created_by:
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+          description: The user that created the deployment
+        completed_at:
+          type: string
+          format: date-time
+          description: The time the deployment succeeded, failed, or terminated
+        mode:
+          description: The mode of the deployment.
+          type: string
+          example: deploy
+        plan_only:
+          type: boolean
+          description: Whether the deployment is executed in plan mode.
+          example: true
+        rollback_to_deployment_id:
+          description: When mode is 'rollback', this field will hold the uuid of the deployment rollback to.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        status:
+          description: The status of the deployment.
+          type: string
+          example: executing
+        status_message:
+          description: A message associated with the 'status'.
+          type: string
+          example: Deployment in flight
+        metrics:
+          $ref: "#/components/schemas/DeploymentMetrics"
+
+    DeploymentPage:
+      description: A page of deployments
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentSummary"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    DeploymentManifest:
+      type: object
+      description: The manifest associated with a deployment
+      required:
+        - workloads
+      properties:
+        workloads:
+          description: The set of workloads in the environment.
+          type: object
+          maxItems: 100
+          additionalProperties:
+            $ref: "#/components/schemas/DeploymentManifestWorkload"
+        shared:
+          description: The set of named shared resources.
+          type: object
+          maxItems: 100
+          additionalProperties:
+            $ref: "#/components/schemas/DeploymentManifestResource"
+          x-go-type-skip-optional-pointer: true
+
+    DeploymentManifestResource:
+      description: A resource to provision as part of the deployment
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: The resource type to provision
+          type: string
+          example: postgres
+          minLength: 2
+          maxLength: 63
+          pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
+          x-pattern-error: type must be a valid resource type
+        class:
+          $ref: "#/components/schemas/ResourceClass"
+        id:
+          $ref: "#/components/schemas/ResourceId"
+        params:
+          description: Optional parameters to pass to the resource provisioning.
+          type: object
+          maxItems: 20
+          additionalProperties: true
+          x-go-type-skip-optional-pointer: true
+
+    DeploymentManifestWorkload:
+      type: object
+      properties:
+        resources:
+          type: object
+          maxItems: 100
+          additionalProperties:
+            $ref: "#/components/schemas/DeploymentManifestResource"
+          x-go-type-skip-optional-pointer: true
+        outputs:
+          type: object
+          maxItems: 100
+          additionalProperties:
+            type: string
+          x-go-type-skip-optional-pointer: true
+        variables:
+          type: object
+          description: Parameter variables is deprecated and will be removed in a future release. Please use outputs instead.
+          deprecated: true
+          maxItems: 100
+          additionalProperties:
+            type: string
+          x-go-type-skip-optional-pointer: true
+          x-oapi-codegen-extra-tags:
+            yaml: variables,omitempty
+
+    Deployment:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/DeploymentSummary"
+        - required:
+            - manifest
+            - runner_id
+          properties:
+            manifest:
+              $ref: "#/components/schemas/DeploymentManifest"
+            runner_id:
+              description: The Runner ID that this deployment executes on
+              type: string
+              example: my-runner
+
+    DeploymentCreateBody:
+      type: object
+      required:
+        - mode
+        - project_id
+        - env_id
+      properties:
+        mode:
+          description: |
+            The mode of the deployment. Defaults to 'deploy'. Can be set to 'rollback' to rollback to the graph used in
+            the deployment specified by `rollback_to_deployment_id`. For backwards compatibility, this can be set to
+            'plan_only' which is equivalent to 'deploy' mode with plan_only set to true.
+          type: string
+          enum:
+            - plan_only
+            - deploy
+            - rollback
+          example: deploy
+        plan_only:
+          type: boolean
+          description: |
+            Whether the deployment should be planned only and not executed. This defaults to 'false' unless the mode is
+            set to 'plan_only'.
+          example: true
+        manifest:
+          $ref: "#/components/schemas/DeploymentManifest"
+        rollback_to_deployment_id:
+          description: Optional ID to rollback to when the deployment mode is 'rollback' or 'rollback_plan'.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        project_id:
+          description: The Project to deploy to.
+          type: string
+          example: "my-project"
+        env_id:
+          description: The environment to deploy to.
+          type: string
+          example: "development"
+        encrypted_outputs_recipient:
+          description: |
+            A recipient public key must be provided in order to access encrypted outputs of the deployment. This must be an 'age' public key (see https://age-encryption.org).
+            The caller must hold the matching private key in order to decrypt the outputs when the deployment completes. If the recipient key is not set, no outputs will be captured
+            from the deployment.
+          type: string
+          example: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+          pattern: ^age[a-z0-9]+$
+          x-pattern-error: "encrypted_outputs_recipient: does not look like an 'age' public key"
+          minLength: 1
+          maxLength: 200
+        encrypted_logs_recipient:
+          description: |
+            A recipient public key must be provided in order to encrypt the logs produced by the runner. This must be an 'age' public key (see https://age-encryption.org).
+            The caller must hold the matching private key in order to decrypt the logs when the logs url is provided. If the recipient key is not set, no logs will be captured
+            by the runner.
+          type: string
+          example: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+          pattern: ^age[a-z0-9]+$
+          x-pattern-error: "encrypted_outputs_recipient: does not look like an 'age' public key"
+          minLength: 1
+          maxLength: 200
+        is_dry_run:
+          description: Whether to just validate the request and not persist or execute it.
+          type: boolean
+          x-go-type-skip-optional-pointer: true
+        runner_log_level:
+          description: The log level for the runner.
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+          example: info
+          default: info
+
+    DeploymentDryRun:
+      type: object
+      required:
+        - runner_id
+        - diff
+      properties:
+        runner_id:
+          description: The Runner ID that this deployment would have executed on
+          type: string
+          example: my-runner
+        diff:
+          $ref: "#/components/schemas/DeploymentDiff"
+
+    DeploymentEncryptedOutputs:
+      type: object
+      required:
+        - raw
+      properties:
+        raw:
+          description: |
+            The base64 encoded encrypted outputs. These are returned in standard base64 with padding. The outputs are encrypted with https://age-encryption.org/ and may
+            be decrypted by the holder of the recipients key.
+          type: string
+
+    DeploymentDiff:
+      type: object
+      description: Describes a diff between the resource graphs of two deployments.
+      required:
+        - changes
+        - num_added
+        - num_changed
+        - num_removed
+      properties:
+        from_deployment_id:
+          description: The deployment ID the diff is calculated from. This will be null if there is no previous deployment.
+          type: string
+          format: uuid
+        to_deployment_id:
+          description: The deployment ID the diff is calculated to. This will be null if the diff is calculated from a dry-run.
+          type: string
+          format: uuid
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentDiffChange"
+        num_added:
+          type: integer
+          description: The number of resources added in the deployment.
+        num_changed:
+          type: integer
+          description: The number of resources changed in the deployment.
+        num_removed:
+          type: integer
+          description: The number of resources removed in the deployment.
+
+    DeploymentDiffChange:
+      type: object
+      required:
+        - id
+        - resource
+        - type
+        - summary
+      properties:
+        id:
+          description: The deterministic hash of the node.
+          type: string
+          example: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        resource:
+          description: The resource identifier of the node including the type, class, and id
+          type: string
+          example: "postgres.default@example"
+        type:
+          description: The type of change in a resource node.
+          type: string
+          enum:
+            - added
+            - removed
+            - module_changed
+            - params_changed
+          x-enum-varnames:
+            - DeploymentDiffChangeTypeAdded
+            - DeploymentDiffChangeTypeRemoved
+            - DeploymentDiffChangeTypeModuleChanged
+            - DeploymentDiffChangeTypeParamsChanged
+        summary:
+          description: A human readable summary of the change to this node.
+          type: string
+
+    MetadataKeyPage:
+      description: A page of metadata keys
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetadataKey"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    MetadataKey:
+      description: A metadata key for an organization.
+      properties:
+        name:
+          description: The name of the metadata key.
+          type: string
+          example: "Example-Key"
+          pattern: "^[A-Z][a-zA-Z0-9]*(-[A-Z0-9][a-zA-Z0-9]*)*$"
+        description:
+          description: A human-readable description of the metadata key.
+          type: string
+          example: "This is an example metadata key."
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-02T03:04:05Z"
+          description: The time the metadata key was created
+        schema:
+          $ref: "#/components/schemas/MetadataKeySchema"
+      required:
+        - name
+        - schema
+        - created_at
+      type: object
+
+    MetadataKeySchema:
+      description: The schema of the metadata key.
+      type: object
+      properties:
+        type:
+          description: The type of the metadata key.
+          type: string
+          enum:
+            - string
+          example: "string"
+        format:
+          description: The format of the metadata key.
+          type: string
+          example: true
+        pattern:
+          description: A regular expression pattern for the metadata key.
+          type: string
+          format: regex
+          example: "^[a-zA-Z0-9_.-]*$"
+      required:
+        - type
+
+    MetadataKeyCreateBody:
+      description: A metadata key for an organization.
+      properties:
+        name:
+          description: The name of the metadata key.
+          type: string
+          example: "Example-Key"
+          pattern: "^[A-Z][a-zA-Z0-9]*(-[A-Z0-9][a-zA-Z0-9]*)*$"
+        description:
+          description: A human-readable description of the metadata key.
+          type: string
+          example: "This is an example metadata key."
+        schema:
+          $ref: "#/components/schemas/MetadataKeySchema"
+      required:
+        - name
+        - schema
+      type: object
+
+    MetadataKeyUpdateBody:
+      description: A metadata key for an organization.
+      properties:
+        description:
+          description: A human-readable description of the metadata key.
+          type: string
+          example: "This is an example metadata key."
+        schema:
+          $ref: "#/components/schemas/UpdateMetadataKeySchema"
+      type: object
+
+    UpdateMetadataKeySchema:
+      description: The schema of the metadata key.
+      type: object
+      properties:
+        type:
+          description: The type of the metadata key.
+          type: string
+          enum:
+            - string
+          example: "string"
+        format:
+          description: The format of the metadata key.
+          type: string
+          example: true
+        pattern:
+          description: A regular expression pattern for the metadata key.
+          type: string
+          format: regex
+          example: "^[a-zA-Z0-9_.-]*$"
+
+    ActiveResourceNode:
+      type: object
+      description: A node in the active resource graph
+      required:
+        - id
+        - project_id
+        - env_id
+        - resource_type
+        - resource_class
+        - resource_id
+        - deployment_id
+        - module_id
+        - module_version
+        - edges
+        - metadata
+      properties:
+        id:
+          type: string
+          description: The deterministic hash of the node in the graph. This hash is also used in the edges map for each node.
+          example: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        project_id:
+          type: string
+          description: The Project id of the environment of this node.
+          example: "my-project"
+        env_id:
+          type: string
+          description: The environment id.
+          example: "my-env"
+        resource_type:
+          type: string
+          example: "postgres"
+        resource_class:
+          type: string
+          example: "default"
+        resource_id:
+          type: string
+          example: "shared.pg"
+        deployment_id:
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        module_id:
+          type: string
+          example: "my-module"
+        module_version:
+          type: string
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        edges:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            some-alias: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        metadata:
+          type: object
+          additionalProperties: true
+          example:
+            namespace: test-k8s-namespace
+            gcp_project: test-gcp-project
+
+    ListActiveResourceNodesPage:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The list of active resource nodes.
+          items:
+            $ref: "#/components/schemas/ActiveResourceNode"
+
+    ResourceNodesPage:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The list of resource nodes for this deployment.
+          items:
+            $ref: "#/components/schemas/ActiveResourceNode"
+
+    RemoteRunnerMessage:
+      oneOf:
+        - $ref: "#/components/schemas/RemoteRunnerMessageCreateJob"
+        - $ref: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
+      discriminator:
+        propertyName: action
+        mapping:
+          create-job: "#/components/schemas/RemoteRunnerMessageCreateJob"
+          check-job-status: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
+
+    RemoteRunnerMessageAction:
+      description: The action to be performed by the remote runner.
+      type: string
+      enum:
+        - create-job
+        - check-job-status
+
+    RemoteRunnerMessageCreateJob:
+      type: object
+      description: The response for creating a job on the runner.
+      properties:
+        action:
+          $ref: "#/components/schemas/RemoteRunnerMessageAction"
+        job_id:
+          type: string
+          description: The ID of the job created on the runner.
+          example: "job-12345"
+        namespace:
+          type: string
+          description: The ID of the namespace associated with the job.
+          example: "test-namespace"
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration for the job to be created on the runner. It must be parsable into a kubernetes Job definition.
+        deployment_token:
+          type: string
+          description: The deployment token to authenticate any request to update deployment results from the remote runner.
+          example: "deployment-token-12345"
+      required:
+        - action
+        - job_id
+        - namespace
+        - configuration
+        - deployment_token
+
+    RemoteRunnerMessageCheckJobStatus:
+      type: object
+      description: The response for checking the status of a job on the runner.
+      properties:
+        action:
+          $ref: "#/components/schemas/RemoteRunnerMessageAction"
+        job_id:
+          type: string
+          description: The ID of the job whose status is being requested.
+          example: "job-12345"
+        namespace:
+          type: string
+          description: The ID of the namespace associated with the job.
+          example: "test-namespace"
+        deployment_token:
+          type: string
+          description: The deployment token to authenticate any request to update deployment results from the remote runner.
+          example: "deployment-token-12345"
+        expires_at:
+          type: string
+          format: date-time
+          description: The time at which the job should be considered stuck by the runner if no pods are running or completed.
+          example: "2025-01-02T03:04:05Z"
+
+      required:
+        - action
+        - job_id
+        - namespace
+        - deployment_token
+        - expires_at
+
+    OpenidConfiguration:
+      description: OpenID discovery configuration.
+      properties:
+        issuer:
+          type: string
+        jwks_uri:
+          type: string
+        subject_types_supported:
+          type: array
+          items:
+            type: string
+        response_types_supported:
+          type: array
+          items:
+            type: string
+        claims_supported:
+          type: array
+          items:
+            type: string
+        id_token_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+        scopes_supported:
+          type: array
+          items:
+            type: string
+      required:
+        - issuer
+        - jwks_uri
+        - subject_types_supported
+        - response_types_supported
+        - claims_supported
+        - id_token_signing_alg_values_supported
+        - scopes_supported
+      type: object
+
+    Jwks:
+      description: JSON Web Keys Set (JWKS).
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/Jwk"
+      required:
+        - keys
+      type: object
+
+    Jwk:
+      description: JSON Web Key
+      type: object
+      properties:
+        alg:
+          type: string
+        kty:
+          type: string
+        use:
+          type: string
+        x5c:
+          type: array
+          items:
+            type: string
+        n:
+          type: string
+        e:
+          type: string
+        kid:
+          type: string
+        x5t:
+          type: string
+      required:
+        - alg
+        - kty
+        - use
+        - n
+        - e
+        - kid
+
+    InternalModuleUsage:
+      type: object
+      required:
+        - env_ids_by_project_id
+      properties:
+        env_ids_by_project_id:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

@@ -1,0 +1,3873 @@
+openapi: 3.0.0
+
+info:
+  title: ''
+  version: ''
+
+paths:
+  /internal/orgs:
+    get:
+      operationId: listInternalOrganizations
+      tags:
+        - Organizations
+        - internal
+      summary: List internal state for Organizations
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalOrganizationPage'
+    post:
+      operationId: createInternalOrganization
+      tags:
+        - Organizations
+        - internal
+      summary: Create the internal state for an Organization
+      security:
+        - userIdHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalOrganizationCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalOrganization'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /internal/orgs/{orgId}:
+    get:
+      operationId: getInternalOrganization
+      tags:
+        - Organizations
+        - internal
+      summary: Get internal state for Organization
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalOrganization'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/orgs/{orgId}/projects/{projectUuid}:
+    get:
+      operationId: getInternalProjectByUuid
+      tags:
+        - Project
+        - internal
+      summary: Get a Project by UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectUuidPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/orgs/{orgId}/projects/{projectUuid}/envs:
+    get:
+      operationId: listInternalEnvironmentsByProjectUuid
+      tags:
+        - Environment
+        - internal
+      summary: Get the list of Environments by Project UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectUuidPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/orgs/{orgId}/envs/{envUuid}:
+    get:
+      operationId: getInternalEnvironmentByUuid
+      tags:
+        - Environment
+        - internal
+      summary: Get an Environment by UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envUuidPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/resource-types:
+    get:
+      operationId: internalListResourceTypes
+      summary: List built-in resource types
+      tags:
+        - ResourceType
+        - internal
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceTypePage'
+    post:
+      operationId: internalCreateResourceType
+      summary: Create a new built-in resource type
+      tags:
+        - ResourceType
+        - internal
+      security:
+        - userIdHeader: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceTypeCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /internal/resource-types/{typeId}:
+    delete:
+      operationId: internalDeleteResourceType
+      summary: Delete a built-in resource type
+      tags:
+        - ResourceType
+        - internal
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    patch:
+      operationId: internalUpdateResourceType
+      summary: Update a built-in resource type
+      tags:
+        - ResourceType
+        - internal
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceTypeUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/orgs/{orgId}/runners/{runnerId}:
+    get:
+      operationId: getInternalRunner
+      tags:
+        - Runner
+        - internal
+      summary: Get runner in the org with secret configuration as secret path
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalRunner'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs:
+    post:
+      operationId: createOrganization
+      summary: Create a new organization with a random name and suffix.
+      tags:
+        - Organization
+      security:
+        - userIdHeader: []
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}:
+    get:
+      operationId: getOrganization
+      summary: Get the details of the identified organization.
+      tags:
+        - Organization
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs/{orgId}/env-types:
+    get:
+      operationId: listEnvironmentTypes
+      summary: List environment types in the organization
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createEnvironmentType
+      summary: Create a new environment type in the organization
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentTypeCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/env-types/{envTypeId}:
+    get:
+      operationId: getEnvironmentType
+      summary: Get an environment type in the org
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      operationId: deleteEnvironmentType
+      summary: Delete an environment type
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    patch:
+      operationId: updateEnvironmentType
+      summary: Update an environment type in the org
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentTypeUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs/{orgId}/projects:
+    get:
+      operationId: listProjects
+      summary: List projects
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createProject
+      summary: Create a new project
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/projects/{projectId}:
+    delete:
+      operationId: deleteProject
+      summary: Delete an project
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the project
+          schema:
+            type: boolean
+          required: false
+
+      responses:
+        '204':
+          description: The project is fully deleted.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      operationId: getProject
+      summary: Get an project
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateProject
+      summary: Update a project
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  /orgs/{orgId}/projects/{projectId}/envs:
+    get:
+      operationId: listEnvironments
+      summary: List environments in an project
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byEnvTypeId
+          in: query
+          description: Filter the list by environment types
+          schema:
+            type: array
+            items:
+              type: string
+          example: development
+          required: false
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createEnvironment
+      summary: Create a new project environment
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}:
+    delete:
+      operationId: deleteEnvironment
+      summary: Delete a project environment.
+      description: Delete an active project environment by issuing a destroy deployment. If the destroy fails, the environment will show status 'destroy_failed' and a new delete request can be made to try again.
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/forceQueryParam'
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the environment
+          schema:
+            type: boolean
+          required: false
+      responses:
+        '202':
+          description: The environment is waiting for a destroy deployment to succeed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '204':
+          description: The environment could be deleted without waiting for a destroy deployment.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      operationId: getEnvironment
+      summary: Get a project environment
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateEnvironment
+      summary: Update a project environment
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs/{orgId}/envs:
+    get:
+      operationId: listEnvironmentsInOrg
+      summary: List environments in an organization
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byEnvTypeId
+          in: query
+          description: Filter the list by environment types
+          schema:
+            type: array
+            items:
+              type: string
+          example: development
+          required: false
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/force-delete:
+    post:
+      operationId: internalForceDeleteEnvironment
+      summary: Force delete the environment without a successful destroy deployment.
+      description: |
+        This is an escape hatch that may be used by privileged users to destroy an environment that cannot be fully destroyed or is facing errors that cannot be worked around.
+        This may leave infrastructure or state behind that must be cleaned up manually outside of the Orchestrator.
+      tags:
+        - internal
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the environment
+          schema:
+            type: boolean
+          required: false
+      responses:
+        '204':
+          description: The environment was deleted.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}:
+    patch:
+      operationId: internalUpdateEnvironment
+      summary: An internal API for updating fields on an environment
+      tags:
+        - Environment
+        - internal
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentInternalUpdateBody'
+      responses:
+        '200':
+          description: The update was accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/refresh_runner:
+    post:
+      operationId: updateRunnerInAnEnvironment
+      summary: Refresh the runner for a project environment. If this runs with dryRun=true, it will not update the runner, but return the id of the runner that would be set.
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/dryRunQueryParam'
+      responses:
+        '200':
+          description: The id of the runner that would be or was set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshRunnerActionResult'
+
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/available-resource-types:
+    get:
+      operationId: listAvailableResourceTypes
+      summary: List available resource types for an environment in project
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - $ref: '#/components/parameters/resourceTypeIdQueryParam'
+        - $ref: '#/components/parameters/includeNonDeveloperAccessibleQueryParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableResourceTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  /orgs/{orgId}/resource-types:
+    get:
+      operationId: listResourceTypes
+      summary: List available resource types
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createResourceType
+      summary: Create a new resource type
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceTypeCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/resource-types/{typeId}:
+    delete:
+      operationId: deleteResourceType
+      summary: Delete a resource type
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    get:
+      operationId: getResourceType
+      summary: Get a resource type
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateResourceType
+      summary: Update a resource type
+      tags:
+        - ResourceType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceTypeUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs/{orgId}/module-providers:
+    get:
+      operationId: listModuleProviders
+      tags:
+        - Providers
+      summary: List module providers in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byProviderType
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given provider type
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleProviderPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createModuleProvider
+      tags:
+        - Providers
+      summary: Create a new module provider in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleProviderCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleProvider'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/module-providers/{providerType}/{providerId}:
+    get:
+      operationId: getModuleProvider
+      tags:
+        - Providers
+      summary: Get an existing module provider in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleProvider'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateModuleProvider
+      tags:
+        - Providers
+      summary: Update an existing module provider
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleProviderUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleProvider'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      operationId: deleteModuleProvider
+      tags:
+        - Providers
+      summary: Delete an existing module provider in the org if it is unused
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/runners:
+    get:
+      operationId: listRunners
+      tags:
+        - Runner
+      summary: List runners in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byRunnerType
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given runner type
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+    post:
+      operationId: createRunner
+      tags:
+        - Runner
+      summary: Create a runner in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunnerCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runner'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}/runners/{runnerId}:
+    get:
+      operationId: getRunner
+      tags:
+        - Runner
+      summary: Get runner in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runner'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateRunner
+      tags:
+        - Runner
+      summary: Update runner in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunnerUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runner'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      operationId: deleteRunner
+      tags:
+        - Runner
+      summary: Delete runner in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/runner-rules:
+    get:
+      operationId: listRunnerRulesInOrg
+      tags:
+        - Runner
+      summary: List runner rules in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byProjectId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given project
+        - name: byEnvTypeId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given environment type id
+        - name: byRunnerId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given runner id
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerRulePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createRunnerRuleInOrg
+      tags:
+        - Runner
+      summary: Create a new runner rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunnerRuleCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerRule'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/runner-rules/{ruleId}:
+    get:
+      operationId: getRunnerRuleInOrg
+      tags:
+        - Runner
+      summary: Get an existing runner rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerRule'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      operationId: deleteRunnerRuleInOrg
+      tags:
+        - Runner
+      summary: Delete an existing runner rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /orgs/{orgId}/modules:
+    get:
+      operationId: listModules
+      tags:
+        - Modules
+      summary: List modules in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byResourceType
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given resource type
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModulePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createModule
+      tags:
+        - Modules
+      summary: Create a new modules in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/modules/{moduleId}:
+    get:
+      operationId: getModule
+      tags:
+        - Modules
+      summary: Get an existing module in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      operationId: updateModule
+      tags:
+        - Modules
+      summary: Update an existing module
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleUpdateBody'
+      responses:
+        '200':
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      operationId: deleteModule
+      tags:
+        - Modules
+      summary: Delete an existing module in the org if it is unused
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/modules/{moduleId}/versions:
+    get:
+      operationId: listModuleVersions
+      tags:
+        - Modules
+      summary: List the versions of a module
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleVersionPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}:
+    get:
+      operationId: getModuleVersion
+      tags:
+        - Modules
+      summary: Get a previous module version in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleVersion'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /orgs/{orgId}/module-rules:
+    get:
+      operationId: listModuleRulesInOrg
+      tags:
+        - Rules
+      summary: List module rules in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byResourceType
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given resource type
+        - name: byModuleId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given module id
+        - name: byProjectId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given project id
+        - name: byEnvId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given environment type id. It must be used together with byProjectId.
+      responses:
+        '200':
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RulePage'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: createModuleRuleInOrg
+      tags:
+        - Rules
+      summary: Create a new module rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreateBody'
+      responses:
+        '201':
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/module-rules/{ruleId}:
+    get:
+      operationId: getModuleRuleInOrg
+      tags:
+        - Rules
+      summary: Get an existing module rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
+      responses:
+        '200':
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      operationId: deleteModuleRuleInOrg
+      tags:
+        - Rules
+      summary: Delete an existing module rule in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
+      responses:
+        '204':
+          description: Successful delete response.
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+  /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-catalogue:
+    post:
+      operationId: generateInternalModuleCatalogue
+      tags:
+        - internal
+      summary: An internal API to get all of the modules, rules, and providers that match an environment as well as any declared pinned versions.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalModuleCatalogueGenerateBody'
+      responses:
+        '200':
+          description: Successful get response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalModuleCatalogue'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+
+components:
+  securitySchemes:
+    userIdHeader:
+      type: apiKey
+      in: header
+      name: From
+  parameters:
+    orgIdPathParam:
+      name: orgId
+      in: path
+      description: The Organization ID
+      example: 'sample-org'
+      required: true
+      schema:
+        type: string
+    projectIdPathParam:
+      name: projectId
+      in: path
+      description: The Project ID
+      example: 'sample-project'
+      required: true
+      schema:
+        type: string
+    projectUuidPathParam:
+      name: projectUuid
+      in: path
+      description: The Project UUID
+      example: '01234567-89ab-cdef-0123-456789abcdef'
+      required: true
+      schema:
+        type: string
+        format: uuid
+    envIdPathParam:
+      name: envId
+      in: path
+      description: The Environment ID
+      example: 'sample-env'
+      required: true
+      schema:
+        type: string
+    envUuidPathParam:
+      name: envUuid
+      in: path
+      description: The Environment UUID
+      example: '01234567-89ab-cdef-0123-456789abcdef'
+      required: true
+      schema:
+        type: string
+        format: uuid
+    envTypeIdPathParam:
+      name: envTypeId
+      in: path
+      description: The Environment Type ID
+      example: 'development'
+      required: true
+      schema:
+        type: string
+    resourceTypeIdPathParam:
+      name: typeId
+      in: path
+      description: The Resource Type
+      example: 's3'
+      required: true
+      schema:
+        type: string
+    providerIdPathParam:
+      name: providerId
+      in: path
+      description: The Module Provider ID
+      example: 'my-aws-provider'
+      required: true
+      schema:
+        type: string
+    providerTypePathParam:
+      name: providerType
+      in: path
+      description: The Module Provider Type
+      example: 'aws'
+      required: true
+      schema:
+        type: string
+    moduleIdPathParam:
+      name: moduleId
+      in: path
+      description: A Module ID
+      example: 'my-s3-module'
+      required: true
+      schema:
+        type: string
+    moduleVersionIdPathParam:
+      name: moduleVersionId
+      in: path
+      description: A Module Version ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ruleIdPathParam:
+      name: ruleId
+      in: path
+      description: A Module Rule ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    runnerIdPathParam:
+      name: runnerId
+      in: path
+      description: A Runner ID
+      example: my-k8s-runner
+      required: true
+      schema:
+        type: string
+    perPageQueryParam:
+      name: per_page
+      in: query
+      description: The maximum number of items to return in a page of results
+      required: false
+      example: 50
+      schema:
+        type: integer
+    pageTokenQueryParam:
+      name: page
+      in: query
+      description: The page token to request from
+      required: false
+      example: 'AAAAAAAAAA=='
+      schema:
+        type: string
+    dryRunQueryParam:
+      name: dry_run
+      in: query
+      description: If true, the request will not make any changes to the system, but will return what would have been done.
+      required: false
+      schema:
+        type: boolean
+        default: false
+    resourceTypeIdQueryParam:
+      name: type_id
+      in: query
+      description: Filter by resource type id.
+      example: 's3'
+      schema:
+        type: string
+      required: false
+    includeNonDeveloperAccessibleQueryParam:
+      name: include_non_developer_accessible
+      in: query
+      description: If true, the list will include resources that are not accessible to developers.
+      required: false
+      schema:
+        type: boolean
+        default: false
+    forceQueryParam:
+      name: force
+      in: query
+      description: If true, will perform force deletion, without destroying underlying infrastructure.
+      required: false
+      schema:
+        type: boolean
+        default: false
+
+  responses:
+    400BadRequest:
+      description: The request was invalid. More detail can be found in the error body.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    401Unauthorized:
+      description: The client didn't provide valid authentication credentials.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    403Forbidden:
+      description: Server understands the request but refuses to authorize it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    404NotFound:
+      description: The request was valid, but the target resource or relation does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    409Conflict:
+      description: The request conflicts with existing state in the system.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      description: A standard error response
+      properties:
+        error:
+          description: |
+            A short code representing the class of error. This code can be used for tracking and observability or to
+            find appropriate troubleshooting documentation.
+          type: string
+          example: API-000
+        message:
+          description: A human-readable explanation of the error.
+          type: string
+          example: 'Something happened!'
+        details:
+          description: An optional payload of metadata associated with the error.
+          additionalProperties: true
+          type: object
+      required:
+        - error
+        - message
+      type: object
+
+    Organization:
+      type: object
+      description: The internal state of an organization known by the control plane.
+      required:
+        - id
+        - uuid
+        - created_at
+        - created_by
+        - plan
+        - status
+      properties:
+        id:
+          description: The unique identifier of the org
+          example: my-org123
+          type: string
+        uuid:
+          description: Unique uid for the org to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        created_at:
+          description: The date and time when the org state was created.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        created_by:
+          description: The user id that created the org for the first time.
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        updated_at:
+          description: The date and time when the org was last updated.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        status:
+          description: The current status of the org.
+          type: string
+          enum:
+            - active
+            - deleting
+            - delete_failed
+            - deleted
+          example: active
+        plan:
+          description: The plan of the org.
+          example: custom
+          type: string
+
+    InternalOrganization:
+      allOf:
+        - $ref: '#/components/schemas/Organization'
+        - properties:
+            source:
+              description: The source of the org state. This is used to identify the source of the org state, such as a git repository.
+              type: string
+              enum:
+                - internal
+                - public
+              default: internal
+              example: internal
+          required:
+            - source
+
+    InternalOrganizationPage:
+      type: object
+      description: A page of organization state returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/InternalOrganization'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    InternalOrganizationCreateBody:
+      type: object
+      description: A request to create a new organization state in the control plane.
+      properties:
+        id:
+          description: The unique identifier of the org. It will be auto-generated if not provided.
+          type: string
+          example: my-org123
+          minLength: 2
+          maxLength: 50
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id must be lowercase alphanumeric including hyphens
+        id_prefix:
+          description: An id prefix for the org. If will be a prefix to the auto-generated id.
+          type: string
+          example: workshop-
+          minLength: 1
+          maxLength: 15
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id_prefix must be lowercase alphanumeric including hyphens
+
+    Project:
+      type: object
+      description: A project.
+      required:
+        - id
+        - uuid
+        - display_name
+        - created_at
+        - updated_at
+        - status
+      properties:
+        id:
+          description: Project identifier
+          type: string
+          example: sample-project
+        uuid:
+          description: Unique uid for the project to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        display_name:
+          description: Project human readable name
+          type: string
+          example: Sample Project
+        created_at:
+          description: The date and time when the project was created
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        updated_at:
+          description: The date and time when the project was updated due to internal or external changes
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        status:
+          description: The status of the project. Projects are normally active unless they have been deleted. A deleting project is waiting for it's environments to be deleted.
+          example: active
+          type: string
+          enum:
+            - active
+            - deleting
+
+    ProjectPage:
+      type: object
+      description: A page of projects returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/Project'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ProjectCreateBody:
+      type: object
+      description: A request to create a new project.
+      required:
+        - id
+      properties:
+        id:
+          description: Project identifier
+          type: string
+          example: sample-project
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id must be a valid identifier
+        display_name:
+          description: Project human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: Sample Project
+
+    ProjectUpdateBody:
+      type: object
+      description: A request to update a project.
+      required:
+        - display_name
+      properties:
+        display_name:
+          description: Project human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: Sample Project
+
+    EnvironmentStatus:
+      type: string
+      description: The status of the environment. Environments are normally active unless they have been deleted. A delete_failed status indicates that the destroy failed and a delete can be re-issued.
+      example: active
+      enum:
+        - active
+        - deleting
+        - delete_failed
+
+    Environment:
+      type: object
+      description: An environment.
+      required:
+        - id
+        - uuid
+        - display_name
+        - created_at
+        - updated_at
+        - project_id
+        - env_type_id
+        - status
+      properties:
+        id:
+          description: Environment identifier
+          type: string
+          example: sample-env
+        uuid:
+          description: Unique uid for the environment to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        project_id:
+          description: Project identifier
+          type: string
+          example: sample-project
+        project_uuid:
+          description: Unique uid for the project to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        env_type_id:
+          description: The environment type for the environment.
+          type: string
+          example: development
+        display_name:
+          description: Environment human readable name
+          type: string
+          example: My Sample Environment
+        created_at:
+          description: The date and time when the resource type was created
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        updated_at:
+          description: The date and time when the environment was updated.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/EnvironmentStatus'
+        status_message:
+          description: An optional message associated with the status.
+          example: delete failed due to a failure in deployment 'xyz'
+          type: string
+        runner_id:
+          description: The id of the runner to be used to deploy this environment. If not set, this will be filled in upon first deployment.
+          type: string
+          example: my-k8s-runner
+
+    EnvironmentPage:
+      type: object
+      description: A page of environments returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/Environment'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    EnvironmentCreateBody:
+      type: object
+      description: A request to create a new environment.
+      required:
+        - id
+        - env_type_id
+      properties:
+        id:
+          description: Environment identifier
+          type: string
+          example: sample-env
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id must be a valid environment identifier
+        env_type_id:
+          description: The environment type for the new environment. This environment type must exist in the org.
+          type: string
+          example: development
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: env_type_id must be a valid environment type identifier
+        display_name:
+          description: Environment human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: My Sample Environment
+
+    EnvironmentUpdateBody:
+      type: object
+      description: A request to update an environment.
+      required:
+        - display_name
+      properties:
+        display_name:
+          description: Environment human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: My Sample Environment
+
+    EnvironmentInternalUpdateBody:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/EnvironmentStatus'
+        status_message:
+          type: string
+
+    EnvironmentTypeSummary:
+      type: object
+      description: Summary of an environment type in the org.
+      required:
+        - id
+        - uuid
+        - created_at
+        - display_name
+      properties:
+        id:
+          description: The unique id of the environment type in this org.
+          type: string
+          example: development
+        uuid:
+          description: Unique uid for the environment type to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
+        created_at:
+          description: The date and time when the environment type was created
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        display_name:
+          description: Human readable name for the environment type
+          type: string
+          example: Development
+
+    EnvironmentType:
+      allOf:
+        - $ref: '#/components/schemas/EnvironmentTypeSummary'
+
+    EnvironmentTypePage:
+      type: object
+      description: A page of environment types returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/EnvironmentTypeSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    EnvironmentTypeCreateBody:
+      type: object
+      description: A request to create a new environment type in the org.
+      required:
+        - id
+      properties:
+        id:
+          description: Environment type identifier
+          type: string
+          example: sample-env
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id must be a valid identifier
+        display_name:
+          description: Human readable name for the environment type. This will be generated if not provided.
+          type: string
+          example: Development
+          maxLength: 60
+
+    EnvironmentTypeUpdateBody:
+      type: object
+      description: A request to update an environment type in the org.
+      required:
+        - display_name
+      properties:
+        display_name:
+          description: Human readable name for the environment type. This will be generated if not provided.
+          type: string
+          example: Development
+          maxLength: 60
+
+    RefreshRunnerActionResult:
+      type: object
+      description: The response body for refreshing a runner in an environment.
+      required:
+        - runner_id
+        - updated
+      properties:
+        runner_id:
+          description: The ID of the runner to refresh.
+          type: string
+          example: my-k8s-runner
+        updated:
+          description: If true, it means that the runner was updated to a new value. Otherwise it was not updated and `runner_id` indicates the existing value.
+          type: boolean
+          default: false
+
+    ResourceType:
+      type: object
+      description: A resource type that can be used in modules.
+      required:
+        - id
+        - output_schema
+        - created_at
+        - built_in
+        - is_developer_accessible
+      properties:
+        id:
+          description: Resource type identifier
+          type: string
+          example: s3
+        description:
+          description: Resource type description
+          type: string
+          example: My AWS S3 bucket
+          maxLength: 200
+        output_schema:
+          description: Schema for output parameters
+          type: object
+          example: {}
+          additionalProperties: true
+        created_at:
+          description: The date and time when the resource type was created
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        built_in:
+          description: Indicates if this is a built-in resource type
+          example: true
+          type: boolean
+        is_developer_accessible:
+          description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false will not be available as types of resources in a manifest.
+          type: boolean
+
+    ResourceTypePage:
+      type: object
+      description: A page of resource types returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/ResourceType'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ResourceTypeCreateBody:
+      type: object
+      description: A request to create a new resource type.
+      required:
+        - id
+        - output_schema
+      properties:
+        id:
+          description: Resource type identifier
+          type: string
+          example: s3
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id must be a valid resource type identifier
+        description:
+          description: Resource type description
+          type: string
+          example: My AWS S3 bucket
+          maxLength: 200
+        output_schema:
+          description: Schema for output parameters
+          type: object
+          example: {}
+          additionalProperties: true
+        is_developer_accessible:
+          description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. If omitted, this property defaults to true.
+          type: boolean
+          default: true
+
+    ResourceTypeUpdateBody:
+      type: object
+      description: A request to update a resource type.
+      properties:
+        description:
+          description: Resource type description
+          type: string
+          example: My AWS S3 bucket
+          maxLength: 200
+        output_schema:
+          description: Schema for output parameters
+          type: object
+          example: {}
+          additionalProperties: true
+        is_developer_accessible:
+          description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest.
+          type: boolean
+
+    AvailableResourceType:
+      type: object
+      description: A page of available resource types returned from the list api.
+      required:
+        - id
+        - output_schema
+        - options
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the resource type
+          example: s3
+        description:
+          type: string
+          description: Resource type description
+          example: My AWS S3 bucket
+          maxLength: 200
+        output_schema:
+          type: object
+          description: The schema for output parameters of the resource type
+          example: {}
+          additionalProperties: true
+        options:
+          type: array
+          description: A list of available options for the resource type
+          items:
+            $ref: '#/components/schemas/AvailableResourceTypeOption'
+          example: []
+
+    AvailableResourceTypeOption:
+      type: object
+      required:
+        - resource_class
+        - rule_id
+        - module_id
+        - module_params
+      properties:
+        resource_id:
+          type: string
+          description: The unique identifier for the resource type
+          example: my-s3
+        resource_class:
+          type: string
+          description: The class of the resource, which can be used to categorize it
+          example: default
+        rule_id:
+          type: string
+          description: The unique identifier for the rule that this option belongs to
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        module_id:
+          type: string
+          description: The unique identifier for the module that this option belongs to
+          example: my-s3-module
+        module_params:
+          description: |
+            The parameters supported by the matched module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleParamItem'
+
+    AvailableResourceTypePage:
+      type: object
+      description: A page of available resource types returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/AvailableResourceType'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ModuleProviderSummary:
+      type: object
+      description: A summary of configuration for an OpenTofu provider that will be used in modules
+      required:
+        - org_id
+        - provider_type
+        - id
+        - source
+        - created_at
+      properties:
+        org_id:
+          description: The Organization ID
+          type: string
+          example: my-org
+        provider_type:
+          description: The OpenTofu provider name
+          type: string
+          example: aws
+        id:
+          description: The unique identifier for this module provider under the given provider type
+          type: string
+          example: my-aws-provider
+        description:
+          description: An optional text description for this module provider
+          type: string
+          example: Provider using default runner environment variables for AWS
+        source:
+          description: The OpenTofu provider source as a registry coordinate
+          type: string
+          example: hashicorp/aws
+        created_at:
+          description: The date and time when the provider was created.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+
+    ModuleProvider:
+      type: object
+      description: Configuration for an OpenTofu provider that will be used in modules
+      allOf:
+        - $ref: '#/components/schemas/ModuleProviderSummary'
+        - required:
+            - org_id
+            - provider_type
+            - id
+            - source
+            - version_constraint
+            - created_at
+            - configuration
+          properties:
+            version_constraint:
+              description: Specify a specific version of the provider
+              type: string
+              example: '~> 1.0'
+            configuration:
+              description: Any required configuration for this provider when used.
+              example: {}
+              type: object
+              additionalProperties: true
+              x-go-type-skip-optional-pointer: true
+
+    ModuleProviderPage:
+      type: object
+      description: A page of module providers returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/ModuleProviderSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ModuleProviderCreateBody:
+      type: object
+      description: A request to create a new module provider.
+      required:
+        - provider_type
+        - id
+        - source
+        - version_constraint
+      properties:
+        provider_type:
+          description: The OpenTofu provider name
+          type: string
+          example: aws
+          pattern: ^[a-z][a-z0-9_-]+$
+          maxLength: 100
+          x-pattern-error: provider_type must be a valid OpenTofu identifier
+        id:
+          description: The unique identifier for this module provider under the given provider type
+          type: string
+          example: my-aws-provider
+          pattern: ^[a-z][a-z0-9_-]+$
+          maxLength: 100
+          x-pattern-error: id must be a valid OpenTofu identifier
+        description:
+          description: An optional text description for this module provider
+          type: string
+          maxLength: 200
+          example: Provider using default runner environment variables for AWS
+        source:
+          description: The OpenTofu provider source as a registry coordinate
+          type: string
+          example: hashicorp/aws
+          pattern: ^([a-z0-9.-]+/)?([a-z][a-z0-9_-]+)/([a-z][a-z0-9_-]+)$
+          maxLength: 100
+          x-pattern-error: source must match (hostname/)namespace/type
+        version_constraint:
+          description: Specify a specific version of the provider
+          type: string
+          pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
+          maxLength: 100
+          x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
+          example: '~> 1.0'
+        configuration:
+          description: Any required configuration for this provider when used.
+          example: {}
+          type: object
+          maxItems: 20
+          additionalProperties: true
+          x-go-type-skip-optional-pointer: true
+
+    ModuleProviderUpdateBody:
+      type: object
+      description: A request to update a module provider
+      properties:
+        description:
+          description: An optional text description for this module provider
+          type: string
+          maxLength: 200
+          example: Provider using default runner environment variables for AWS
+        version_constraint:
+          description: Specify a specific version of the provider
+          type: string
+          pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
+          maxLength: 100
+          x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
+          example: '~> 1.0'
+        configuration:
+          description: Any required configuration for this provider when used.
+          example: {}
+          type: object
+          maxItems: 20
+          additionalProperties: true
+
+    ModuleId:
+      type: string
+      description: The unique identifier for a module
+      example: my-s3-module
+      maxLength: 100
+      pattern: ^[a-z](?:-?[a-z0-9]+)+$
+      x-pattern-error: module id must be a valid identifier of alphanumerics and hyphens
+
+    ResourceClass:
+      description: A resource class requested by the resource graph. 'default' is the default value.
+      type: string
+      minLength: 1
+      maxLength: 63
+      pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
+      x-pattern-error: resource class must be a valid identifier of alphanumerics and hyphens
+      example: classic
+
+    ResourceId:
+      description: A specific resource id requested by the resource graph
+      type: string
+      example: standard.common-postgres
+      minLength: 1
+      maxLength: 63
+      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
+      x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
+
+    RunnerType:
+      description: The Runner type.
+      type: string
+      enum:
+        - kubernetes
+        - kubernetes-gke
+        - kubernetes-agent
+        - kubernetes-eks
+        - serverless-ecs
+
+    StateStorageType:
+      description: Type of the Terraform Backend used by the runner.
+      type: string
+      enum:
+        - kubernetes
+        - s3
+        - gcs
+        - azurerm
+
+    ModuleVersionSummaryCoreFields:
+      type: object
+      required:
+        - version_id
+        - resource_type
+        - module_source
+        - provider_mapping
+      properties:
+        version_id:
+          description: A unique identifier for this version of the module
+          type: string
+          example: 'a1b2c3d4-some-version'
+        resource_type:
+          description: The resource type that this module provisions.
+          type: string
+          example: s3
+        module_source:
+          description: The source of the OpenTofu module backing this module.
+          type: string
+          format: uri
+        provider_mapping:
+          description: A mapping of module providers to use when provisioning using this module
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            aws: aws.default
+        description:
+          description: An optional text description for this module
+          type: string
+          example: Module for an aws s3 bucket
+
+    ModuleVersionSummary:
+      allOf:
+        - $ref: '#/components/schemas/ModuleVersionSummaryCoreFields'
+        - description: A summary of Module Version.
+          required:
+            - created_at
+          properties:
+            created_at:
+              description: The date and time when the module version was created.
+              example: '2023-01-01T00:00:00Z'
+              type: string
+              format: date-time
+
+    ModuleVersionPage:
+      type: object
+      description: A page of the list modules versions response.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/ModuleVersionSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ModuleSummary:
+      type: object
+      description: A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
+      allOf:
+        - $ref: '#/components/schemas/ModuleVersionSummaryCoreFields'
+        - required:
+            - org_id
+            - id
+            - created_at
+            - updated_at
+          properties:
+            org_id:
+              description: The Organization ID
+              type: string
+              example: my-org
+            id:
+              $ref: '#/components/schemas/ModuleId'
+            created_at:
+              description: The date and time when the module was created.
+              example: '2023-01-01T00:00:00Z'
+              type: string
+              format: date-time
+            updated_at:
+              description: The date and time when the module was updated to this version.
+              example: '2023-01-01T00:00:00Z'
+              type: string
+              format: date-time
+
+    ModulePage:
+      type: object
+      description: A page of the list modules response.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: '#/components/schemas/ModuleSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ModuleCoreFields:
+      type: object
+      required:
+        - module_params
+        - module_inputs
+        - dependencies
+        - coprovisioned
+      properties:
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleParamItem'
+        module_inputs:
+          description: The fixed inputs to this module. These may contain expressions referencing the modules context.
+          type: object
+          additionalProperties: true
+        module_source_code:
+          description: The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+          type: string
+        dependencies:
+          description: A mapping of alias to resource dependencies that must be provisioned with this module
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleDependencyManifest'
+        coprovisioned:
+          description: A set of resources to provision after or in parallel with the resource of the current module.
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
+
+    Module:
+      type: object
+      description: Configuration for an OpenTofu provider that will be used in modules
+      allOf:
+        - $ref: '#/components/schemas/ModuleSummary'
+        - $ref: '#/components/schemas/ModuleCoreFields'
+
+    ModuleVersion:
+      type: object
+      description: Configuration for an OpenTofu provider that will be used in modules
+      allOf:
+        - $ref: '#/components/schemas/ModuleVersionSummary'
+        - $ref: '#/components/schemas/ModuleCoreFields'
+
+    ModuleDependencyManifest:
+      description: A dependency to provision before the current resource is provisioned
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: The resource type to provision
+          type: string
+          example: postgres
+          minLength: 2
+          maxLength: 63
+          pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
+          x-pattern-error: type must be a valid resource type
+        class:
+          $ref: '#/components/schemas/ResourceClass'
+        id:
+          $ref: '#/components/schemas/ResourceId'
+        params:
+          description: The parameters to pass to the dependency for provisioning.
+          type: object
+          additionalProperties: true
+          x-go-type-skip-optional-pointer: true
+          maxItems: 20
+
+    ModuleCoProvisionManifest:
+      description: A resource to provision after or in parallel with the resource of the current module.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: The resource type to provision
+          type: string
+          example: postgres
+          minLength: 2
+          maxLength: 63
+          pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
+          x-pattern-error: type must be a valid resource type
+        class:
+          $ref: '#/components/schemas/ResourceClass'
+        id:
+          $ref: '#/components/schemas/ResourceId'
+        params:
+          description: The parameters to pass for provisioning.
+          type: object
+          additionalProperties: true
+          x-go-type-skip-optional-pointer: true
+          maxItems: 20
+        is_dependent_on_current:
+          type: boolean
+          description: |
+            If true, this coprovisioned resource will have a dependency on the current resource so that the current
+            resource must be successfully provisioned before the coprovisioned one is.
+          example: false
+          x-go-type-skip-optional-pointer: true
+        copy_dependents_from_current:
+          type: boolean
+          description: |
+            If true, all resources that depend on the current resource will also depend on (be provisioned after) this coprovisioned resource.
+          example: false
+          x-go-type-skip-optional-pointer: true
+
+    ModuleParamItem:
+      description: The definition of a parameter that can be provided when using this module.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: |
+            The type of input supported for this parameter. This will be enforced by the orchestrator at graph creation
+            time when values are known ahead of time. Use 'any' to indicate no type constraint.
+          type: string
+          enum:
+            - string
+            - number
+            - bool
+            - list
+            - map
+            - any
+          example: string
+        is_optional:
+          description: Whether this parameter is optional. Defaults to false.
+          type: boolean
+          example: false
+          x-go-type-skip-optional-pointer: true
+        description:
+          description: An optional description that helps a user define the correct value.
+          type: string
+          example: The input string value
+
+    ModuleCreateBody:
+      type: object
+      description: A request to create a new module
+      required:
+        - id
+        - resource_type
+        - module_source
+      properties:
+        id:
+          $ref: '#/components/schemas/ModuleId'
+        description:
+          description: An optional text description for this module
+          type: string
+          maxLength: 200
+          example: Module for an aws s3 bucket
+        resource_type:
+          description: The resource type that this module provisions.
+          type: string
+          minLength: 2
+          example: s3
+        module_source:
+          description: The source of the OpenTofu module backing this module.
+          type: string
+          minLength: 2
+          maxLength: 200
+        module_source_code:
+          description: The source code of the OpenTofu module backing this module. Required, if module_source is 'inline'.
+          type: string
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleParamItem'
+          x-go-type-skip-optional-pointer: true
+        module_inputs:
+          description: The fixed inputs to this module. These may contain expressions referencing the modules context.
+          type: object
+          maxItems: 20
+          additionalProperties: true
+          x-go-type-skip-optional-pointer: true
+        provider_mapping:
+          description: A mapping of module providers to use when provisioning using this module.
+          type: object
+          maxItems: 20
+          additionalProperties:
+            type: string
+          example:
+            aws: aws.default
+          x-go-type-skip-optional-pointer: true
+        dependencies:
+          description: A mapping of alias to resource dependencies that must be provisioned with this module
+          type: object
+          maxItems: 20
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleDependencyManifest'
+          x-go-type-skip-optional-pointer: true
+        coprovisioned:
+          description: A set of resources to provision after or in parallel with the resource of the current module.
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
+          x-go-type-skip-optional-pointer: true
+
+    ModuleUpdateBody:
+      type: object
+      description: A request to update an existing module
+      properties:
+        description:
+          description: An optional text description for this module
+          type: string
+          maxLength: 200
+          example: Module for an aws s3 bucket
+        module_source:
+          description: The source of the OpenTofu module backing this module.
+          type: string
+          format: uri
+          minLength: 2
+          maxLength: 200
+        module_source_code:
+          description: The source code of the OpenTofu module backing this module.
+          type: string
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleParamItem'
+        module_inputs:
+          description: The inputs to the module. These may contain expressions referencing the modules context.
+          type: object
+          maxItems: 20
+          additionalProperties: true
+        provider_mapping:
+          description: A mapping of module providers to use when provisioning using this module.
+          type: object
+          maxItems: 20
+          additionalProperties:
+            type: string
+          example:
+            aws: aws.default
+        dependencies:
+          description: A mapping of alias to resource dependencies that must be provisioned with this module
+          type: object
+          maxItems: 20
+          additionalProperties:
+            $ref: '#/components/schemas/ModuleDependencyManifest'
+        coprovisioned:
+          description: A set of resources to provision after or in parallel with the resource of the current module.
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
+
+    RunnerPage:
+      type: object
+      description: A page of runners returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page.
+          items:
+            $ref: '#/components/schemas/RunnerSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items.
+
+    RunnerSummary:
+      type: object
+      description: A summary of configuration a runner.
+      required:
+        - org_id
+        - id
+        - created_at
+        - updated_at
+      properties:
+        org_id:
+          description: The Organization ID.
+          type: string
+          example: my-org
+        id:
+          description: The unique identifier for the runner under the organization.
+          type: string
+          example: my-k8s-runner
+        description:
+          description: An optional text description for this runner.
+          type: string
+          example: Runner to execute Terraform in our production cluster
+        created_at:
+          description: The date and time when the runner was created.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        updated_at:
+          description: The date and time when the runner was updated.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        runner_configuration:
+          $ref: '#/components/schemas/RunnerConfigurationSummary'
+        state_storage_configuration:
+          $ref: '#/components/schemas/StateStorageConfigurationSummary'
+
+    Runner:
+      type: object
+      description: A summary of configuration a runner.
+      allOf:
+        - $ref: '#/components/schemas/RunnerSummary'
+        - required:
+            - org_id
+            - id
+            - runner_configuration
+            - state_storage_configuration
+            - created_at
+          properties:
+            runner_configuration:
+              $ref: '#/components/schemas/RunnerConfiguration'
+            state_storage_configuration:
+              $ref: '#/components/schemas/StateStorageConfiguration'
+
+    RunnerConfiguration:
+      description: The data needed to configure the runner.
+      oneOf:
+        - $ref: '#/components/schemas/K8sRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sGkeRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sEksRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sAgentRunnerConfiguration'
+        - $ref: '#/components/schemas/ServerlessEcsRunnerConfiguration'
+      discriminator:
+        propertyName: type
+        mapping:
+          kubernetes: '#/components/schemas/K8sRunnerConfiguration'
+          kubernetes-gke: '#/components/schemas/K8sGkeRunnerConfiguration'
+          kubernetes-eks: '#/components/schemas/K8sEksRunnerConfiguration'
+          kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfiguration'
+          serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfiguration'
+
+    RunnerConfigurationUpdate:
+      description: The data needed to update the runner configuration.
+      oneOf:
+        - $ref: '#/components/schemas/K8sRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sGkeRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sEksRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sAgentRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody'
+      discriminator:
+        propertyName: type
+        mapping:
+          kubernetes: '#/components/schemas/K8sRunnerConfigurationUpdateBody'
+          kubernetes-gke: '#/components/schemas/K8sGkeRunnerConfigurationUpdateBody'
+          kubernetes-eks: '#/components/schemas/K8sEksRunnerConfigurationUpdateBody'
+          kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfigurationUpdateBody'
+          serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody'
+
+    InternalRunner:
+      type: object
+      description: A summary of configuration a runner.
+      allOf:
+        - $ref: '#/components/schemas/Runner'
+        - properties:
+            runner_configuration_secret:
+              $ref: '#/components/schemas/ConfigurationSecret'
+
+    ConfigurationSecret:
+      type: object
+      description: Secret path and version of a secret stored in the internal store.
+      x-go-type-skip-optional-pointer: true
+      properties:
+        path:
+          type: string
+          example: /orgs/test-org/runners/default
+          description: Path where the secret is stored
+        version:
+          type: integer
+          example: 2
+          description: The version of the secret
+      required:
+        - path
+        - version
+
+    K8sRunnerJobConfig:
+      description: Properties of the Kubernetes Runner Job.
+      type: object
+      properties:
+        namespace:
+          type: string
+          description: Namespace where the Job runs.
+        service_account:
+          type: string
+          description: Service Account the Job runs with.
+        pod_template:
+          description: |
+            The Pod Template Spec manifest which defines the runner job pod in the target cluster. It will be merged with the default Job Pod Template Spec.
+          type: object
+          additionalProperties: true
+      required:
+        - namespace
+        - service_account
+
+    K8sRunnerGkeCluster:
+      description: Configuration to access a GKE cluster.
+      type: object
+      properties:
+        name:
+          description: Name of the cluster.
+          type: string
+        project_id:
+          title: GCP Project ID.
+          type: string
+        proxy_url:
+          description: Cluster Proxy URL.
+          type: string
+        location:
+          description: GCP cluster Location.
+          type: string
+        internal_ip:
+          description: Uses the private endpoint address of the cluster if the private endpoint is enabled.
+          default: false
+          type: boolean
+        auth:
+          $ref: '#/components/schemas/K8sRunnerGcpTemporaryAuth'
+      required:
+        - name
+        - project_id
+        - location
+        - auth
+
+    K8sRunnerGcpTemporaryAuth:
+      description: Configuration to obtain temporary access token to access a GKE cluster.
+      x-go-type-skip-optional-pointer: true
+      type: object
+      properties:
+        gcp_audience:
+          type: string
+          description: The URL of the workload identity pool provider used as an audience for OIDC token.
+        gcp_service_account:
+          type: string
+          description: The Google service account to impersonate.
+      required:
+        - gcp_audience
+        - gcp_service_account
+
+    K8sRunnerEksCluster:
+      description: Configuration to access an EKS cluster.
+      type: object
+      properties:
+        name:
+          description: Name of the EKS cluster.
+          type: string
+        region:
+          description: AWS region where the EKS cluster is located.
+          type: string
+        auth:
+          $ref: '#/components/schemas/AwsTemporaryAuth'
+      required:
+        - name
+        - region
+        - auth
+
+    AwsTemporaryAuth:
+      description: Configuration to obtain temporary AWS security credentials by assuming an IAM role.
+      type: object
+      properties:
+        role_arn:
+          description: The ARN of the role to assume.
+          type: string
+          pattern: ^arn:aws:iam::[0-9]{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: role_arn is not a valid IAM Role ARN
+        session_name:
+          description: (Optional) Session name to be used when assuming the role. If not provided, a default session name will be "{org_id}-{runner_id}".
+          type: string
+          pattern: ^[a-zA-Z0-9+=,.@\-_/]+$
+          minLength: 3
+          maxLength: 64
+          x-pattern-error: session_name must contain only valid characters (letters, digits, and +=,.@-_/)
+        sts_region:
+          description: (Optional) The AWS region identifier for the Security Token Service (STS) endpoint. If not provided, the cluster region will be used.
+          type: string
+          pattern: ^[a-z]{2}-[a-z]+-\d$
+          x-pattern-error: sts_region is not a valid AWS STS region
+      required:
+        - role_arn
+
+    K8sRunnerK8sCluster:
+      description: Configuration to obtain access token to a generic K8s cluster with auth
+      type: object
+      properties:
+        cluster_data:
+          $ref: '#/components/schemas/K8sRunnerK8sClusterClusterData'
+        auth:
+          $ref: '#/components/schemas/K8sRunnerK8sClusterAuth'
+      required:
+        - cluster_data
+        - auth
+
+    K8sRunnerK8sClusterAuth:
+      x-go-type-skip-optional-pointer: true
+      description: Configuration to obtain access to a k8s cluster.
+      type: object
+      properties:
+        client_certificate_data:
+          description: 'Kubeconfig Field: user.client-certificate-data'
+          type: string
+        client_key_data:
+          description: 'Kubeconfig Field: user.client-key-data'
+          type: string
+        service_account_token:
+          description: Service account token.
+          type: string
+
+    K8sRunnerK8sClusterClusterData:
+      description: Cluster data to access Kubernetes cluster.
+      type: object
+      x-go-type-skip-optional-pointer: true
+      properties:
+        certificate_authority_data:
+          description: 'Kubeconfig Field: cluster.certificate-authority-data'
+          type: string
+        proxy_url:
+          description: 'Kubeconfig Field: cluster.proxy-url'
+          type: string
+        server:
+          description: 'Kubeconfig Field: cluster.server'
+          type: string
+      required:
+        - certificate_authority_data
+        - server
+
+    K8sAgentRunnerKey:
+      description: A public ed25519 key in PEM format. The caller must hold the matching private key.
+      type: string
+      example: |
+        -----BEGIN PUBLIC KEY-----
+        MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
+        -----END PUBLIC KEY-----
+      pattern: ^-----BEGIN PUBLIC KEY-----\n[^\n]+\n-----END PUBLIC KEY-----(\n)?$
+      x-pattern-error: 'key: does not look like an ed25519 public key in PEM format'
+      minLength: 1
+      maxLength: 200
+
+    StateStorageConfiguration:
+      description: Configuration for the Terraform Backend used by the runner.
+      oneOf:
+        - $ref: '#/components/schemas/K8sStorageConfiguration'
+        - $ref: '#/components/schemas/S3StorageConfiguration'
+        - $ref: '#/components/schemas/GCSStorageConfiguration'
+        - $ref: '#/components/schemas/AzureRMStorageConfiguration'
+      discriminator:
+        propertyName: type
+        mapping:
+          kubernetes: '#/components/schemas/K8sStorageConfiguration'
+          s3: '#/components/schemas/S3StorageConfiguration'
+          gcs: '#/components/schemas/GCSStorageConfiguration'
+          azurerm: '#/components/schemas/AzureRMStorageConfiguration'
+
+    StateStorageConfigurationSummary:
+      description: Summary of the state storage configuration.
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+      required:
+        - type
+
+    K8sStorageConfiguration:
+      description: Configuration to use the Kubernetes Backend as backend of this runner. The in-cluster mode is used.
+      type: object
+      properties:
+        namespace:
+          description: Where the secrets with the state should be created.
+          type: string
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+      required:
+        - namespace
+        - type
+
+    S3StorageConfiguration:
+      description: |-
+        Configuration to use an AWS S3 bucket as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/s3#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+        bucket:
+          type: string
+          description: Name of the S3 Bucket.
+          pattern: ^[a-z0-9][a-z0-9\-]*[a-z0-9]$
+          x-pattern-error: state storage bucket is not a valid S3 Bucket name.
+          example: example-bucket
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid S3 prefix path.
+          example: path/to/state/directory
+      required:
+        - type
+        - bucket
+
+    GCSStorageConfiguration:
+      description: |-
+        Configuration to use a Google Cloud Storage (GCS) bucket as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/gcs#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+        bucket:
+          type: string
+          description: Name of the GCS Bucket.
+          pattern: ^[a-z0-9][a-z0-9\-]*[a-z0-9]$
+          x-pattern-error: state storage bucket is not a valid GCS Bucket name.
+          example: example-bucket
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid GCS prefix path.
+          example: path/to/state/directory
+      required:
+        - type
+        - bucket
+
+    AzureRMStorageConfiguration:
+      description: |-
+        Configuration to use an AzureRM Storage Account as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/azurerm#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+        resource_group_name:
+          type: string
+          description: Name of the Azure Resource Group.
+          example: rg-terraform-state
+        storage_account_name:
+          type: string
+          description: Name of the Azure Storage Account.
+          example: sttfstatepro001
+        container_name:
+          type: string
+          description: Name of the Azure Storage Container.
+          example: tfstates
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid AzureRM path.
+          example: path/to/state/directory
+      required:
+        - type
+        - storage_account_name
+        - container_name
+
+    RunnerCreateBody:
+      type: object
+      description: A request to create a new runner.
+      required:
+        - id
+        - runner_configuration
+        - state_storage_configuration
+      properties:
+        id:
+          description: The unique identifier for the runner under the organization.
+          type: string
+          example: my-k8s-runner
+          pattern: ^[a-z][a-z0-9_-]+$
+          x-pattern-error: id must be a valid identifier
+        description:
+          description: An optional text description for this runner.
+          type: string
+          example: Runner to execute Terraform in our production cluster
+        runner_configuration:
+          $ref: '#/components/schemas/RunnerConfiguration'
+        state_storage_configuration:
+          $ref: '#/components/schemas/StateStorageConfiguration'
+
+    RunnerConfigurationSummary:
+      description: A summary of the runner configuration.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+      required:
+        - type
+
+    K8sRunnerConfiguration:
+      description: Runner configuration for a Kubernetes cluster.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerK8sCluster'
+      required:
+        - type
+        - job
+        - cluster
+
+    K8sGkeRunnerConfiguration:
+      description: Runner configuration for a GKE cluster.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerGkeCluster'
+      required:
+        - type
+        - job
+        - cluster
+
+    K8sEksRunnerConfiguration:
+      description: Runner configuration for an EKS cluster.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerEksCluster'
+      required:
+        - type
+        - job
+        - cluster
+
+    K8sAgentRunnerConfiguration:
+      description: Runner configuration for a Kubernetes Agent.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        key:
+          $ref: '#/components/schemas/K8sAgentRunnerKey'
+      required:
+        - type
+        - job
+        - key
+
+    ServerlessEcsRunnerConfiguration:
+      description: Runner configuration for executing on AWS ECS Fargate.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        auth:
+          $ref: '#/components/schemas/AwsTemporaryAuth'
+        job:
+          $ref: '#/components/schemas/ServerlessEcsRunnerJob'
+      required:
+        - type
+        - auth
+        - job
+
+    ServerlessEcsRunnerJob:
+      description: Job details for the AWS ECS Runner
+      required:
+        - region
+        - cluster
+        - subnets
+        - execution_role_arn
+      properties:
+        region:
+          description: AWS Region to run the ECS job in.
+          type: string
+          pattern: ^[a-z]{2}-[a-z]+-\d$
+          x-pattern-error: job region is not a valid AWS Region.
+          example: us-west-2
+          minLength: 1
+          maxLength: 24
+        cluster:
+          description: ECS Fargate cluster name
+          type: string
+          example: my-cluster
+          minLength: 1
+          maxLength: 255
+        subnets:
+          description: The IDs of the AWS subnets that the runner must be connected to. At least one is required.
+          type: array
+          items:
+            type: string
+            example: 'subnet-12345'
+            minLength: 1
+            maxLength: 24
+          minItems: 1
+          maxItems: 16
+        security_groups:
+          description: An optional list of IDs for the AWS security groups that the runner should be associated with.
+          type: array
+          items:
+            type: string
+            example: 'runner-security-group'
+            minLength: 1
+            maxLength: 255
+          maxItems: 5
+          x-go-type-skip-optional-pointer: true
+        is_public_ip_enabled:
+          description: |
+            Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways
+            instead of NAT Gateways to reach public networks. Defaults to false.
+          type: boolean
+          example: true
+          x-go-type-skip-optional-pointer: true
+        execution_role_arn:
+          description: The ARN of the role used to pull images, retrieve secrets and parameters, and execute the Runner.
+          type: string
+          pattern: ^arn:aws:iam::\d{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: job execution_role_arn is not a valid IAM Role ARN
+          example: arn:aws:iam::123456789012:role/ECSExecutionRole
+        image:
+          description: Container image to use for the runner. If not specified, a default runner image will be used.
+          type: string
+          pattern: ^[a-zA-Z0-9._:/-]+(?:@[a-z0-9]+:[a-fA-F0-9]+)?$
+          x-pattern-error: image must be a valid container image
+          example: platform-orchestrator/platform-orchestrator-runner:latest
+          maxLength: 255
+        task_role_arn:
+          description: An optional ARN for the role available inside the Runner.
+          type: string
+          pattern: ^arn:aws:iam::\d{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: job task_role_arn is not a valid IAM Role ARN
+          example: arn:aws:iam::123456789012:role/ECSTaskRole
+        environment:
+          description: Additional environment variables to pass to the ECS job.
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            description: The value of the variable.
+            type: string
+            maxLength: 1024
+        secrets:
+          description: A set of AWS Secrets Manager Secrets or Parameter Store Parameters to mount
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            description: The source ARN
+            type: string
+            pattern: ^arn:aws:((secretsmanager:[^:]+:[^:]+:secret:[^:]+-[a-zA-Z0-9]{6})|(ssm:[^:]+:[^:]+:parameter\/.+))$
+            x-pattern-error: job secrets value is not a valid AWS Secret or Parameter ARN
+            example: arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/database/credentials-AbCdEf
+
+    RunnerUpdateBody:
+      type: object
+      description: A request to update a runner
+      properties:
+        description:
+          description: An optional text description for this runner.
+          type: string
+          example: Runner to execute Terraform in our production cluster
+        runner_configuration:
+          $ref: '#/components/schemas/RunnerConfigurationUpdate'
+        state_storage_configuration:
+          $ref: '#/components/schemas/StateStorageConfiguration'
+
+    K8sRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for a Kubernetes cluster.
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerK8sCluster'
+        type:
+          $ref: '#/components/schemas/RunnerType'
+      required:
+        - type
+
+    K8sGkeRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for a GKE cluster.
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerGkeCluster'
+        type:
+          $ref: '#/components/schemas/RunnerType'
+      required:
+        - type
+
+    K8sEksRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for an EKS cluster.
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        cluster:
+          $ref: '#/components/schemas/K8sRunnerEksCluster'
+        type:
+          $ref: '#/components/schemas/RunnerType'
+      required:
+        - type
+
+    K8sAgentRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for a Kubernetes Agent.
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        key:
+          $ref: '#/components/schemas/K8sAgentRunnerKey'
+      required:
+        - type
+
+    ServerlessEcsRunnerConfigurationUpdateBody:
+      description: Runner configuration for executing on AWS ECS Fargate.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RunnerType'
+        auth:
+          $ref: '#/components/schemas/AwsTemporaryAuth'
+        job:
+          $ref: '#/components/schemas/ServerlessEcsRunnerJob'
+      required:
+        - type
+
+    RuleSummary:
+      type: object
+      description: A summary of a rule that matches resource requests against a module
+      required:
+        - org_id
+        - id
+        - module_id
+        - created_at
+        - resource_type
+        - resource_class
+      properties:
+        org_id:
+          description: The Organization ID.
+          type: string
+          example: my-org
+        id:
+          description: The unique identifier for the rule under the organization.
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        module_id:
+          $ref: '#/components/schemas/ModuleId'
+        created_at:
+          description: The time this rule was created
+          type: string
+          format: date-time
+          example: '2025-01-02T03:04:05Z'
+        resource_type:
+          description: The resource type matched by this rule
+          type: string
+          example: s3
+        resource_class:
+          description: The resource class to match
+          type: string
+          example: classic
+        resource_id:
+          description: The resource id to match
+          type: string
+          example: specific-bucket
+        project_id:
+          description: The optional project id that this rule matches.
+          type: string
+          example: my-app
+        env_type_id:
+          description: The optional env type id that this rule matches.
+          type: string
+          example: dev
+        env_id:
+          description: The optional environment id that this rule matches.
+          type: string
+          example: my-env
+
+    RulePage:
+      type: object
+      description: A page of rules returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page.
+          items:
+            $ref: '#/components/schemas/RuleSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items.
+
+    Rule:
+      type: object
+      description: The full details of a rule that matches resource requests against a module
+      allOf:
+        - $ref: '#/components/schemas/RuleSummary'
+
+    RuleCreateBody:
+      type: object
+      description: The properties required to create a new rule that matches modules
+      required:
+        - module_id
+      properties:
+        module_id:
+          $ref: '#/components/schemas/ModuleId'
+        resource_class:
+          $ref: '#/components/schemas/ResourceClass'
+        resource_id:
+          $ref: '#/components/schemas/ResourceId'
+        env_type_id:
+          description: |
+            The environment type to match this rule. This environment type must exist in the org.
+            Mutually exclusive with env_id.
+          type: string
+          example: development
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: env_type_id must be a valid identifier
+        project_id:
+          description: Project identifier to match this rule. This app must exist in the org.
+          type: string
+          example: sample-project
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: project_id must be a valid identifier
+        env_id:
+          description: |
+            Environment identifier to match this rule. This environment must exist in the app given by project_id.
+            Requires project_id to be set, mutually exclusive with env_type_id.
+          type: string
+          example: sample-env
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: env_id must be a valid identifier
+
+    RunnerRulePage:
+      type: object
+      description: A page of rules returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page.
+          items:
+            $ref: '#/components/schemas/RunnerRuleSummary'
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items.
+
+    RunnerRule:
+      type: object
+      description: The full details of a rule that matches resource requests against a module
+      allOf:
+        - $ref: '#/components/schemas/RunnerRuleSummary'
+
+    RunnerRuleCreateBody:
+      type: object
+      description: The properties required to create a new rule that matches runners
+      required:
+        - runner_id
+      properties:
+        runner_id:
+          type: string
+          description: The unique identifier for a runner
+          example: my-gke-runner
+        env_type_id:
+          description: |
+            The environment type to match this rule. This environment type must exist in the org.
+          type: string
+          example: development
+        project_id:
+          description: |
+            Project identifier to match this rule. This project must exist in the org.
+          type: string
+          example: sample-project
+
+    RunnerRuleSummary:
+      type: object
+      description: A summary of a rule that matches resource requests against a module
+      required:
+        - org_id
+        - id
+        - runner_id
+        - created_at
+        - project_id
+        - env_type_id
+      properties:
+        org_id:
+          description: The Organization ID.
+          type: string
+          example: my-org
+        id:
+          description: The unique identifier for the rule under the organization.
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        runner_id:
+          type: string
+          description: The unique identifier for a runner
+          example: my-gke-runner
+        created_at:
+          description: The time this rule was created
+          type: string
+          format: date-time
+          example: '2025-01-02T03:04:05Z'
+        project_id:
+          description: The optional project id that this rule matches.
+          type: string
+          example: my-app
+        env_type_id:
+          description: The optional env type id that this rule matches.
+          type: string
+          example: dev
+
+    InternalModuleCatalogue:
+      type: object
+      description: A collation of all the applicable modules, and providers for an environment. A module is applicable if there is at least one rule for it that matches the requested environment.
+      required:
+        - modules
+        - providers
+      properties:
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/InternalModuleCatalogueModule'
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleProvider'
+
+    InternalModuleCatalogueModuleRule:
+      type: object
+      description: A rule within a module
+      required:
+        - rule_id
+        - resource_class
+      properties:
+        rule_id:
+          type: string
+          format: uuid
+        resource_class:
+          $ref: '#/components/schemas/ResourceClass'
+        resource_id:
+          $ref: '#/components/schemas/ResourceId'
+        project_id:
+          description: The optional project id that this rule matches.
+          type: string
+          example: my-app
+        env_type_id:
+          description: The optional env type id that this rule matches.
+          type: string
+          example: dev
+        env_id:
+          description: The optional environment id that this rule matches.
+          type: string
+          example: my-env
+
+    InternalModuleCatalogueModule:
+      type: object
+      description: A module within a catalogue
+      allOf:
+        - $ref: '#/components/schemas/Module'
+        - required:
+            - rules
+          properties:
+            rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/InternalModuleCatalogueModuleRule'
+
+    InternalModuleCatalogueGenerateBody:
+      type: object
+      description: The request contents to generate a module catalogue
+      properties:
+        pinned_module_versions:
+          description: The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
+          type: array
+          items:
+            description: The module id and version separated by a '@'.
+            type: string
+            example: my-module@01234567-89ab-cdef-0123-456789abcdef
+          x-go-type-skip-optional-pointer: true
+        pinned_providers:
+          description: The normal response body only includes the modules and providers currently configured. However if we are removing nodes that still rely on providers we need to fetch their details without having the modules.
+          type: array
+          items:
+            description: The provider type and id separated by a '.'.
+            type: string
+            example: aws.default
+          x-go-type-skip-optional-pointer: true
+        are_rules_ignored:
+          description: When running a destroy deployment, we only care about pinned module version and do not need to check the rules. This option can be used to skip rule evaluation.
+          type: boolean
+          example: false
+          x-go-type-skip-optional-pointer: true

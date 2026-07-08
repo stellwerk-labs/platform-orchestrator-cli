@@ -1,0 +1,2066 @@
+openapi: 3.0.0
+info:
+  title: ""
+  version: ""
+paths:
+  /auth/register:
+    post:
+      tags:
+        - internal
+      operationId: registerUser
+      summary: Register a new user using a login provider and grant an initial session token in the cookie.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserBody"
+      parameters:
+        - $ref: "#/components/parameters/xClientRegionHeaderParam"
+        - $ref: "#/components/parameters/xClientCityHeaderParam"
+        - $ref: "#/components/parameters/xClientIpHeaderParam"
+      responses:
+        "202":
+          description: Successfully registered a user.
+          headers:
+            Set-Cookie:
+              description: A set-cookie request containing the session token granted for this user.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisteredUser"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+
+  /auth/login:
+    post:
+      tags:
+        - internal
+      operationId: loginSession
+      summary: Log in and create a new session token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginUserBody"
+      parameters:
+        - $ref: "#/components/parameters/xClientRegionHeaderParam"
+        - $ref: "#/components/parameters/xClientCityHeaderParam"
+        - $ref: "#/components/parameters/xClientIpHeaderParam"
+      responses:
+        "200":
+          description: Successfully logged in.
+          headers:
+            Set-Cookie:
+              description: A set-cookie request containing the session token granted for this user.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+
+  /auth/device:
+    post:
+      tags:
+        - Device
+      operationId: requestDeviceLogin
+      summary: Begin a device login flow
+      parameters:
+        - name: User-Agent
+          in: header
+          schema:
+            type: string
+        - $ref: "#/components/parameters/xClientRegionHeaderParam"
+        - $ref: "#/components/parameters/xClientCityHeaderParam"
+        - $ref: "#/components/parameters/xClientIpHeaderParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceLoginCreateBody"
+      responses:
+        "201":
+          description: Successfully created a device login request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedDeviceLoginRequest"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+
+  /auth/sso/login:
+    post:
+      tags:
+        - internal
+      operationId: requestSsoLogin
+      summary: Begin SSO login flow
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SsoLoginCreateBody"
+      responses:
+        "200":
+          description: Successfully initialized SSO request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SsoLoginResponse"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /auth/sso/callback:
+    get:
+      tags:
+        - internal
+      operationId: getSsoCallback
+      summary: Callback SSO login flow
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: error_description
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/xClientRegionHeaderParam"
+        - $ref: "#/components/parameters/xClientCityHeaderParam"
+        - $ref: "#/components/parameters/xClientIpHeaderParam"
+      responses:
+        "200":
+          description: Successfully logged in.
+          headers:
+            Set-Cookie:
+              description: A set-cookie request containing the session token granted for this user.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+
+  /internal/orgs/{orgId}/sso-configuration:
+    put:
+      tags:
+        - internal
+      operationId: internalUpdateSsoConfiguration
+      summary: Update SSO configuration for the organization
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SsoConfiguration"
+      responses:
+        "200":
+          description: Successfully updates organization SSO configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SsoConfiguration"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+    get:
+      tags:
+        - internal
+      operationId: internalGetSsoConfiguration
+      summary: Get SSO configuration for the organization
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "200":
+          description: Return organization SSO configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SsoConfiguration"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /auth/logout:
+    post:
+      tags:
+        - internal
+      operationId: logoutSession
+      summary: Log out the current session token
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: X-Token-Hash
+          in: header
+          schema:
+            type: string
+          required: false
+          description: An optional hash of the session token coming from the authN gateway. This allows the session to be properly invalidated.
+      responses:
+        "204":
+          description: Success
+          headers:
+            Set-Cookie:
+              description: A set-cookie request containing the session token granted for this user.
+              schema:
+                type: string
+
+  /auth/check-permissions:
+    post:
+      tags:
+        - User
+      operationId: checkPermissions
+      summary: Bulkly check permissions for the current subject that is logged in. This works for both human users and service users.
+      security:
+        - userIdHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ResourcePermissionCheck"
+      responses:
+        "200":
+          description: List of permission checks with their result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourcePermissionCheckResult"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /users/{userId}/memberships:
+    get:
+      tags:
+        - Membership
+      operationId: listUserMemberships
+      summary: List all of the memberships for the given user
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/userIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - name: orgId
+          in: query
+          description: Filter memberships by org ID.
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully listed organization memberships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembershipPage"
+
+  /users/{userId}/session-tokens:
+    get:
+      tags:
+        - User
+      operationId: listUserSessionTokens
+      summary: List all of the active user session tokens
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/userIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed organization memberships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSessionTokenPage"
+
+  /users/{userId}/session-tokens/{hash}:
+    delete:
+      tags:
+        - User
+      operationId: revokeUserSessionToken
+      summary: Revoke the session token for this user. Due to internal caching, this may take up to a minute for authorized sessions to be revoked.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/userIdPathParam"
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Successfully revoked the session
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /users/{userId}/actions/dismiss-prompt:
+    post:
+      tags:
+        - User
+      operationId: dismissPrompt
+      summary: Dismiss a prompt for the user
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/userIdPathParam"
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-z][a-z0-9-]{0,20}[a-z0-9]$
+            x-pattern-error: "prompt id must be 2-22 characters long and start with a letter"
+            description: The ID of the prompt to dismiss
+      responses:
+        "204":
+          description: Successfully dismissed the prompt
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/members:
+    get:
+      tags:
+        - Membership
+      operationId: listMembers
+      summary: List the members of an org with their identity provider information
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - name: userId
+          in: query
+          description: Filter members by user ID.
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully listed organization members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPage"
+
+  /orgs/{orgId}/memberships:
+    get:
+      tags:
+        - Membership
+      operationId: listOrgMemberships
+      summary: List the memberships for an org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - name: userId
+          in: query
+          description: Filter memberships by user ID.
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully listed organization memberships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgMembershipPage"
+
+  /orgs/{orgId}/memberships/{membershipId}:
+    delete:
+      tags:
+        - Membership
+      operationId: deleteOrgMembership
+      summary: Delete an org membership for a user. Due to internal caching, this may take up to a minute for authorized sessions to be revoked.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully deleted the org membership
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/users/{userId}/memberships:
+    put:
+      tags:
+        - Membership
+        - internal
+      operationId: replaceOrgUserMemberships
+      summary: Replace all memberships for a user in an organization
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/userIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceUserMembershipsBody"
+      responses:
+        "200":
+          description: Successfully updated user memberships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembershipPage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /internal/orgs/{orgId}/memberships:
+    post:
+      tags:
+        - internal
+        - Membership
+      operationId: internalCreateOrgMembership
+      summary: Manually create an org membership
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InternalMembershipCreateBody"
+      responses:
+        "201":
+          description: Successfully created organization membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgMembership"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /internal/orgs/{orgId}/actions/remove-access:
+    post:
+      tags:
+        - internal
+      operationId: internalRemoveAccessFromOrg
+      summary: Removes all user and service user access from an org.
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "204":
+          description: Successfully removed access
+
+  /internal/orgs/{orgId}/actions/sync-spicedb:
+    post:
+      tags:
+        - internal
+      operationId: internalSyncOrgToSpiceDB
+      summary: Sync organization relationships to SpiceDB
+      description: Performs a snapshot sync of the organization's memberships and service user roles to SpiceDB. Deletes all existing relationships and bulk inserts fresh data.
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "200":
+          description: Successfully synced organization to SpiceDB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpiceDBSyncResult"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/actions/sync-scopes:
+    post:
+      tags:
+        - internal
+      operationId: internalSyncOrgScopes
+      summary: Sync scoped roles for all projects in an organization
+      description: Checks that the organization exists, lists all projects, and creates scoped roles and relationships for all projects and their environments in SpiceDB.
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "200":
+          description: Successfully synced scoped roles for all projects
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopeSyncResult"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/authenticate:
+    post:
+      tags:
+        - internal
+      operationId: internalAuthenticate
+      summary: Authenticate the current request and return From and Hash headers to the gateway
+      parameters:
+        - name: Authorization
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: session-token
+          in: cookie
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request is successfully authenticated
+          headers:
+            From:
+              schema:
+                type: string
+                format: uuid
+            X-Token-Hash:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+
+  /internal/authorize:
+    post:
+      tags:
+        - internal
+      operationId: internalAuthorize
+      summary: Perform a policy enforcement check on the requested user, subjects, and permissions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InternalAuthorizeBody"
+      responses:
+        "204":
+          description: The request is authorized to continue
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+  /current-user:
+    get:
+      tags:
+        - User
+      operationId: getCurrentUser
+      summary: Get details of the current user that is logged in
+      security:
+        - userIdHeader: []
+      responses:
+        "200":
+          description: Successfully retrieved the current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+
+  /orgs/{orgId}/service-users:
+    get:
+      tags:
+        - ServiceUser
+      operationId: listServiceUsers
+      summary: List the service users in this org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed service users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceUserPage"
+    post:
+      tags:
+        - ServiceUser
+      operationId: createServiceUser
+      summary: Create a new service user in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUserCreateBody"
+      responses:
+        "201":
+          description: Successfully created a service user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceUserWithToken"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/service-users/{serviceUserId}:
+    delete:
+      tags:
+        - ServiceUser
+      operationId: deleteServiceUser
+      summary: Delete a service user from the org. Due to internal caching, this may take up to a minute for authorized sessions to be revoked.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/serviceUserIdPathParam"
+      responses:
+        "204":
+          description: Successfully deleted the service user
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    put:
+      tags:
+        - ServiceUser
+        - internal
+      operationId: replaceServiceUserRoles
+      summary: Replace all roles for a service user in an organization
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/serviceUserIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceServiceUserRolesBody"
+      responses:
+        "200":
+          description: Successfully updated service user roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceUserSummary"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/service-users/{serviceUserId}/actions/regenerate:
+    post:
+      tags:
+        - ServiceUser
+      operationId: regenerateServiceUser
+      summary: Regenerate the service user token and extend the expiry. Due to internal caching, this may take up to a minute for authorized sessions to be revoked.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/serviceUserIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUserRegenerateBody"
+      responses:
+        "200":
+          description: Successfully regenerated the service user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceUserWithToken"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/invitations:
+    post:
+      tags:
+        - Invitation
+      operationId: createInvitation
+      summary: Create and send an email invitation to a user to join this organization.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationCreateBody"
+      responses:
+        "201":
+          description: Successfully sent the invitation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationSummary"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+
+    get:
+      tags:
+        - Invitation
+      operationId: listInvitations
+      summary: List the invitations that are pending in the organization.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed invitations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationPage"
+
+  /orgs/{orgId}/invitations/{invitationId}:
+    get:
+      tags:
+        - Invitation
+      operationId: getInvitation
+      summary: Previews an invitation for membership to an org without redeeming it. The user must be authorized or present the correct redemption token.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: redemptionToken
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved the invitation preview.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationSummary"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      tags:
+        - Invitation
+      operationId: revokeInvitation
+      summary: Deletes a pending invitation and invalidates it.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully deleted the invitation
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/invitations/{invitationId}/actions/redeem:
+    post:
+      tags:
+        - Invitation
+      operationId: redeemInvitation
+      summary: Redeems an invitation for membership to an org.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: redemptionToken
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully redeemed the invitation for membership to the org.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembership"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}/projects/{projectId}/users:
+    get:
+      tags:
+        - Project
+        - Permissions
+      operationId: listProjectUsers
+      summary: List the users and service users that have access to this project.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: "#/components/parameters/userTypeQueryParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed project users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithRolePage"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/users:
+    get:
+      tags:
+        - Environment
+        - Permissions
+      operationId: listEnvironmentUsers
+      summary: List the users and service users that have access to this environment.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: "#/components/parameters/userTypeQueryParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed environment users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithRolePage"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /orgs/{orgId}/roles:
+    get:
+      tags:
+        - Role
+      operationId: listRoles
+      summary: List the roles in this Organization.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successfully listed roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RolePage"
+
+  /orgs/{orgId}/roles/{roleId}:
+    get:
+      tags:
+        - Role
+      operationId: getRole
+      summary: Obtain details of a Role in an Organization.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successfully retrieved the role details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /devicelogins/{requestId}/actions/poll:
+    post:
+      tags:
+        - Device
+      operationId: pollDeviceLoginRequest
+      summary: Poll the device login request and attempt to redeem for a session token
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: pollingToken
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: The device login has not been accepted or rejected yet
+        "200":
+          description: The device login was accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedDeviceLoginRequest"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /devicelogins/{code}:
+    get:
+      tags:
+        - Device
+      operationId: getDeviceLoginRequest
+      summary: View the attributes of a device login request
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: code
+          in: path
+          description: The short code associated with the device login request.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved the device login request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceLoginRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /devicelogins/{requestId}/actions/accept:
+    post:
+      tags:
+        - Device
+      operationId: acceptDeviceLoginRequest
+      summary: Accept the device login request and allocate it a session token.
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully accepted the device login request.
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /devicelogins/{requestId}/actions/reject:
+    post:
+      tags:
+        - Device
+      operationId: rejectDeviceLoginRequest
+      summary: Reject the device login request
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully rejected the device login request.
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+components:
+  securitySchemes:
+    userIdHeader:
+      type: apiKey
+      in: header
+      name: From
+
+  parameters:
+    orgIdPathParam:
+      name: orgId
+      in: path
+      description: The Organization ID
+      example: "sample-org"
+      required: true
+      schema:
+        type: string
+    projectIdPathParam:
+      name: projectId
+      in: path
+      description: The Project ID
+      example: "sample-project"
+      required: true
+      schema:
+        type: string
+    envIdPathParam:
+      name: envId
+      in: path
+      description: The Environment ID
+      example: "sample-env"
+      required: true
+      schema:
+        type: string
+    userIdPathParam:
+      name: userId
+      in: path
+      description: The User ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    serviceUserIdPathParam:
+      name: serviceUserId
+      in: path
+      description: The Service User ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    userTypeQueryParam:
+      name: type
+      in: query
+      description: Type of Subject. Either User or Group
+      required: false
+      schema:
+        type: string
+        enum:
+          - user
+          - service-user
+    perPageQueryParam:
+      name: per_page
+      in: query
+      description: The maximum number of items to return in a page of results
+      required: false
+      example: 50
+      schema:
+        type: integer
+    pageTokenQueryParam:
+      name: page
+      in: query
+      description: The page token to request from
+      required: false
+      example: "AAAAAAAAAA=="
+      schema:
+        type: string
+    xClientRegionHeaderParam:
+      name: X-Client-Region
+      in: header
+      description: IP address region injected by the load balancer.
+      required: false
+      allowEmptyValue: true
+      schema:
+        type: string
+      x-internal: true
+    xClientCityHeaderParam:
+      name: X-Client-City
+      in: header
+      description: IP address city injected by the load balancer.
+      required: false
+      allowEmptyValue: true
+      schema:
+        type: string
+      x-internal: true
+    xClientIpHeaderParam:
+      name: X-Client-IP
+      in: header
+      description: IP address injected by the load balancer.
+      required: false
+      allowEmptyValue: true
+      schema:
+        type: string
+      x-internal: true
+
+  responses:
+    400BadRequest:
+      description: The request was invalid. More detail can be found in the error body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    401Unauthorized:
+      description: The client didn't provide valid authentication credentials.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    403Forbidden:
+      description: Server understands the request but refuses to authorize it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    404NotFound:
+      description: The request was valid, but the target resource or relation does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    409Conflict:
+      description: The request conflicts with related or concurrent state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      description: A standard error response
+      properties:
+        error:
+          description: |
+            A short code representing the class of error. This code can be used for tracking and observability or to
+            find appropriate troubleshooting documentation.
+          type: string
+          example: API-000
+        message:
+          description: A human-readable explanation of the error.
+          type: string
+          example: "Something happened!"
+        details:
+          description: An optional payload of metadata associated with the error.
+          additionalProperties: true
+          type: object
+      required:
+        - error
+        - message
+      type: object
+
+    TemporaryLoginBody:
+      description: A payload needed to login to Orchestrator (temporary).
+      required:
+        - org_id
+        - token
+      properties:
+        org_id:
+          description: The Organization ID
+          type: string
+          example: my-org
+        token:
+          description: The token for the Organization to login.
+          type: string
+      additionalProperties: false
+
+    RegisterUserBody:
+      description: A payload needed to register a user against an identity provider.
+      required:
+        - provider
+        - provider_token
+      properties:
+        provider:
+          description: The login provider type.
+          type: string
+          example: google
+        provider_token:
+          description: An id token that allows us to look up the real user identifiers.
+          type: string
+
+    LoginUserBody:
+      description: A payload needed to login a user against an identity provider.
+      required:
+        - provider
+        - provider_token
+      properties:
+        provider:
+          description: The login provider type.
+          type: string
+          example: google
+        provider_token:
+          description: An id token that allows us to look up the real user identifiers.
+          type: string
+
+    User:
+      description: The details of a users account
+      required:
+        - id
+        - display_name
+        - created_at
+        - login_providers
+      properties:
+        id:
+          description: The user id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        display_name:
+          description: A display name for the user
+          type: string
+          example: Some User
+        created_at:
+          description: The time the user account was registered
+          type: string
+          format: date-time
+        last_logged_in_at:
+          description: The approximate time the user last logged in
+          type: string
+          format: date-time
+        login_providers:
+          description: The list of login providers that can be used to login to this user.
+          type: array
+          items:
+            type: string
+        primary_email_address:
+          description: The primary email address if known for the current user.
+          type: string
+          example: user@example.com
+
+    RegisteredUser:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - required:
+            - identity_already_exists
+          properties:
+            identity_already_exists:
+              description: Whether an existing user already matched this login identity and could be returned
+              type: boolean
+              example: false
+
+    CurrentUser:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - required:
+            - organization_memberships
+            - dismissed_prompts
+          properties:
+            organization_memberships:
+              type: array
+              items:
+                $ref: "#/components/schemas/CurrentUserOrgMembership"
+            dismissed_prompts:
+              type: array
+              items:
+                type: string
+
+    CurrentUserOrgMembership:
+      required:
+        - id
+      properties:
+        id:
+          description: The organization id
+          type: string
+
+    UserMembership:
+      description: A user membership in an org
+      required:
+        - id
+        - created_at
+        - org_id
+        - subject_type
+        - subject
+      properties:
+        id:
+          description: The membership id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        created_at:
+          description: The time the membership was created
+          type: string
+          format: date-time
+        org_id:
+          description: The org id of the membership
+          type: string
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject:
+          description: The membership subject identity.
+          type: string
+        scope:
+          description: The membership scope if applicable composed by <resource-kind>:<resource-id>. It will be empty for organization level memberships.
+          type: string
+          example: project:01234567-89ab-cdef-0123-456789abcdef
+
+    UserMembershipPage:
+      description: A page of user memberships
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserMembership"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    OrgMembership:
+      description: A user membership from the perspective of an org
+      required:
+        - id
+        - created_at
+        - user_id
+        - user_display_name
+        - subject_type
+        - subject
+      properties:
+        id:
+          description: The membership id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        created_at:
+          description: The time the membership was created
+          type: string
+          format: date-time
+        user_id:
+          description: The user id of the membership
+          type: string
+          format: uuid
+        user_display_name:
+          description: The display name of the user membership
+          type: string
+          example: User Name
+        user_primary_email_address:
+          description: The primary email address of the user membership if available
+          type: string
+          example: user@example.com
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject:
+          description: The membership subject identity.
+          type: string
+        scope:
+          description: The membership scope if applicable composed by <resource-kind>:<resource-id>. It will be empty for organization level memberships.
+          type: string
+          example: project:01234567-89ab-cdef-0123-456789abcdef
+
+    OrgMembershipPage:
+      description: A page of org memberships
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrgMembership"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    Member:
+      description: A user who is a member of an org, with their identity provider information
+      required:
+        - id
+        - created_at
+        - user_id
+        - user_display_name
+        - subject_type
+        - subject
+        - identity_providers
+      properties:
+        id:
+          description: The membership id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        created_at:
+          description: The time the membership was created
+          type: string
+          format: date-time
+        user_id:
+          description: The user id
+          type: string
+          format: uuid
+        user_display_name:
+          description: The display name of the user membership
+          type: string
+          example: User Name
+        user_primary_email_address:
+          description: The primary email address of the user membership if available
+          type: string
+          example: user@example.com
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject:
+          description: The membership subject identity.
+          type: string
+        identity_providers:
+          description: List of identity providers the user has registered with
+          type: array
+          items:
+            type: string
+          example: ["google", "microsoft"]
+
+    MemberPage:
+      description: A page of members
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    InternalMembershipCreateBody:
+      description: The payload to manually add a user to an org with a particular membership
+      required:
+        - user_id
+        - subject_type
+        - subject
+      properties:
+        user_id:
+          description: The org id of the membership
+          type: string
+          format: uuid
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject:
+          description: The membership subject identity.
+          type: string
+        scope:
+          description: The membership scope if applicable composed by <resource-kind>:<resource-id>. It will be empty for organization level memberships.
+          type: string
+          example: project:01234567-89ab-cdef-0123-456789
+
+    ReplaceUserMembershipsBody:
+      description: The payload to replace all memberships for a user in an organization
+      required:
+        - memberships
+      properties:
+        memberships:
+          description: Array of memberships to replace all existing memberships for the user
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/UserMembershipRequest"
+
+    UserMembershipRequest:
+      description: A single membership request for a user
+      required:
+        - subject_type
+        - subject
+      properties:
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject:
+          description: The membership subject identity.
+          type: string
+        scope:
+          description: The membership scope if applicable composed by <resource-kind>:<resource-id>. It will be empty for organization level memberships.
+          type: string
+          example: project:01234567-89ab-cdef-0123-456789abcdef
+
+    InternalAuthorizeBody:
+      description: An authorization request by a backend service. This is somewhat modeled on what an underlying SpiceDB CheckBulkPermissions call would look like.
+      required:
+        - user_id
+        - checks
+      properties:
+        user_id:
+          description: The user id we are checking against. Human or service token.
+          type: string
+          format: uuid
+        checks:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ResourcePermissionCheck"
+
+    ResourcePermissionCheck:
+      required:
+        - resource
+        - permission
+      properties:
+        resource:
+          description: The resource to check permissions on.
+          type: string
+          # SpiceDB's regex: ^(([a-zA-Z0-9/_|\-=+]{1,})|\*)$
+          pattern: ^(organization|project|env):[a-zA-Z0-9/_|\-=+]+$
+          x-pattern-error: 'resource must be organization:<id>, project:<id>, or env:<id> where id matches regex pattern: ^[a-zA-Z0-9/_|\-=+]+$'
+        permission:
+          description: The permission string.
+          type: string
+          # SpiceDB's regex: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
+          pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
+          x-pattern-error: "permission must match regex pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$"
+
+    ResourcePermissionCheckResult:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourcePermissionCheckResultItem"
+
+    ResourcePermissionCheckResultItem:
+      required:
+        - permission_check
+        - allowed
+      properties:
+        permission_check:
+          $ref: "#/components/schemas/ResourcePermissionCheck"
+        allowed:
+          description: True if the user owns this permission, false otherwise.
+          type: boolean
+
+    ServiceUserSummary:
+      description: Summary fields of the service user
+      required:
+        - id
+        - generated_at
+        - generated_by
+        - display_name
+        - current_token_expires_at
+        - roles
+      properties:
+        id:
+          description: The service token id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        generated_at:
+          description: The time the service token was created or last regenerated
+          type: string
+          format: date-time
+        generated_by:
+          description: The user that created or last regenerated the service token
+          type: string
+          format: uuid
+        display_name:
+          description: A display name of the service user
+          type: string
+        current_token_expires_at:
+          description: The time at which the current generation of the token expires
+          type: string
+          format: date-time
+        roles:
+          description: The list of roles assigned to this service user
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceUserRole"
+
+    ServiceUser:
+      allOf:
+        - $ref: "#/components/schemas/ServiceUserSummary"
+
+    ServiceUserWithToken:
+      allOf:
+        - $ref: "#/components/schemas/ServiceUser"
+        - required:
+            - token
+          properties:
+            token:
+              description: The authorization bearer token for the service user
+              type: string
+
+    ServiceUserCreateBody:
+      description: Details required to create the service user
+      required:
+        - display_name
+        - expiry_in_days
+      properties:
+        display_name:
+          description: A display name of the service user
+          minLength: 2
+          maxLength: 200
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: My test token
+        expiry_in_days:
+          description: The expiry time in days from the time of creation
+          type: integer
+          minimum: 1
+          maximum: 3660
+          example: 30
+        roles:
+          description: The initial set of roles to assign to this service user. These can be modified later.
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceUserRole"
+          example: [{ "id": "01234567-89ab-cdef-0123-456789abcdef" }]
+
+    ServiceUserRegenerateBody:
+      description: Details required to regenerate the service user
+      required:
+        - expiry_in_days
+      properties:
+        expiry_in_days:
+          description: The expiry time in days from the time of regeneration
+          type: integer
+          minimum: 1
+          maximum: 3660
+          example: 30
+
+    ReplaceServiceUserRolesBody:
+      description: The payload to replace all roles for a service user in an organization
+      required:
+        - roles
+      properties:
+        roles:
+          description: Array of roles to replace all existing roles for the service user
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ServiceUserRole"
+
+    ServiceUserPage:
+      description: A page of service user summaries
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceUserSummary"
+
+    UserSessionTokenSummary:
+      required:
+        - hash
+        - created_at
+        - expires_at
+        - provider
+      properties:
+        hash:
+          description: The token hash identifier
+          type: string
+        created_at:
+          description: The time the session token was created
+          type: string
+          format: date-time
+        expires_at:
+          description: The time the session token expires
+          type: string
+          format: date-time
+        provider:
+          description: The login provider used for this session
+          type: string
+        client_ip:
+          description: The client IP that requested the session
+          type: string
+        client_city:
+          description: The closest city associated with the client ip that requested the session
+          type: string
+        client_region:
+          description: The region associated with the client ip that requested the session
+          type: string
+
+    UserSessionTokenPage:
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserSessionTokenSummary"
+
+    InvitationSummary:
+      description: Summary details of an invitation for this organization.
+      required:
+        - id
+        - created_at
+        - expires_at
+        - created_by
+        - created_by_display_name
+        - email_address
+        - membership_subject_type
+        - membership_subject
+      properties:
+        id:
+          description: The invitation id.
+          type: string
+          format: uuid
+        created_at:
+          description: When the invitation was generated and sent.
+          type: string
+          format: date-time
+        expires_at:
+          description: When the invitation expires and must be sent again. By default, invitations are only valid for 7 days until they must be resent.
+          type: string
+          format: date-time
+        created_by:
+          description: The user id that created the invitation.
+          type: string
+          format: uuid
+        created_by_display_name:
+          description: The display name of the user who created the invitation.
+          type: string
+          example: User Name
+        created_by_primary_email_address:
+          description: The primary email address of the user who created the invitation.
+          type: string
+          example: user@example.com
+        email_address:
+          description: The email address this invitation was sent too.
+          type: string
+        membership_subject_type:
+          description: The membership subject type that the invitation is valid for.
+          $ref: "#/components/schemas/SubjectType"
+        membership_subject:
+          description: The membership subject that the invitation is valid for
+          type: string
+
+    InvitationPage:
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvitationSummary"
+
+    InvitationCreateBody:
+      description: Details required to create an invitation.
+      required:
+        - email_address
+        - membership_subject_type
+        - membership_subject
+      properties:
+        email_address:
+          description: The email address this invitation was sent too.
+          type: string
+          example: bob@email.com
+          minLength: 3
+          maxLength: 320
+          pattern: ^[^\p{Cc}\p{Cs}\p{Cf}\p{Z}]+$
+          x-pattern-error: email_address contains invalid characters
+        membership_subject_type:
+          description: The membership subject type that the invitation is valid for.
+          $ref: "#/components/schemas/SubjectType"
+        membership_subject:
+          description: The membership subject that the invitation is valid for
+          type: string
+          example: owners
+        expiry_in_days:
+          description: The expiry period for this invitation in days. Defaults to 7 days.
+          type: integer
+          minimum: 1
+          example: 7
+
+    SubjectType:
+      type: string
+      enum:
+        - role
+        - virtual-group
+
+    DeviceLoginCreateBody:
+      type: object
+
+    BaseDeviceLoginRequest:
+      required:
+        - id
+        - created_at
+        - expires_at
+      properties:
+        id:
+          description: The id of the device login request
+          type: string
+          format: uuid
+        created_at:
+          description: The time at which the device login request was created.
+          type: string
+          format: date-time
+        expires_at:
+          description: The time at which this device login request will expire.
+          type: string
+          format: date-time
+
+    CreatedDeviceLoginRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseDeviceLoginRequest"
+        - description: The response returned to the device that requested login
+          required:
+            - polling_token
+            - approval_url
+            - code
+          properties:
+            polling_token:
+              description: The token that can be used to poll the pending device login until verified.
+              type: string
+            approval_url:
+              description: The url the user should go to to approve this device login.
+              type: string
+            code:
+              description: The short code associated with this device login
+              type: string
+
+    AcceptedDeviceLoginRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseDeviceLoginRequest"
+        - description: The response returned to the device when the user accepts the device login
+          required:
+            - token
+            - token_expires_at
+          properties:
+            token:
+              description: The authorization bearer token for the device
+              type: string
+            token_expires_at:
+              description: The time at which the bearer token with expire.
+              type: string
+              format: date-time
+
+    DeviceLoginRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseDeviceLoginRequest"
+        - description: The response returned to the user in the UI.
+          required:
+            - user_agent
+          properties:
+            user_agent:
+              description: The user agent string associated with the device that requested login
+              type: string
+            client_ip:
+              description: The client IP that requested the session
+              type: string
+            client_city:
+              description: The closest city associated with the client ip that requested the session
+              type: string
+            client_region:
+              description: The region associated with the client ip that requested the session
+              type: string
+
+    SsoLoginCreateBody:
+      required:
+        - org_id
+      properties:
+        org_id:
+          type: string
+
+    SsoLoginResponse:
+      required:
+        - redirect_url
+      properties:
+        redirect_url:
+          type: string
+
+    RolePage:
+      description: A page of roles
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    Role:
+      description: A role within an organization that can be assigned to users or service users.
+      required:
+        - id
+        - display_name
+        - created_at
+        - created_by
+        - permissions
+      properties:
+        id:
+          description: The role id
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        display_name:
+          description: The name of the role
+          type: string
+          example: Admin
+        created_at:
+          description: The time the role was created
+          type: string
+          format: date-time
+        created_by:
+          description: The user id that created the role.
+          type: string
+          format: uuid
+        permissions:
+          description: The list of permissions associated with this role.
+          type: array
+          items:
+            type: string
+
+    ServiceUserRole:
+      description: A role to assign to a user or service user.
+      required:
+        - id
+      properties:
+        id:
+          description: The role id to assign
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        scope:
+          description: The scope to assign the role within. If not provided, the role is assigned at the organization level.
+          type: string
+          example: project:01234567-89ab-cdef-0123-456789abcdef
+
+    SpiceDBSyncResult:
+      description: The result of a SpiceDB sync operation
+      properties:
+        added:
+          description: The number of relationships added during the sync operation
+          type: integer
+        removed:
+          description: The number of relationships removed during the sync operation
+          type: integer
+      required:
+        - added
+
+    ScopeSyncResult:
+      description: The result of a scope sync operation
+      properties:
+        projects_synced:
+          description: The number of projects synced
+          type: integer
+        environments_synced:
+          description: The number of environments synced
+          type: integer
+        scoped_roles_created:
+          description: The number of scoped roles created in the database
+          type: integer
+        relationships_added:
+          description: The number of relationships added to SpiceDB
+          type: integer
+      required:
+        - projects_synced
+        - environments_synced
+        - scoped_roles_created
+        - relationships_added
+
+    SsoConfiguration:
+      properties:
+        provider_org_id:
+          description: Organization's ID in the SSO Provider
+          type: string
+      required:
+        - provider_org_id
+
+    UserWithRolePage:
+      description: A page of users or service users with permissions in a scope
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserWithRole"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    UserWithRole:
+      description: A user / service user with their role
+      required:
+        - id
+        - type
+        - subject_type
+        - subject_id
+      properties:
+        id:
+          description: The user / service user id
+          type: string
+          format: uuid
+        type:
+          description: The type of user - human user or service user
+          type: string
+          enum:
+            - user
+            - service-user
+        subject_type:
+          description: The membership subject type.
+          $ref: "#/components/schemas/SubjectType"
+        subject_id:
+          description: The membership subject id.
+          type: string
+          format: uuid
