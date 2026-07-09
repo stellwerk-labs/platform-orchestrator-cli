@@ -8,9 +8,17 @@ The Stellwerk CLI for platform-orchestrator-cp, platform-orchestrator-dp and pla
 
 Licensed under the EUPL-1.2. See [LICENSE](./LICENSE).
 
-## Open tasks
+## Configuration
 
-- Set the correct default API URL in `internal/command/root.go`.
+By default, `octl` connects to `https://api.stellwerk.localhost`.
+
+Override the API URL with `PO_API_URL` or persist it in the local configuration:
+
+```bash
+octl config set-url https://api.stellwerk.localhost
+```
+
+The configuration file is stored at `~/.config/octl/config.yaml`.
 
 ## Install
 
