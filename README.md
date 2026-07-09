@@ -8,6 +8,10 @@ The Stellwerk CLI for platform-orchestrator-cp, platform-orchestrator-dp and pla
 
 Licensed under the EUPL-1.2. See [LICENSE](./LICENSE).
 
+## Open tasks
+
+- Set the correct default API URL in `internal/command/root.go`.
+
 ## Install
 
 Install directly into your Go bin (your `$PATH` should include `$GOPATH/bin`):
