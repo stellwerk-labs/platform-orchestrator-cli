@@ -2,6 +2,7 @@
 # https://goreleaser.com/customization/docker/#the-docker-build-context
 FROM gcr.io/distroless/static:nonroot
 
-COPY octl /usr/local/bin/octl
+ARG TARGETARCH
+COPY linux/${TARGETARCH}/octl /usr/local/bin/octl
 
 ENTRYPOINT ["/usr/local/bin/octl"]
