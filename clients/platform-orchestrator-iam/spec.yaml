@@ -495,34 +495,13 @@ paths:
         "204":
           description: Successfully removed access
 
-  /internal/orgs/{orgId}/actions/sync-spicedb:
-    post:
-      tags:
-        - internal
-      operationId: internalSyncOrgToSpiceDB
-      summary: Sync organization relationships to SpiceDB
-      description: Performs a snapshot sync of the organization's memberships and service user roles to SpiceDB. Deletes all existing relationships and bulk inserts fresh data.
-      parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-      responses:
-        "200":
-          description: Successfully synced organization to SpiceDB
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SpiceDBSyncResult"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-
   /internal/orgs/{orgId}/actions/sync-scopes:
     post:
       tags:
         - internal
       operationId: internalSyncOrgScopes
-      summary: Sync scoped roles for all projects in an organization
-      description: Checks that the organization exists, lists all projects, and creates scoped roles and relationships for all projects and their environments in SpiceDB.
+      summary: Sync authorization resources for all projects in an organization
+      description: Checks that the organization exists and stores the organization, project, and environment hierarchy used for inherited role bindings.
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       responses:
@@ -926,6 +905,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RolePage"
+    post:
+      tags:
+        - Role
+      operationId: createRole
+      summary: Create a configurable role in this organization.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleWriteBody"
+      responses:
+        "201":
+          description: Successfully created the role.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
   /orgs/{orgId}/roles/{roleId}:
     get:
@@ -954,6 +959,62 @@ paths:
           $ref: "#/components/responses/400BadRequest"
         "404":
           $ref: "#/components/responses/404NotFound"
+    put:
+      tags:
+        - Role
+      operationId: updateRole
+      summary: Replace the name and permissions of a configurable role.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleWriteBody"
+      responses:
+        "200":
+          description: Successfully updated the role.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+    delete:
+      tags:
+        - Role
+      operationId: deleteRole
+      summary: Delete an unassigned configurable role.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully deleted the role.
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
   /devicelogins/{requestId}/actions/poll:
     post:
@@ -1540,7 +1601,7 @@ components:
           example: project:01234567-89ab-cdef-0123-456789abcdef
 
     InternalAuthorizeBody:
-      description: An authorization request by a backend service. This is somewhat modeled on what an underlying SpiceDB CheckBulkPermissions call would look like.
+      description: An authorization request by a backend service.
       required:
         - user_id
         - checks
@@ -1563,13 +1624,11 @@ components:
         resource:
           description: The resource to check permissions on.
           type: string
-          # SpiceDB's regex: ^(([a-zA-Z0-9/_|\-=+]{1,})|\*)$
           pattern: ^(organization|project|env):[a-zA-Z0-9/_|\-=+]+$
           x-pattern-error: 'resource must be organization:<id>, project:<id>, or env:<id> where id matches regex pattern: ^[a-zA-Z0-9/_|\-=+]+$'
         permission:
           description: The permission string.
           type: string
-          # SpiceDB's regex: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
           pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
           x-pattern-error: "permission must match regex pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$"
 
@@ -1946,6 +2005,7 @@ components:
         - created_at
         - created_by
         - permissions
+        - is_system
       properties:
         id:
           description: The role id
@@ -1969,6 +2029,29 @@ components:
           type: array
           items:
             type: string
+        is_system:
+          description: True for immutable built-in roles.
+          type: boolean
+
+    RoleWriteBody:
+      description: The configurable fields of an organization role.
+      required:
+        - display_name
+        - permissions
+      properties:
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+        permissions:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
 
     ServiceUserRole:
       description: A role to assign to a user or service user.
@@ -1985,20 +2068,8 @@ components:
           type: string
           example: project:01234567-89ab-cdef-0123-456789abcdef
 
-    SpiceDBSyncResult:
-      description: The result of a SpiceDB sync operation
-      properties:
-        added:
-          description: The number of relationships added during the sync operation
-          type: integer
-        removed:
-          description: The number of relationships removed during the sync operation
-          type: integer
-      required:
-        - added
-
     ScopeSyncResult:
-      description: The result of a scope sync operation
+      description: The result of an authorization resource sync operation
       properties:
         projects_synced:
           description: The number of projects synced
@@ -2006,17 +2077,13 @@ components:
         environments_synced:
           description: The number of environments synced
           type: integer
-        scoped_roles_created:
-          description: The number of scoped roles created in the database
-          type: integer
-        relationships_added:
-          description: The number of relationships added to SpiceDB
+        resources_upserted:
+          description: The number of authorization resources inserted or refreshed
           type: integer
       required:
         - projects_synced
         - environments_synced
-        - scoped_roles_created
-        - relationships_added
+        - resources_upserted
 
     SsoConfiguration:
       properties:

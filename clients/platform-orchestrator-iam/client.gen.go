@@ -172,7 +172,7 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-// InternalAuthorizeBody An authorization request by a backend service. This is somewhat modeled on what an underlying SpiceDB CheckBulkPermissions call would look like.
+// InternalAuthorizeBody An authorization request by a backend service.
 type InternalAuthorizeBody struct {
 	Checks []ResourcePermissionCheck `json:"checks"`
 
@@ -394,6 +394,9 @@ type Role struct {
 	// Id The role id
 	Id openapi_types.UUID `json:"id"`
 
+	// IsSystem True for immutable built-in roles.
+	IsSystem bool `json:"is_system"`
+
 	// Permissions The list of permissions associated with this role.
 	Permissions []string `json:"permissions"`
 }
@@ -406,7 +409,13 @@ type RolePage struct {
 	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
-// ScopeSyncResult The result of a scope sync operation
+// RoleWriteBody The configurable fields of an organization role.
+type RoleWriteBody struct {
+	DisplayName string   `json:"display_name"`
+	Permissions []string `json:"permissions"`
+}
+
+// ScopeSyncResult The result of an authorization resource sync operation
 type ScopeSyncResult struct {
 	// EnvironmentsSynced The number of environments synced
 	EnvironmentsSynced int `json:"environments_synced"`
@@ -414,11 +423,8 @@ type ScopeSyncResult struct {
 	// ProjectsSynced The number of projects synced
 	ProjectsSynced int `json:"projects_synced"`
 
-	// RelationshipsAdded The number of relationships added to SpiceDB
-	RelationshipsAdded int `json:"relationships_added"`
-
-	// ScopedRolesCreated The number of scoped roles created in the database
-	ScopedRolesCreated int `json:"scoped_roles_created"`
+	// ResourcesUpserted The number of authorization resources inserted or refreshed
+	ResourcesUpserted int `json:"resources_upserted"`
 }
 
 // ServiceUser Summary fields of the service user
@@ -499,15 +505,6 @@ type ServiceUserWithToken struct {
 
 	// Token The authorization bearer token for the service user
 	Token string `json:"token"`
-}
-
-// SpiceDBSyncResult The result of a SpiceDB sync operation
-type SpiceDBSyncResult struct {
-	// Added The number of relationships added during the sync operation
-	Added int `json:"added"`
-
-	// Removed The number of relationships removed during the sync operation
-	Removed *int `json:"removed,omitempty"`
 }
 
 // SsoConfiguration defines model for SsoConfiguration.
@@ -906,6 +903,12 @@ type InternalUpdateSsoConfigurationJSONRequestBody = SsoConfiguration
 // CreateInvitationJSONRequestBody defines body for CreateInvitation for application/json ContentType.
 type CreateInvitationJSONRequestBody = InvitationCreateBody
 
+// CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
+type CreateRoleJSONRequestBody = RoleWriteBody
+
+// UpdateRoleJSONRequestBody defines body for UpdateRole for application/json ContentType.
+type UpdateRoleJSONRequestBody = RoleWriteBody
+
 // CreateServiceUserJSONRequestBody defines body for CreateServiceUser for application/json ContentType.
 type CreateServiceUserJSONRequestBody = ServiceUserCreateBody
 
@@ -1051,9 +1054,6 @@ type ClientInterface interface {
 	// InternalSyncOrgScopes request
 	InternalSyncOrgScopes(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// InternalSyncOrgToSpiceDB request
-	InternalSyncOrgToSpiceDB(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// InternalCreateOrgMembershipWithBody request with any body
 	InternalCreateOrgMembershipWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1102,8 +1102,21 @@ type ClientInterface interface {
 	// ListRoles request
 	ListRoles(ctx context.Context, orgId OrgIdPathParam, params *ListRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateRoleWithBody request with any body
+	CreateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateRole(ctx context.Context, orgId OrgIdPathParam, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRole request
+	DeleteRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetRole request
 	GetRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateRoleWithBody request with any body
+	UpdateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListServiceUsers request
 	ListServiceUsers(ctx context.Context, orgId OrgIdPathParam, params *ListServiceUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1408,18 +1421,6 @@ func (c *Client) InternalSyncOrgScopes(ctx context.Context, orgId OrgIdPathParam
 	return c.Client.Do(req)
 }
 
-func (c *Client) InternalSyncOrgToSpiceDB(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInternalSyncOrgToSpiceDBRequest(c.Server, orgId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) InternalCreateOrgMembershipWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalCreateOrgMembershipRequestWithBody(c.Server, orgId, contentType, body)
 	if err != nil {
@@ -1624,8 +1625,68 @@ func (c *Client) ListRoles(ctx context.Context, orgId OrgIdPathParam, params *Li
 	return c.Client.Do(req)
 }
 
+func (c *Client) CreateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequestWithBody(c.Server, orgId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateRole(ctx context.Context, orgId OrgIdPathParam, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequest(c.Server, orgId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRoleRequest(c.Server, orgId, roleId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRoleRequest(c.Server, orgId, roleId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateRoleRequestWithBody(c.Server, orgId, roleId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateRoleRequest(c.Server, orgId, roleId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2634,40 +2695,6 @@ func NewInternalSyncOrgScopesRequest(server string, orgId OrgIdPathParam) (*http
 	return req, nil
 }
 
-// NewInternalSyncOrgToSpiceDBRequest generates requests for InternalSyncOrgToSpiceDB
-func NewInternalSyncOrgToSpiceDBRequest(server string, orgId OrgIdPathParam) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/internal/orgs/%s/actions/sync-spicedb", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewInternalCreateOrgMembershipRequest calls the generic InternalCreateOrgMembership builder with application/json body
 func NewInternalCreateOrgMembershipRequest(server string, orgId OrgIdPathParam, body InternalCreateOrgMembershipJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3564,6 +3591,94 @@ func NewListRolesRequest(server string, orgId OrgIdPathParam, params *ListRolesP
 	return req, nil
 }
 
+// NewCreateRoleRequest calls the generic CreateRole builder with application/json body
+func NewCreateRoleRequest(server string, orgId OrgIdPathParam, body CreateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateRoleRequestWithBody(server, orgId, "application/json", bodyReader)
+}
+
+// NewCreateRoleRequestWithBody generates requests for CreateRole with any type of body
+func NewCreateRoleRequestWithBody(server string, orgId OrgIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/roles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteRoleRequest generates requests for DeleteRole
+func NewDeleteRoleRequest(server string, orgId OrgIdPathParam, roleId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "roleId", runtime.ParamLocationPath, roleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/roles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetRoleRequest generates requests for GetRole
 func NewGetRoleRequest(server string, orgId OrgIdPathParam, roleId openapi_types.UUID) (*http.Request, error) {
 	var err error
@@ -3601,6 +3716,60 @@ func NewGetRoleRequest(server string, orgId OrgIdPathParam, roleId openapi_types
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewUpdateRoleRequest calls the generic UpdateRole builder with application/json body
+func NewUpdateRoleRequest(server string, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateRoleRequestWithBody(server, orgId, roleId, "application/json", bodyReader)
+}
+
+// NewUpdateRoleRequestWithBody generates requests for UpdateRole with any type of body
+func NewUpdateRoleRequestWithBody(server string, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "roleId", runtime.ParamLocationPath, roleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/roles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4283,9 +4452,6 @@ type ClientWithResponsesInterface interface {
 	// InternalSyncOrgScopesWithResponse request
 	InternalSyncOrgScopesWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*InternalSyncOrgScopesResponse, error)
 
-	// InternalSyncOrgToSpiceDBWithResponse request
-	InternalSyncOrgToSpiceDBWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*InternalSyncOrgToSpiceDBResponse, error)
-
 	// InternalCreateOrgMembershipWithBodyWithResponse request with any body
 	InternalCreateOrgMembershipWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalCreateOrgMembershipResponse, error)
 
@@ -4334,8 +4500,21 @@ type ClientWithResponsesInterface interface {
 	// ListRolesWithResponse request
 	ListRolesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListRolesParams, reqEditors ...RequestEditorFn) (*ListRolesResponse, error)
 
+	// CreateRoleWithBodyWithResponse request with any body
+	CreateRoleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	CreateRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	// DeleteRoleWithResponse request
+	DeleteRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error)
+
 	// GetRoleWithResponse request
 	GetRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetRoleResponse, error)
+
+	// UpdateRoleWithBodyWithResponse request with any body
+	UpdateRoleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error)
+
+	UpdateRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error)
 
 	// ListServiceUsersWithResponse request
 	ListServiceUsersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListServiceUsersParams, reqEditors ...RequestEditorFn) (*ListServiceUsersResponse, error)
@@ -4743,30 +4922,6 @@ func (r InternalSyncOrgScopesResponse) StatusCode() int {
 	return 0
 }
 
-type InternalSyncOrgToSpiceDBResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SpiceDBSyncResult
-	JSON400      *N400BadRequest
-	JSON404      *N404NotFound
-}
-
-// Status returns HTTPResponse.Status
-func (r InternalSyncOrgToSpiceDBResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r InternalSyncOrgToSpiceDBResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type InternalCreateOrgMembershipResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5092,6 +5247,53 @@ func (r ListRolesResponse) StatusCode() int {
 	return 0
 }
 
+type CreateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *Role
+	JSON400      *N400BadRequest
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetRoleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5110,6 +5312,31 @@ func (r GetRoleResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Role
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateRoleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5539,15 +5766,6 @@ func (c *ClientWithResponses) InternalSyncOrgScopesWithResponse(ctx context.Cont
 	return ParseInternalSyncOrgScopesResponse(rsp)
 }
 
-// InternalSyncOrgToSpiceDBWithResponse request returning *InternalSyncOrgToSpiceDBResponse
-func (c *ClientWithResponses) InternalSyncOrgToSpiceDBWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*InternalSyncOrgToSpiceDBResponse, error) {
-	rsp, err := c.InternalSyncOrgToSpiceDB(ctx, orgId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseInternalSyncOrgToSpiceDBResponse(rsp)
-}
-
 // InternalCreateOrgMembershipWithBodyWithResponse request with arbitrary body returning *InternalCreateOrgMembershipResponse
 func (c *ClientWithResponses) InternalCreateOrgMembershipWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalCreateOrgMembershipResponse, error) {
 	rsp, err := c.InternalCreateOrgMembershipWithBody(ctx, orgId, contentType, body, reqEditors...)
@@ -5698,6 +5916,32 @@ func (c *ClientWithResponses) ListRolesWithResponse(ctx context.Context, orgId O
 	return ParseListRolesResponse(rsp)
 }
 
+// CreateRoleWithBodyWithResponse request with arbitrary body returning *CreateRoleResponse
+func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRoleWithBody(ctx, orgId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRole(ctx, orgId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+// DeleteRoleWithResponse request returning *DeleteRoleResponse
+func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error) {
+	rsp, err := c.DeleteRole(ctx, orgId, roleId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRoleResponse(rsp)
+}
+
 // GetRoleWithResponse request returning *GetRoleResponse
 func (c *ClientWithResponses) GetRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetRoleResponse, error) {
 	rsp, err := c.GetRole(ctx, orgId, roleId, reqEditors...)
@@ -5705,6 +5949,23 @@ func (c *ClientWithResponses) GetRoleWithResponse(ctx context.Context, orgId Org
 		return nil, err
 	}
 	return ParseGetRoleResponse(rsp)
+}
+
+// UpdateRoleWithBodyWithResponse request with arbitrary body returning *UpdateRoleResponse
+func (c *ClientWithResponses) UpdateRoleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error) {
+	rsp, err := c.UpdateRoleWithBody(ctx, orgId, roleId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error) {
+	rsp, err := c.UpdateRole(ctx, orgId, roleId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateRoleResponse(rsp)
 }
 
 // ListServiceUsersWithResponse request returning *ListServiceUsersResponse
@@ -6344,46 +6605,6 @@ func ParseInternalSyncOrgScopesResponse(rsp *http.Response) (*InternalSyncOrgSco
 	return response, nil
 }
 
-// ParseInternalSyncOrgToSpiceDBResponse parses an HTTP response from a InternalSyncOrgToSpiceDBWithResponse call
-func ParseInternalSyncOrgToSpiceDBResponse(rsp *http.Response) (*InternalSyncOrgToSpiceDBResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &InternalSyncOrgToSpiceDBResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SpiceDBSyncResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest N400BadRequest
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404NotFound
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseInternalCreateOrgMembershipResponse parses an HTTP response from a InternalCreateOrgMembershipWithResponse call
 func ParseInternalCreateOrgMembershipResponse(rsp *http.Response) (*InternalCreateOrgMembershipResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6867,6 +7088,79 @@ func ParseListRolesResponse(rsp *http.Response) (*ListRolesResponse, error) {
 	return response, nil
 }
 
+// ParseCreateRoleResponse parses an HTTP response from a CreateRoleWithResponse call
+func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Role
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRoleResponse parses an HTTP response from a DeleteRoleWithResponse call
+func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetRoleResponse parses an HTTP response from a GetRoleWithResponse call
 func ParseGetRoleResponse(rsp *http.Response) (*GetRoleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6901,6 +7195,53 @@ func ParseGetRoleResponse(rsp *http.Response) (*GetRoleResponse, error) {
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateRoleResponse parses an HTTP response from a UpdateRoleWithResponse call
+func ParseUpdateRoleResponse(rsp *http.Response) (*UpdateRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Role
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
