@@ -3497,7 +3497,7 @@ components:
           type: string
           pattern: ^[a-zA-Z0-9._:/-]+(?:@[a-z0-9]+:[a-fA-F0-9]+)?$
           x-pattern-error: image must be a valid container image
-          example: platform-orchestrator/platform-orchestrator-runner:latest
+          example: ghcr.io/stellwerk-labs/platform-orchestrator-runner:v1.0.0
           maxLength: 255
         task_role_arn:
           description: An optional ARN for the role available inside the Runner.

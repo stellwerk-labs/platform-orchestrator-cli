@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +19,6 @@ import (
 )
 
 const (
-	JwtAuthScopes      = "jwtAuth.Scopes"
 	UserIdHeaderScopes = "userIdHeader.Scopes"
 )
 
@@ -56,12 +54,6 @@ const (
 // Defines values for MetadataKeySchemaType.
 const (
 	MetadataKeySchemaTypeString MetadataKeySchemaType = "string"
-)
-
-// Defines values for RemoteRunnerMessageAction.
-const (
-	CheckJobStatus RemoteRunnerMessageAction = "check-job-status"
-	CreateJob      RemoteRunnerMessageAction = "create-job"
 )
 
 // Defines values for UpdateMetadataKeySchemaType.
@@ -526,50 +518,6 @@ type OpenidConfiguration struct {
 // OrganizationId The Organization ID
 type OrganizationId = string
 
-// RemoteRunnerMessage defines model for RemoteRunnerMessage.
-type RemoteRunnerMessage struct {
-	union json.RawMessage
-}
-
-// RemoteRunnerMessageAction The action to be performed by the remote runner.
-type RemoteRunnerMessageAction string
-
-// RemoteRunnerMessageCheckJobStatus The response for checking the status of a job on the runner.
-type RemoteRunnerMessageCheckJobStatus struct {
-	// Action The action to be performed by the remote runner.
-	Action RemoteRunnerMessageAction `json:"action"`
-
-	// DeploymentToken The deployment token to authenticate any request to update deployment results from the remote runner.
-	DeploymentToken string `json:"deployment_token"`
-
-	// ExpiresAt The time at which the job should be considered stuck by the runner if no pods are running or completed.
-	ExpiresAt time.Time `json:"expires_at"`
-
-	// JobId The ID of the job whose status is being requested.
-	JobId string `json:"job_id"`
-
-	// Namespace The ID of the namespace associated with the job.
-	Namespace string `json:"namespace"`
-}
-
-// RemoteRunnerMessageCreateJob The response for creating a job on the runner.
-type RemoteRunnerMessageCreateJob struct {
-	// Action The action to be performed by the remote runner.
-	Action RemoteRunnerMessageAction `json:"action"`
-
-	// Configuration The configuration for the job to be created on the runner. It must be parsable into a kubernetes Job definition.
-	Configuration map[string]interface{} `json:"configuration"`
-
-	// DeploymentToken The deployment token to authenticate any request to update deployment results from the remote runner.
-	DeploymentToken string `json:"deployment_token"`
-
-	// JobId The ID of the job created on the runner.
-	JobId string `json:"job_id"`
-
-	// Namespace The ID of the namespace associated with the job.
-	Namespace string `json:"namespace"`
-}
-
 // ResourceClass A resource class requested by the resource graph. 'default' is the default value.
 type ResourceClass = string
 
@@ -623,9 +571,6 @@ type PerPageQueryParam = int
 
 // ProjectIdQueryParam defines model for projectIdQueryParam.
 type ProjectIdQueryParam = string
-
-// RunnerIdPathParam defines model for runnerIdPathParam.
-type RunnerIdPathParam = string
 
 // N400BadRequest A standard error response
 type N400BadRequest = Error
@@ -752,9 +697,6 @@ type ListMetadataKeysParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
-// InternalPushMessageToRemoteRunnerJSONRequestBody defines body for InternalPushMessageToRemoteRunner for application/json ContentType.
-type InternalPushMessageToRemoteRunnerJSONRequestBody = RemoteRunnerMessage
-
 // CreateDeploymentJSONRequestBody defines body for CreateDeployment for application/json ContentType.
 type CreateDeploymentJSONRequestBody = DeploymentCreateBody
 
@@ -766,95 +708,6 @@ type CreateMetadataKeyJSONRequestBody = MetadataKeyCreateBody
 
 // UpdateMetadataKeyJSONRequestBody defines body for UpdateMetadataKey for application/json ContentType.
 type UpdateMetadataKeyJSONRequestBody = MetadataKeyUpdateBody
-
-// AsRemoteRunnerMessageCreateJob returns the union data inside the RemoteRunnerMessage as a RemoteRunnerMessageCreateJob
-func (t RemoteRunnerMessage) AsRemoteRunnerMessageCreateJob() (RemoteRunnerMessageCreateJob, error) {
-	var body RemoteRunnerMessageCreateJob
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromRemoteRunnerMessageCreateJob overwrites any union data inside the RemoteRunnerMessage as the provided RemoteRunnerMessageCreateJob
-func (t *RemoteRunnerMessage) FromRemoteRunnerMessageCreateJob(v RemoteRunnerMessageCreateJob) error {
-	v.Action = "create-job"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeRemoteRunnerMessageCreateJob performs a merge with any union data inside the RemoteRunnerMessage, using the provided RemoteRunnerMessageCreateJob
-func (t *RemoteRunnerMessage) MergeRemoteRunnerMessageCreateJob(v RemoteRunnerMessageCreateJob) error {
-	v.Action = "create-job"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsRemoteRunnerMessageCheckJobStatus returns the union data inside the RemoteRunnerMessage as a RemoteRunnerMessageCheckJobStatus
-func (t RemoteRunnerMessage) AsRemoteRunnerMessageCheckJobStatus() (RemoteRunnerMessageCheckJobStatus, error) {
-	var body RemoteRunnerMessageCheckJobStatus
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromRemoteRunnerMessageCheckJobStatus overwrites any union data inside the RemoteRunnerMessage as the provided RemoteRunnerMessageCheckJobStatus
-func (t *RemoteRunnerMessage) FromRemoteRunnerMessageCheckJobStatus(v RemoteRunnerMessageCheckJobStatus) error {
-	v.Action = "check-job-status"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeRemoteRunnerMessageCheckJobStatus performs a merge with any union data inside the RemoteRunnerMessage, using the provided RemoteRunnerMessageCheckJobStatus
-func (t *RemoteRunnerMessage) MergeRemoteRunnerMessageCheckJobStatus(v RemoteRunnerMessageCheckJobStatus) error {
-	v.Action = "check-job-status"
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JSONMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t RemoteRunnerMessage) Discriminator() (string, error) {
-	var discriminator struct {
-		Discriminator string `json:"action"`
-	}
-	err := json.Unmarshal(t.union, &discriminator)
-	return discriminator.Discriminator, err
-}
-
-func (t RemoteRunnerMessage) ValueByDiscriminator() (interface{}, error) {
-	discriminator, err := t.Discriminator()
-	if err != nil {
-		return nil, err
-	}
-	switch discriminator {
-	case "check-job-status":
-		return t.AsRemoteRunnerMessageCheckJobStatus()
-	case "create-job":
-		return t.AsRemoteRunnerMessageCreateJob()
-	default:
-		return nil, errors.New("unknown discriminator value: " + discriminator)
-	}
-}
-
-func (t RemoteRunnerMessage) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *RemoteRunnerMessage) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -944,11 +797,6 @@ type ClientInterface interface {
 	// InternalCheckModuleUsage request
 	InternalCheckModuleUsage(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// InternalPushMessageToRemoteRunnerWithBody request with any body
-	InternalPushMessageToRemoteRunnerWithBody(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	InternalPushMessageToRemoteRunner(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body InternalPushMessageToRemoteRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// ListActiveResourceNodes request
 	ListActiveResourceNodes(ctx context.Context, orgId OrgIdPathParam, params *ListActiveResourceNodesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1010,9 +858,6 @@ type ClientInterface interface {
 	UpdateMetadataKeyWithBody(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateMetadataKey(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, body UpdateMetadataKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WaitForRemoteRunnerMessages request
-	WaitForRemoteRunnerMessages(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetJwks(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1065,30 +910,6 @@ func (c *Client) InternalForceFailDeployment(ctx context.Context, orgId OrgIdPat
 
 func (c *Client) InternalCheckModuleUsage(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalCheckModuleUsageRequest(c.Server, orgId, moduleId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) InternalPushMessageToRemoteRunnerWithBody(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInternalPushMessageToRemoteRunnerRequestWithBody(c.Server, orgId, runnerId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) InternalPushMessageToRemoteRunner(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body InternalPushMessageToRemoteRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInternalPushMessageToRemoteRunnerRequest(c.Server, orgId, runnerId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1363,18 +1184,6 @@ func (c *Client) UpdateMetadataKey(ctx context.Context, orgId OrgIdPathParam, me
 	return c.Client.Do(req)
 }
 
-func (c *Client) WaitForRemoteRunnerMessages(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWaitForRemoteRunnerMessagesRequest(c.Server, orgId, runnerId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // NewGetJwksRequest generates requests for GetJwks
 func NewGetJwksRequest(server string) (*http.Request, error) {
 	var err error
@@ -1617,60 +1426,6 @@ func NewInternalCheckModuleUsageRequest(server string, orgId OrgIdPathParam, mod
 	if err != nil {
 		return nil, err
 	}
-
-	return req, nil
-}
-
-// NewInternalPushMessageToRemoteRunnerRequest calls the generic InternalPushMessageToRemoteRunner builder with application/json body
-func NewInternalPushMessageToRemoteRunnerRequest(server string, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body InternalPushMessageToRemoteRunnerJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewInternalPushMessageToRemoteRunnerRequestWithBody(server, orgId, runnerId, "application/json", bodyReader)
-}
-
-// NewInternalPushMessageToRemoteRunnerRequestWithBody generates requests for InternalPushMessageToRemoteRunner with any type of body
-func NewInternalPushMessageToRemoteRunnerRequestWithBody(server string, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "runnerId", runtime.ParamLocationPath, runnerId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/internal/orgs/%s/remote-runners/%s/actions/push-message", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -2787,47 +2542,6 @@ func NewUpdateMetadataKeyRequestWithBody(server string, orgId OrgIdPathParam, me
 	return req, nil
 }
 
-// NewWaitForRemoteRunnerMessagesRequest generates requests for WaitForRemoteRunnerMessages
-func NewWaitForRemoteRunnerMessagesRequest(server string, orgId OrgIdPathParam, runnerId RunnerIdPathParam) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "runnerId", runtime.ParamLocationPath, runnerId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/orgs/%s/remote-runners/%s/actions/poll-requests", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -2885,11 +2599,6 @@ type ClientWithResponsesInterface interface {
 
 	// InternalCheckModuleUsageWithResponse request
 	InternalCheckModuleUsageWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*InternalCheckModuleUsageResponse, error)
-
-	// InternalPushMessageToRemoteRunnerWithBodyWithResponse request with any body
-	InternalPushMessageToRemoteRunnerWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalPushMessageToRemoteRunnerResponse, error)
-
-	InternalPushMessageToRemoteRunnerWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body InternalPushMessageToRemoteRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalPushMessageToRemoteRunnerResponse, error)
 
 	// ListActiveResourceNodesWithResponse request
 	ListActiveResourceNodesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListActiveResourceNodesParams, reqEditors ...RequestEditorFn) (*ListActiveResourceNodesResponse, error)
@@ -2952,9 +2661,6 @@ type ClientWithResponsesInterface interface {
 	UpdateMetadataKeyWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMetadataKeyResponse, error)
 
 	UpdateMetadataKeyWithResponse(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, body UpdateMetadataKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMetadataKeyResponse, error)
-
-	// WaitForRemoteRunnerMessagesWithResponse request
-	WaitForRemoteRunnerMessagesWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*WaitForRemoteRunnerMessagesResponse, error)
 }
 
 type GetJwksResponse struct {
@@ -3068,27 +2774,6 @@ func (r InternalCheckModuleUsageResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r InternalCheckModuleUsageResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type InternalPushMessageToRemoteRunnerResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-}
-
-// Status returns HTTPResponse.Status
-func (r InternalPushMessageToRemoteRunnerResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r InternalPushMessageToRemoteRunnerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3518,29 +3203,6 @@ func (r UpdateMetadataKeyResponse) StatusCode() int {
 	return 0
 }
 
-type WaitForRemoteRunnerMessagesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *RemoteRunnerMessage
-	JSON404      *N404NotFound
-}
-
-// Status returns HTTPResponse.Status
-func (r WaitForRemoteRunnerMessagesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WaitForRemoteRunnerMessagesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 // GetJwksWithResponse request returning *GetJwksResponse
 func (c *ClientWithResponses) GetJwksWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetJwksResponse, error) {
 	rsp, err := c.GetJwks(ctx, reqEditors...)
@@ -3584,23 +3246,6 @@ func (c *ClientWithResponses) InternalCheckModuleUsageWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseInternalCheckModuleUsageResponse(rsp)
-}
-
-// InternalPushMessageToRemoteRunnerWithBodyWithResponse request with arbitrary body returning *InternalPushMessageToRemoteRunnerResponse
-func (c *ClientWithResponses) InternalPushMessageToRemoteRunnerWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalPushMessageToRemoteRunnerResponse, error) {
-	rsp, err := c.InternalPushMessageToRemoteRunnerWithBody(ctx, orgId, runnerId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseInternalPushMessageToRemoteRunnerResponse(rsp)
-}
-
-func (c *ClientWithResponses) InternalPushMessageToRemoteRunnerWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body InternalPushMessageToRemoteRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalPushMessageToRemoteRunnerResponse, error) {
-	rsp, err := c.InternalPushMessageToRemoteRunner(ctx, orgId, runnerId, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseInternalPushMessageToRemoteRunnerResponse(rsp)
 }
 
 // ListActiveResourceNodesWithResponse request returning *ListActiveResourceNodesResponse
@@ -3797,15 +3442,6 @@ func (c *ClientWithResponses) UpdateMetadataKeyWithResponse(ctx context.Context,
 	return ParseUpdateMetadataKeyResponse(rsp)
 }
 
-// WaitForRemoteRunnerMessagesWithResponse request returning *WaitForRemoteRunnerMessagesResponse
-func (c *ClientWithResponses) WaitForRemoteRunnerMessagesWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*WaitForRemoteRunnerMessagesResponse, error) {
-	rsp, err := c.WaitForRemoteRunnerMessages(ctx, orgId, runnerId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWaitForRemoteRunnerMessagesResponse(rsp)
-}
-
 // ParseGetJwksResponse parses an HTTP response from a GetJwksWithResponse call
 func ParseGetJwksResponse(rsp *http.Response) (*GetJwksResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -3980,22 +3616,6 @@ func ParseInternalCheckModuleUsageResponse(rsp *http.Response) (*InternalCheckMo
 		}
 		response.JSON404 = &dest
 
-	}
-
-	return response, nil
-}
-
-// ParseInternalPushMessageToRemoteRunnerResponse parses an HTTP response from a InternalPushMessageToRemoteRunnerWithResponse call
-func ParseInternalPushMessageToRemoteRunnerResponse(rsp *http.Response) (*InternalPushMessageToRemoteRunnerResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &InternalPushMessageToRemoteRunnerResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
 	}
 
 	return response, nil
@@ -4645,39 +4265,6 @@ func ParseUpdateMetadataKeyResponse(rsp *http.Response) (*UpdateMetadataKeyRespo
 			return nil, err
 		}
 		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404NotFound
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWaitForRemoteRunnerMessagesResponse parses an HTTP response from a WaitForRemoteRunnerMessagesWithResponse call
-func ParseWaitForRemoteRunnerMessagesResponse(rsp *http.Response) (*WaitForRemoteRunnerMessagesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WaitForRemoteRunnerMessagesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest RemoteRunnerMessage
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest N404NotFound

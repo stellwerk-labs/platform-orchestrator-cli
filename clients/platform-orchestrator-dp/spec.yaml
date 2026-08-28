@@ -364,31 +364,6 @@ paths:
         "409":
           $ref: "#/components/responses/409Conflict"
 
-  /orgs/{orgId}/remote-runners/{runnerId}/actions/poll-requests:
-    post:
-      security:
-        - jwtAuth: []
-      summary: Long-poll wait for pending messages for a remote runner
-      description: |
-        Remote runners should poll this endpoint to receive pending messages.
-      operationId: waitForRemoteRunnerMessages
-      tags:
-        - RemoteRunnerMessages
-      parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
-      responses:
-        "200":
-          description: Successfully polled for requests.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RemoteRunnerMessage"
-        "204":
-          description: No messages for the runner.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-
   /orgs/{orgId}/deployments/{deploymentId}/resources:
     get:
       operationId: listDeploymentResourceNodes
@@ -471,30 +446,6 @@ paths:
                 $ref: "#/components/schemas/InternalModuleUsage"
         404:
           $ref: "#/components/responses/404NotFound"
-
-  /internal/orgs/{orgId}/remote-runners/{runnerId}/actions/push-message:
-    post:
-      summary: Push a message to a remote runner
-      description: |
-        Sends a message to a specific remote runner for processing.
-      operationId: internalPushMessageToRemoteRunner
-      tags:
-        - internal
-        - RemoteRunnerMessages
-      parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RemoteRunnerMessage"
-      responses:
-        204:
-          description: Message pushed successfully.
-        503:
-          description: Runner is not connected.
 
   /orgs/{orgId}/metadata-keys:
     get:
@@ -1482,83 +1433,6 @@ components:
           description: The list of resource nodes for this deployment.
           items:
             $ref: "#/components/schemas/ActiveResourceNode"
-
-    RemoteRunnerMessage:
-      oneOf:
-        - $ref: "#/components/schemas/RemoteRunnerMessageCreateJob"
-        - $ref: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
-      discriminator:
-        propertyName: action
-        mapping:
-          create-job: "#/components/schemas/RemoteRunnerMessageCreateJob"
-          check-job-status: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
-
-    RemoteRunnerMessageAction:
-      description: The action to be performed by the remote runner.
-      type: string
-      enum:
-        - create-job
-        - check-job-status
-
-    RemoteRunnerMessageCreateJob:
-      type: object
-      description: The response for creating a job on the runner.
-      properties:
-        action:
-          $ref: "#/components/schemas/RemoteRunnerMessageAction"
-        job_id:
-          type: string
-          description: The ID of the job created on the runner.
-          example: "job-12345"
-        namespace:
-          type: string
-          description: The ID of the namespace associated with the job.
-          example: "test-namespace"
-        configuration:
-          type: object
-          additionalProperties: true
-          description: The configuration for the job to be created on the runner. It must be parsable into a kubernetes Job definition.
-        deployment_token:
-          type: string
-          description: The deployment token to authenticate any request to update deployment results from the remote runner.
-          example: "deployment-token-12345"
-      required:
-        - action
-        - job_id
-        - namespace
-        - configuration
-        - deployment_token
-
-    RemoteRunnerMessageCheckJobStatus:
-      type: object
-      description: The response for checking the status of a job on the runner.
-      properties:
-        action:
-          $ref: "#/components/schemas/RemoteRunnerMessageAction"
-        job_id:
-          type: string
-          description: The ID of the job whose status is being requested.
-          example: "job-12345"
-        namespace:
-          type: string
-          description: The ID of the namespace associated with the job.
-          example: "test-namespace"
-        deployment_token:
-          type: string
-          description: The deployment token to authenticate any request to update deployment results from the remote runner.
-          example: "deployment-token-12345"
-        expires_at:
-          type: string
-          format: date-time
-          description: The time at which the job should be considered stuck by the runner if no pods are running or completed.
-          example: "2025-01-02T03:04:05Z"
-
-      required:
-        - action
-        - job_id
-        - namespace
-        - deployment_token
-        - expires_at
 
     OpenidConfiguration:
       description: OpenID discovery configuration.

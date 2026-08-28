@@ -28,18 +28,19 @@ func PromptTextAndEnterToContinue(ctx context.Context, stdin io.Reader, required
 	ctx, cancel := context.WithTimeout(ctx, PromptTimeout)
 	defer cancel()
 
-	// Wait in a goroutine and communicate back to the main process by cancellation and or channel.
-	entered := make(chan struct{})
+	// Read in a goroutine so the context timeout can still stop the caller. The
+	// channel is buffered because cancelling the context cannot interrupt a
+	// blocking read from an arbitrary io.Reader.
+	inputResult := make(chan error, 1)
 	go func() {
 		reader := bufio.NewReader(stdin)
 		if text, err := reader.ReadString('\n'); err != nil {
-			failureMessageF("failed to read input: %v", err)
-			cancel()
+			inputResult <- errors.Wrap(err, "failed to read input")
 		} else if text = strings.TrimSpace(text); text != requiredText {
-			failureMessageF("expected '%s', got '%s'", requiredText, text)
-			cancel()
+			inputResult <- errors.Errorf("expected '%s', got '%s'", requiredText, text)
+		} else {
+			inputResult <- nil
 		}
-		close(entered)
 	}()
 
 	// Wait and continue.
@@ -49,7 +50,11 @@ func PromptTextAndEnterToContinue(ctx context.Context, stdin io.Reader, required
 	}
 	_, _ = fmt.Fprintf(color.Output, "%sEnter to continue within %s, or Ctrl+C to abort... ", prefix, PromptTimeout)
 	select {
-	case <-entered:
+	case err := <-inputResult:
+		if err != nil {
+			failureMessageF("%v", err)
+			return context.Canceled
+		}
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()

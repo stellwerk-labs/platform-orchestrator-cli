@@ -30,30 +30,39 @@ const (
 	tableTypeDeploymentSummary      = "DeploymentSummary"
 	tableTypeEnvironment            = "Environment"
 	tableTypeEnvironmentTypeSummary = "EnvironmentTypeSummary"
+	tableTypeMetadataKey            = "MetadataKey"
 	tableTypeModule                 = "Module"
 	tableTypeModuleProvider         = "ModuleProvider"
 	tableTypeModuleProviderSummary  = "ModuleProviderSummary"
 	tableTypeModuleSummary          = "ModuleSummary"
 	tableTypeProject                = "Project"
+	tableTypePermissionDefinition   = "PermissionDefinition"
 	tableTypeResourceType           = "ResourceType"
+	tableTypeRole                   = "Role"
 	tableTypeRuleSummary            = "RuleSummary"
 	tableTypeRunner                 = "Runner"
 	tableTypeRunnerRuleSummary      = "RunnerRuleSummary"
 	tableTypeRunnerSummary          = "RunnerSummary"
+	tableTypeScimGroupMapping       = "ScimGroupMapping"
+	tableTypeServiceUserSummary     = "ServiceUserSummary"
 
 	tableFieldBuiltIn                 = "BuiltIn"
 	tableFieldCompletedAt             = "CompletedAt"
 	tableFieldConfiguration           = "Configuration"
 	tableFieldCoprovisioned           = "Coprovisioned"
+	tableFieldCategory                = "Category"
 	tableFieldCreatedAt               = "CreatedAt"
+	tableFieldCurrentTokenExpiresAt   = "CurrentTokenExpiresAt"
 	tableFieldDependencies            = "Dependencies"
 	tableFieldDescription             = "Description"
 	tableFieldDisplayName             = "DisplayName"
 	tableFieldEnvId                   = "EnvId"
 	tableFieldEnvTypeId               = "EnvTypeId"
 	tableFieldId                      = "Id"
+	tableFieldIsSystem                = "IsSystem"
 	tableFieldIsDeveloperAccessible   = "IsDeveloperAccessible"
 	tableFieldManifest                = "Manifest"
+	tableFieldLevel                   = "Level"
 	tableFieldMode                    = "Mode"
 	tableFieldModuleId                = "ModuleId"
 	tableFieldModuleInputs            = "ModuleInputs"
@@ -69,10 +78,16 @@ const (
 	tableFieldProviderType            = "ProviderType"
 	tableFieldResourceClass           = "ResourceClass"
 	tableFieldResourceType            = "ResourceType"
+	tableFieldRoleId                  = "RoleId"
+	tableFieldRoles                   = "Roles"
 	tableFieldRunnerId                = "RunnerId"
 	tableFieldRunnerType              = "RunnerType"
 	tableFieldSource                  = "Source"
+	tableFieldScopes                  = "Scopes"
+	tableFieldSchema                  = "Schema"
 	tableFieldStatus                  = "Status"
+	tableFieldPermissions             = "Permissions"
+	tableFieldGroupDisplayName        = "GroupDisplayName"
 	tableFieldUpdatedAt               = "UpdatedAt"
 	tableFieldUuid                    = "Uuid"
 	tableFieldVersionConstraint       = "VersionConstraint"
@@ -109,17 +124,22 @@ var tableColumns = map[string][]string{
 	tableTypeDeploymentSummary:      {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt},
 	tableTypeEnvironmentTypeSummary: {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt},
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},
+	tableTypeMetadataKey:            {tableFieldName, tableFieldDescription, tableFieldSchema, tableFieldCreatedAt},
 	tableTypeModule:                 {tableFieldId, tableFieldDescription, tableFieldOrgId, tableFieldResourceType, tableFieldModuleSource, tableFieldModuleParams, tableFieldModuleInputs, tableFieldProviderMapping, tableFieldDependencies, tableFieldCoprovisioned, tableFieldUpdatedAt, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleSummary:          {tableFieldId, tableFieldDescription, tableFieldResourceType, tableFieldModuleSource, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleProvider:         {tableFieldId, tableFieldDescription, tableFieldProviderType, tableFieldSource, tableFieldVersionConstraint, tableFieldConfiguration, tableFieldCreatedAt},
 	tableTypeModuleProviderSummary:  {tableFieldId, tableFieldDescription, tableFieldProviderType, tableFieldSource, tableFieldCreatedAt},
 	tableTypeProject:                {tableFieldId, tableFieldDisplayName, tableFieldUuid, tableFieldCreatedAt},
+	tableTypePermissionDefinition:   {tableFieldId, tableFieldDisplayName, tableFieldCategory, tableFieldLevel, tableFieldScopes},
 	tableTypeAvailableResourceType:  {tableFieldId, tableFieldName},
 	tableTypeResourceType:           {tableFieldId, tableFieldBuiltIn, tableFieldDescription, tableFieldIsDeveloperAccessible, tableFieldCreatedAt},
+	tableTypeRole:                   {tableFieldId, tableFieldDisplayName, tableFieldIsSystem, tableFieldPermissions, tableFieldCreatedAt},
 	tableTypeRuleSummary:            {tableFieldId, tableFieldResourceType, tableFieldResourceClass, tableFieldModuleId, tableFieldCreatedAt},
 	tableTypeRunner:                 {tableFieldId, tableFieldOrgId},
 	tableTypeRunnerRuleSummary:      {tableFieldId, tableFieldRunnerId, tableFieldCreatedAt},
 	tableTypeRunnerSummary:          {tableFieldId, tableFieldDescription, tableFieldRunnerType, tableFieldCreatedAt},
+	tableTypeScimGroupMapping:       {tableFieldGroupDisplayName, tableFieldRoleId, tableFieldCreatedAt},
+	tableTypeServiceUserSummary:     {tableFieldId, tableFieldDisplayName, tableFieldRoles, tableFieldCurrentTokenExpiresAt},
 	tableTypeCurrentUser:            {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt, tableFieldOrganizationMemberships},
 }
 

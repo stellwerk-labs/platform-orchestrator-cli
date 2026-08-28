@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+	dp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-dp"
+	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/ref"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -293,6 +296,33 @@ func TestTablePrinter_Write(t *testing.T) {
 				CreatedAt:         time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
 			},
 			contains: []string{"Id", tableFieldDescription, tableFieldProviderType, tableFieldSource, tableFieldVersionConstraint, tableFieldConfiguration, tableFieldCreatedAt, testProviderID, "-", testAWSProviderType, testAWSProviderSource, testAWSVersionConstraint},
+		},
+		{
+			name: "automation API types",
+			input: []iam.Role{{
+				Id: uuid.MustParse("11111111-1111-4111-8111-111111111111"), DisplayName: "Auditor", Permissions: []string{"environment_read"},
+			}},
+			contains: []string{tableFieldId, tableFieldDisplayName, tableFieldPermissions, "Auditor", "environment_read"},
+		},
+		{
+			name:     "metadata key API type",
+			input:    dp.MetadataKey{Name: "cost-center", Schema: dp.MetadataKeySchema{Type: dp.MetadataKeySchemaTypeString}},
+			contains: []string{tableFieldName, tableFieldSchema, "cost-center", "string"},
+		},
+		{
+			name:     "SCIM mapping API type",
+			input:    iam.ScimGroupMapping{GroupDisplayName: "Platform Engineers", RoleId: uuid.MustParse("22222222-2222-4222-8222-222222222222")},
+			contains: []string{tableFieldGroupDisplayName, tableFieldRoleId, "Platform Engineers"},
+		},
+		{
+			name:     "service user API type",
+			input:    iam.ServiceUserSummary{Id: uuid.MustParse("33333333-3333-4333-8333-333333333333"), DisplayName: "SCIM client"},
+			contains: []string{tableFieldId, tableFieldDisplayName, tableFieldCurrentTokenExpiresAt, "SCIM client"},
+		},
+		{
+			name:     "permission API type",
+			input:    iam.PermissionDefinition{Id: "provisioning_read", DisplayName: "Read provisioning directory", Category: "Provisioning", Level: iam.Read},
+			contains: []string{tableFieldId, tableFieldCategory, tableFieldLevel, "provisioning_read"},
 		},
 		{
 			name:     testNilInputName,

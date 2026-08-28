@@ -302,7 +302,7 @@ paths:
       tags:
         - User
       operationId: revokeUserSessionToken
-      summary: Revoke the session token for this user. Due to internal caching, this may take up to a minute for authorized sessions to be revoked.
+      summary: Revoke the session token for this user.
       security:
         - userIdHeader: []
       parameters:
@@ -1045,6 +1045,72 @@ paths:
         "409":
           $ref: "#/components/responses/409Conflict"
 
+  /orgs/{orgId}/scim/group-mappings:
+    get:
+      tags:
+        - Provisioning
+      operationId: listScimGroupMappings
+      summary: List the SCIM group-to-role mappings in this organization.
+      description: Each mapping grants members of the named SCIM group the mapped role. Group names are matched case-insensitively. Renaming a group in the IDP breaks its mapping.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "200":
+          description: Successfully listed SCIM group mappings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScimGroupMappingPage"
+
+  /orgs/{orgId}/scim/group-mappings/{groupDisplayName}:
+    put:
+      tags:
+        - Provisioning
+      operationId: upsertScimGroupMapping
+      summary: Create or replace the role mapping for a SCIM group display name.
+      description: Members of the SCIM group with this display name (compared case-insensitively) are granted the mapped role on their next provisioning sync or group membership change. Requires membership management permission, not provisioning or role permission.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/scimGroupDisplayNamePathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScimGroupMappingWriteBody"
+            example:
+              role_id: 01234567-89ab-cdef-0123-456789abcdef
+      responses:
+        "200":
+          description: Successfully created or replaced the mapping.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScimGroupMapping"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      tags:
+        - Provisioning
+      operationId: deleteScimGroupMapping
+      summary: Delete the role mapping for a SCIM group display name.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/scimGroupDisplayNamePathParam"
+      responses:
+        "204":
+          description: Successfully deleted the mapping.
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
   /devicelogins/{requestId}/actions/poll:
     post:
       tags:
@@ -1160,6 +1226,16 @@ components:
       required: true
       schema:
         type: string
+    scimGroupDisplayNamePathParam:
+      name: groupDisplayName
+      in: path
+      description: The SCIM group display name the mapping applies to (matched case-insensitively).
+      example: "Platform Engineers"
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
     projectIdPathParam:
       name: projectId
       in: path
@@ -2082,6 +2158,47 @@ components:
           items:
             type: string
             pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
+
+    ScimGroupMappingPage:
+      description: The SCIM group-to-role mappings configured for an organization.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScimGroupMapping"
+
+    ScimGroupMapping:
+      description: Grants members of the named SCIM group the mapped role. The group display name is matched case-insensitively against synced SCIM groups.
+      required:
+        - group_display_name
+        - role_id
+        - created_at
+      properties:
+        group_display_name:
+          description: The SCIM group display name, stored as configured.
+          type: string
+          example: Platform Engineers
+        role_id:
+          description: The id of the role granted to the group's members.
+          type: string
+          format: uuid
+          example: 01234567-89ab-cdef-0123-456789abcdef
+        created_at:
+          description: The time the mapping was first created.
+          type: string
+          format: date-time
+
+    ScimGroupMappingWriteBody:
+      description: The role a SCIM group's members should hold.
+      required:
+        - role_id
+      properties:
+        role_id:
+          description: The id of a role in this organization.
+          type: string
+          format: uuid
 
     PermissionDefinitionPage:
       description: The authoritative catalog of granular permissions assignable to configurable roles.

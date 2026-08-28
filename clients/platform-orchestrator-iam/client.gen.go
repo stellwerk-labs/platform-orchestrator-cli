@@ -459,6 +459,29 @@ type RoleWriteBody struct {
 	Permissions []string `json:"permissions"`
 }
 
+// ScimGroupMapping Grants members of the named SCIM group the mapped role. The group display name is matched case-insensitively against synced SCIM groups.
+type ScimGroupMapping struct {
+	// CreatedAt The time the mapping was first created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// GroupDisplayName The SCIM group display name, stored as configured.
+	GroupDisplayName string `json:"group_display_name"`
+
+	// RoleId The id of the role granted to the group's members.
+	RoleId openapi_types.UUID `json:"role_id"`
+}
+
+// ScimGroupMappingPage The SCIM group-to-role mappings configured for an organization.
+type ScimGroupMappingPage struct {
+	Items []ScimGroupMapping `json:"items"`
+}
+
+// ScimGroupMappingWriteBody The role a SCIM group's members should hold.
+type ScimGroupMappingWriteBody struct {
+	// RoleId The id of a role in this organization.
+	RoleId openapi_types.UUID `json:"role_id"`
+}
+
 // ScopeSyncResult The result of an authorization resource sync operation
 type ScopeSyncResult struct {
 	// EnvironmentsSynced The number of environments synced
@@ -695,6 +718,9 @@ type PerPageQueryParam = int
 
 // ProjectIdPathParam defines model for projectIdPathParam.
 type ProjectIdPathParam = string
+
+// ScimGroupDisplayNamePathParam defines model for scimGroupDisplayNamePathParam.
+type ScimGroupDisplayNamePathParam = string
 
 // ServiceUserIdPathParam defines model for serviceUserIdPathParam.
 type ServiceUserIdPathParam = openapi_types.UUID
@@ -953,6 +979,9 @@ type CreateRoleJSONRequestBody = RoleWriteBody
 // UpdateRoleJSONRequestBody defines body for UpdateRole for application/json ContentType.
 type UpdateRoleJSONRequestBody = RoleWriteBody
 
+// UpsertScimGroupMappingJSONRequestBody defines body for UpsertScimGroupMapping for application/json ContentType.
+type UpsertScimGroupMappingJSONRequestBody = ScimGroupMappingWriteBody
+
 // CreateServiceUserJSONRequestBody defines body for CreateServiceUser for application/json ContentType.
 type CreateServiceUserJSONRequestBody = ServiceUserCreateBody
 
@@ -1164,6 +1193,17 @@ type ClientInterface interface {
 	UpdateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListScimGroupMappings request
+	ListScimGroupMappings(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteScimGroupMapping request
+	DeleteScimGroupMapping(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpsertScimGroupMappingWithBody request with any body
+	UpsertScimGroupMappingWithBody(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpsertScimGroupMapping(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, body UpsertScimGroupMappingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListServiceUsers request
 	ListServiceUsers(ctx context.Context, orgId OrgIdPathParam, params *ListServiceUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1746,6 +1786,54 @@ func (c *Client) UpdateRoleWithBody(ctx context.Context, orgId OrgIdPathParam, r
 
 func (c *Client) UpdateRole(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateRoleRequest(c.Server, orgId, roleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListScimGroupMappings(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListScimGroupMappingsRequest(c.Server, orgId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteScimGroupMapping(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteScimGroupMappingRequest(c.Server, orgId, groupDisplayName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpsertScimGroupMappingWithBody(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpsertScimGroupMappingRequestWithBody(c.Server, orgId, groupDisplayName, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpsertScimGroupMapping(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, body UpsertScimGroupMappingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpsertScimGroupMappingRequest(c.Server, orgId, groupDisplayName, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3867,6 +3955,135 @@ func NewUpdateRoleRequestWithBody(server string, orgId OrgIdPathParam, roleId op
 	return req, nil
 }
 
+// NewListScimGroupMappingsRequest generates requests for ListScimGroupMappings
+func NewListScimGroupMappingsRequest(server string, orgId OrgIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/scim/group-mappings", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteScimGroupMappingRequest generates requests for DeleteScimGroupMapping
+func NewDeleteScimGroupMappingRequest(server string, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "groupDisplayName", runtime.ParamLocationPath, groupDisplayName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/scim/group-mappings/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpsertScimGroupMappingRequest calls the generic UpsertScimGroupMapping builder with application/json body
+func NewUpsertScimGroupMappingRequest(server string, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, body UpsertScimGroupMappingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpsertScimGroupMappingRequestWithBody(server, orgId, groupDisplayName, "application/json", bodyReader)
+}
+
+// NewUpsertScimGroupMappingRequestWithBody generates requests for UpsertScimGroupMapping with any type of body
+func NewUpsertScimGroupMappingRequestWithBody(server string, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "groupDisplayName", runtime.ParamLocationPath, groupDisplayName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/scim/group-mappings/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListServiceUsersRequest generates requests for ListServiceUsers
 func NewListServiceUsersRequest(server string, orgId OrgIdPathParam, params *ListServiceUsersParams) (*http.Request, error) {
 	var err error
@@ -4611,6 +4828,17 @@ type ClientWithResponsesInterface interface {
 	UpdateRoleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error)
 
 	UpdateRoleWithResponse(ctx context.Context, orgId OrgIdPathParam, roleId openapi_types.UUID, body UpdateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRoleResponse, error)
+
+	// ListScimGroupMappingsWithResponse request
+	ListScimGroupMappingsWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*ListScimGroupMappingsResponse, error)
+
+	// DeleteScimGroupMappingWithResponse request
+	DeleteScimGroupMappingWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, reqEditors ...RequestEditorFn) (*DeleteScimGroupMappingResponse, error)
+
+	// UpsertScimGroupMappingWithBodyWithResponse request with any body
+	UpsertScimGroupMappingWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertScimGroupMappingResponse, error)
+
+	UpsertScimGroupMappingWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, body UpsertScimGroupMappingJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertScimGroupMappingResponse, error)
 
 	// ListServiceUsersWithResponse request
 	ListServiceUsersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListServiceUsersParams, reqEditors ...RequestEditorFn) (*ListServiceUsersResponse, error)
@@ -5461,6 +5689,74 @@ func (r UpdateRoleResponse) StatusCode() int {
 	return 0
 }
 
+type ListScimGroupMappingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScimGroupMappingPage
+}
+
+// Status returns HTTPResponse.Status
+func (r ListScimGroupMappingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListScimGroupMappingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteScimGroupMappingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteScimGroupMappingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteScimGroupMappingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpsertScimGroupMappingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScimGroupMapping
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r UpsertScimGroupMappingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpsertScimGroupMappingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListServiceUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6093,6 +6389,41 @@ func (c *ClientWithResponses) UpdateRoleWithResponse(ctx context.Context, orgId 
 		return nil, err
 	}
 	return ParseUpdateRoleResponse(rsp)
+}
+
+// ListScimGroupMappingsWithResponse request returning *ListScimGroupMappingsResponse
+func (c *ClientWithResponses) ListScimGroupMappingsWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*ListScimGroupMappingsResponse, error) {
+	rsp, err := c.ListScimGroupMappings(ctx, orgId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListScimGroupMappingsResponse(rsp)
+}
+
+// DeleteScimGroupMappingWithResponse request returning *DeleteScimGroupMappingResponse
+func (c *ClientWithResponses) DeleteScimGroupMappingWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, reqEditors ...RequestEditorFn) (*DeleteScimGroupMappingResponse, error) {
+	rsp, err := c.DeleteScimGroupMapping(ctx, orgId, groupDisplayName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteScimGroupMappingResponse(rsp)
+}
+
+// UpsertScimGroupMappingWithBodyWithResponse request with arbitrary body returning *UpsertScimGroupMappingResponse
+func (c *ClientWithResponses) UpsertScimGroupMappingWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertScimGroupMappingResponse, error) {
+	rsp, err := c.UpsertScimGroupMappingWithBody(ctx, orgId, groupDisplayName, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpsertScimGroupMappingResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpsertScimGroupMappingWithResponse(ctx context.Context, orgId OrgIdPathParam, groupDisplayName ScimGroupDisplayNamePathParam, body UpsertScimGroupMappingJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertScimGroupMappingResponse, error) {
+	rsp, err := c.UpsertScimGroupMapping(ctx, orgId, groupDisplayName, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpsertScimGroupMappingResponse(rsp)
 }
 
 // ListServiceUsersWithResponse request returning *ListServiceUsersResponse
@@ -7395,6 +7726,98 @@ func ParseUpdateRoleResponse(rsp *http.Response) (*UpdateRoleResponse, error) {
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListScimGroupMappingsResponse parses an HTTP response from a ListScimGroupMappingsWithResponse call
+func ParseListScimGroupMappingsResponse(rsp *http.Response) (*ListScimGroupMappingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListScimGroupMappingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScimGroupMappingPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteScimGroupMappingResponse parses an HTTP response from a DeleteScimGroupMappingWithResponse call
+func ParseDeleteScimGroupMappingResponse(rsp *http.Response) (*DeleteScimGroupMappingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteScimGroupMappingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpsertScimGroupMappingResponse parses an HTTP response from a UpsertScimGroupMappingWithResponse call
+func ParseUpsertScimGroupMappingResponse(rsp *http.Response) (*UpsertScimGroupMappingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpsertScimGroupMappingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScimGroupMapping
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

@@ -119,11 +119,16 @@ func (s *slogTestLogger) Write(p []byte) (n int, err error) {
 }
 
 func setupTestContext(t *testing.T) (orgId string, cpc *mockcp.MockClientWithResponsesInterface, dpc *mockdp.MockClientWithResponsesInterface, ctx context.Context, fin func()) {
+	orgId, cpc, dpc, _, ctx, fin = setupTestContextWithIam(t)
+	return
+}
+
+func setupTestContextWithIam(t *testing.T) (orgId string, cpc *mockcp.MockClientWithResponsesInterface, dpc *mockdp.MockClientWithResponsesInterface, iamc *mockiam.MockClientWithResponsesInterface, ctx context.Context, fin func()) {
 	ctrl := gomock.NewController(t)
 	orgId = fmt.Sprintf("org-%s", strings.ToLower(rand.Text()))
 	cpc = mockcp.NewMockClientWithResponsesInterface(ctrl)
 	dpc = mockdp.NewMockClientWithResponsesInterface(ctrl)
-	iamc := mockiam.NewMockClientWithResponsesInterface(ctrl)
+	iamc = mockiam.NewMockClientWithResponsesInterface(ctrl)
 	ctx = context.WithValue(context.Background(), ConfigContextKey, config.Config{
 		DefaultOrg: orgId,
 	})
@@ -143,7 +148,7 @@ func setupTestContext(t *testing.T) (orgId string, cpc *mockcp.MockClientWithRes
 	_ = os.Setenv("PO_API_URL", testApiUrl)
 	cobra.EnableTraverseRunHooks = true
 
-	return orgId, cpc, dpc, ctx, func() {
+	return orgId, cpc, dpc, iamc, ctx, func() {
 		slog.SetDefault(oldSlogDefault)
 		ctrl.Finish()
 	}

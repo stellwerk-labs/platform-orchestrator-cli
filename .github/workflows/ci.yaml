@@ -29,6 +29,8 @@ jobs:
           go-version-file: go.mod
       - name: generate
         run: make generate
+      - name: check vendored API specifications
+        run: make check-api-specs
       - name: test
         run: go tool gotestsum --format github-actions
       - name: build

@@ -18,6 +18,11 @@ install:
 generate:
 	go generate -v ./...
 
+## Verify vendored API specifications match their released sources
+.PHONY: check-api-specs
+check-api-specs:
+	./scripts/check-api-specs.sh
+
 ## Build binary
 .PHONY: build
 build:

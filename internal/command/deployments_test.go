@@ -102,7 +102,7 @@ func TestGet_dep_not_found(t *testing.T) {
 
 	dpc.EXPECT().GetDeploymentWithResponse(gomock.Any(), orgId, depId).Return(&dp.GetDeploymentResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusNotFound},
-		JSON404:      &dp.Error{Message: "not found"},
+		JSON404:      &dp.Error{Message: envTypesTestNotFound},
 	}, nil)
 
 	_, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testGetCmd, deploymentsTestAliasSingular, depId.String()})
