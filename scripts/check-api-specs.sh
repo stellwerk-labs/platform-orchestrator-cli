@@ -2,8 +2,8 @@
 set -euo pipefail
 
 readonly cp_revision=v2.1.0
-readonly dp_revision=46d92a65f50c2bb4f44d61493c30d875c1a36d17
-readonly iam_revision=342c1b1f9d06e801319c198587e6d337235c2091
+readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
+readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
 readonly temp_dir="$(mktemp -d)"
 trap 'rm -rf -- "$temp_dir"' EXIT
 
@@ -30,5 +30,5 @@ check_spec() {
 }
 
 check_spec stellwerk-labs/platform-orchestrator-cp "$cp_revision" clients/platform-orchestrator-cp/spec.yaml
-check_spec jayonthenet/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
-check_spec jayonthenet/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
+check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
+check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
