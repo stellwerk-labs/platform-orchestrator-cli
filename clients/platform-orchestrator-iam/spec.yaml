@@ -601,6 +601,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ServiceUserPage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
     post:
       tags:
         - ServiceUser
@@ -1868,6 +1870,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ServiceUserSummary"
+        next_page_token:
+          description: The page token to use to request the next page of items
+          type: string
 
     UserSessionTokenSummary:
       required:

@@ -1327,6 +1327,7 @@ components:
         description:
           description: A human-readable description of the metadata key.
           type: string
+          nullable: true
           example: "This is an example metadata key."
         schema:
           $ref: "#/components/schemas/UpdateMetadataKeySchema"
@@ -1345,10 +1346,12 @@ components:
         format:
           description: The format of the metadata key.
           type: string
+          nullable: true
           example: true
         pattern:
           description: A regular expression pattern for the metadata key.
           type: string
+          nullable: true
           format: regex
           example: "^[a-zA-Z0-9_.-]*$"
 

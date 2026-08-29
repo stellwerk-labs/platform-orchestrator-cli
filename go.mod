@@ -9,6 +9,7 @@ require (
 	github.com/gosuri/uitable v0.0.4
 	github.com/justinrixx/retryhttp v1.0.1
 	github.com/mattn/go-isatty v0.0.20
+	github.com/oapi-codegen/nullable v1.2.0
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1

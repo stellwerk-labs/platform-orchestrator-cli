@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/oapi-codegen/nullable"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -56,7 +57,7 @@ func TestUpdateMetadataKey(t *testing.T) {
 	orgID, _, dpc, ctx, fin := setupTestContext(t)
 	defer fin()
 	description := "Updated"
-	body := dp.MetadataKeyUpdateBody{Description: &description}
+	body := dp.MetadataKeyUpdateBody{Description: nullable.NewNullableWithValue(description)}
 	dpc.EXPECT().UpdateMetadataKeyWithResponse(gomock.Any(), orgID, metadataKeyOwner, body).Return(&dp.UpdateMetadataKeyResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 		JSON200:      &dp.MetadataKey{Name: metadataKeyOwner, Description: &description, Schema: dp.MetadataKeySchema{Type: dp.MetadataKeySchemaTypeString}},
@@ -66,6 +67,28 @@ func TestUpdateMetadataKey(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Contains(t, stdout, "Updated")
 	}
+}
+
+func TestUpdateMetadataKeyClearsOptionalFields(t *testing.T) {
+	orgID, _, dpc, ctx, fin := setupTestContext(t)
+	defer fin()
+	body := dp.MetadataKeyUpdateBody{
+		Description: nullable.NewNullNullable[string](),
+		Schema: &dp.UpdateMetadataKeySchema{
+			Format:  nullable.NewNullNullable[string](),
+			Pattern: nullable.NewNullNullable[string](),
+		},
+	}
+	dpc.EXPECT().UpdateMetadataKeyWithResponse(gomock.Any(), orgID, metadataKeyOwner, body).Return(&dp.UpdateMetadataKeyResponse{
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
+		JSON200:      &dp.MetadataKey{Name: metadataKeyOwner, Schema: dp.MetadataKeySchema{Type: dp.MetadataKeySchemaTypeString}},
+	}, nil)
+
+	_, _, err := executeAndResetCommand(ctx, RootCmd, []string{
+		orgFlag, orgID, outFlag, jsonOutput, testUpdateCmd, metadataKeyCommandName, metadataKeyOwner,
+		`--set-json={"description":null,"schema":{"format":null,"pattern":null}}`,
+	})
+	assert.NoError(t, err)
 }
 
 func TestDeleteMetadataKeyNotFound(t *testing.T) {

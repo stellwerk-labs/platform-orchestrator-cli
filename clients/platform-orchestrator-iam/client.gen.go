@@ -512,6 +512,9 @@ type ServiceUserCreateBody struct {
 // ServiceUserPage A page of service user summaries
 type ServiceUserPage struct {
 	Items []ServiceUserSummary `json:"items"`
+
+	// NextPageToken The page token to use to request the next page of items
+	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
 // ServiceUserRegenerateBody Details required to regenerate the service user
@@ -5761,6 +5764,7 @@ type ListServiceUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceUserPage
+	JSON400      *N400BadRequest
 }
 
 // Status returns HTTPResponse.Status
@@ -7844,6 +7848,13 @@ func ParseListServiceUsersResponse(rsp *http.Response) (*ListServiceUsersRespons
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 

@@ -8,7 +8,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/stellwerk-labs/platform-orchestrator-cli/clients"
 	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/ref"
 )
 
 const (
@@ -18,6 +20,17 @@ const (
 	minimumExpiryInDays = 1
 	maximumExpiryInDays = 3660
 )
+
+func listAllServiceUsers(cmd *cobra.Command, orgID string) ([]iam.ServiceUserSummary, error) {
+	return clients.CollectAll(
+		func(page string) (*iam.ListServiceUsersResponse, error) {
+			return MustIamClient(cmd.Context()).ListServiceUsersWithResponse(cmd.Context(), orgID, &iam.ListServiceUsersParams{Page: ref.RefStringEmptyNil(page)})
+		},
+		func(res *iam.ListServiceUsersResponse) ([]iam.ServiceUserSummary, *string) {
+			return res.JSON200.Items, res.JSON200.NextPageToken
+		},
+	)
+}
 
 var CreateServiceUser = &cobra.Command{
 	Use:   "service-user",
@@ -70,14 +83,11 @@ var GetServiceUser = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		res, err := MustIamClient(cmd.Context()).ListServiceUsersWithResponse(cmd.Context(), orgID, &iam.ListServiceUsersParams{})
+		serviceUsers, err := listAllServiceUsers(cmd, orgID)
 		if err != nil {
 			return errors.Wrap(err, "failed to list service users")
 		}
-		if res.StatusCode() != http.StatusOK {
-			return errors.Errorf("unexpected status code %d when listing service users: %s", res.StatusCode(), string(res.Body))
-		}
-		for _, serviceUser := range res.JSON200.Items {
+		for _, serviceUser := range serviceUsers {
 			if serviceUser.Id == serviceUserID {
 				return MustPrinter(cmd.Context()).Write(cmd.OutOrStdout(), serviceUser)
 			}
@@ -96,14 +106,11 @@ var ListServiceUsers = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		res, err := MustIamClient(cmd.Context()).ListServiceUsersWithResponse(cmd.Context(), orgID, &iam.ListServiceUsersParams{})
+		serviceUsers, err := listAllServiceUsers(cmd, orgID)
 		if err != nil {
 			return errors.Wrap(err, "failed to list service users")
 		}
-		if res.StatusCode() != http.StatusOK {
-			return errors.Errorf("unexpected status code %d when listing service users: %s", res.StatusCode(), string(res.Body))
-		}
-		return MustPrinter(cmd.Context()).Write(cmd.OutOrStdout(), res.JSON200.Items)
+		return MustPrinter(cmd.Context()).Write(cmd.OutOrStdout(), serviceUsers)
 	},
 }
 

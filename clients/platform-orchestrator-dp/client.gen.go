@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oapi-codegen/nullable"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -498,7 +499,7 @@ type MetadataKeySchemaType string
 // MetadataKeyUpdateBody A metadata key for an organization.
 type MetadataKeyUpdateBody struct {
 	// Description A human-readable description of the metadata key.
-	Description *string `json:"description,omitempty"`
+	Description nullable.Nullable[string] `json:"description,omitempty"`
 
 	// Schema The schema of the metadata key.
 	Schema *UpdateMetadataKeySchema `json:"schema,omitempty"`
@@ -533,10 +534,10 @@ type ResourceNodesPage struct {
 // UpdateMetadataKeySchema The schema of the metadata key.
 type UpdateMetadataKeySchema struct {
 	// Format The format of the metadata key.
-	Format *string `json:"format,omitempty"`
+	Format nullable.Nullable[string] `json:"format,omitempty"`
 
 	// Pattern A regular expression pattern for the metadata key.
-	Pattern *string `json:"pattern,omitempty"`
+	Pattern nullable.Nullable[string] `json:"pattern,omitempty"`
 
 	// Type The type of the metadata key.
 	Type *UpdateMetadataKeySchemaType `json:"type,omitempty"`

@@ -5,3 +5,5 @@ generate:
   client: true
   echo-server: false
 output: client.gen.go
+output-options:
+  nullable-type: true

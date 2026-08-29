@@ -10,6 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/ref"
 )
 
 const (
@@ -42,13 +43,38 @@ func TestGetServiceUserFiltersList(t *testing.T) {
 	serviceUserID := uuid.New()
 	iamc.EXPECT().ListServiceUsersWithResponse(gomock.Any(), orgID, &iam.ListServiceUsersParams{}).Return(&iam.ListServiceUsersResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-		JSON200:      &iam.ServiceUserPage{Items: []iam.ServiceUserSummary{{Id: uuid.New()}, {Id: serviceUserID, DisplayName: "SCIM"}}},
+		JSON200:      &iam.ServiceUserPage{Items: []iam.ServiceUserSummary{{Id: uuid.New()}}, NextPageToken: ref.Ref("next")},
+	}, nil)
+	iamc.EXPECT().ListServiceUsersWithResponse(gomock.Any(), orgID, &iam.ListServiceUsersParams{Page: ref.Ref("next")}).Return(&iam.ListServiceUsersResponse{
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
+		JSON200:      &iam.ServiceUserPage{Items: []iam.ServiceUserSummary{{Id: serviceUserID, DisplayName: "SCIM"}}},
 	}, nil)
 
 	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgID, outFlag, jsonOutput, testGetCmd, serviceUserCommandName, serviceUserID.String()})
 	if assert.NoError(t, err) {
 		assert.Contains(t, stdout, serviceUserID.String())
 		assert.Contains(t, stdout, "SCIM")
+	}
+}
+
+func TestListServiceUsersCollectsPages(t *testing.T) {
+	orgID, _, _, iamc, ctx, fin := setupTestContextWithIam(t)
+	defer fin()
+	firstID := uuid.New()
+	secondID := uuid.New()
+	iamc.EXPECT().ListServiceUsersWithResponse(gomock.Any(), orgID, &iam.ListServiceUsersParams{}).Return(&iam.ListServiceUsersResponse{
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
+		JSON200:      &iam.ServiceUserPage{Items: []iam.ServiceUserSummary{{Id: firstID}}, NextPageToken: ref.Ref("next")},
+	}, nil)
+	iamc.EXPECT().ListServiceUsersWithResponse(gomock.Any(), orgID, &iam.ListServiceUsersParams{Page: ref.Ref("next")}).Return(&iam.ListServiceUsersResponse{
+		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
+		JSON200:      &iam.ServiceUserPage{Items: []iam.ServiceUserSummary{{Id: secondID}}},
+	}, nil)
+
+	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgID, outFlag, jsonOutput, testGetCmd, "service-users"})
+	if assert.NoError(t, err) {
+		assert.Contains(t, stdout, firstID.String())
+		assert.Contains(t, stdout, secondID.String())
 	}
 }
 
