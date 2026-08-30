@@ -1,4 +1,5 @@
 name: CI
+
 on:
   workflow_dispatch:
     inputs:
@@ -12,99 +13,155 @@ on:
     tags:
       - 'v**'
   pull_request:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
-      - name: setup-go
-        uses: actions/setup-go@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - name: generate
+
+      - name: Generate
         run: make generate
-      - name: check vendored API specifications
+
+      - name: Check vendored API specifications
         run: make check-api-specs
-      - name: test
+
+      - name: Test
         run: go tool gotestsum --format github-actions
-      - name: build
+
+      - name: Build
         run: go build -o ${{ runner.temp }}/octl ./
-      - name: cli-should-run
+
+      - name: Verify CLI starts
         run: ${{ runner.temp }}/octl --version
-      - name: lint
-        uses: golangci/golangci-lint-action@v9
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@db9de0fc1a667e1a49d2291a1a042dff081d78f6 # v9
         with:
-          version: latest
-      - name: tidy
+          version: v2.11.4
+
+      - name: Tidy modules
         run: go mod tidy
-      - name: diff
+
+      - name: Check generated and module files
         run: git diff --exit-code
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v7
+
+      - name: Run GoReleaser snapshot
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
           distribution: goreleaser
           version: '~> v2'
           args: build --snapshot
+
       - name: Build Docker image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.0.0
         with:
           context: .
           push: false
 
   release:
-    needs:
-      - test
+    if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))))
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: release-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       issues: write
       id-token: write
       packages: write
       pull-requests: write
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
-      - name: Validate manual release tag
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-        run: |
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$(git describe --tags --exact-match)" = "$RELEASE_TAG"
-      - id: release
+
+      - name: Create semantic release
+        id: release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: stellwerk-labs/semantic-release-action@main
+        uses: stellwerk-labs/semantic-release-action@b1269e93b486873118eef1646bfcd46a9d23d3a3
         with:
           token: ${{ github.token }}
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GIT_REF: ${{ github.ref }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+          MANUAL_TAG: ${{ inputs.release_tag }}
+          SEMANTIC_TAG: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME:$GIT_REF" in
+            push:refs/heads/main) release_tag="$SEMANTIC_TAG" ;;
+            push:refs/tags/v*) release_tag="$GIT_REF_NAME" ;;
+            workflow_dispatch:*) release_tag="$MANUAL_TAG" ;;
+            *) release_tag="" ;;
+          esac
+
+          if [ -z "$release_tag" ]; then
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "image_tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git fetch --force origin "refs/tags/${release_tag}:refs/tags/${release_tag}"
+          test "$(git rev-list -n 1 "$release_tag")" = "$(git rev-parse HEAD)"
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${release_tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release credentials
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: test -n "$GH_PAT"
+
       - name: Install Cosign
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-        uses: sigstore/cosign-installer@v3
+        if: steps.version.outputs.tag != ''
+        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+
       - name: Set up QEMU
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-        uses: docker/setup-qemu-action@v4
+        if: steps.version.outputs.tag != ''
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.0.0
+
       - name: Set up Docker Buildx
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-        uses: docker/setup-buildx-action@v4
+        if: steps.version.outputs.tag != ''
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.0.0
+
       - name: Login to GitHub Container Registry
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-        uses: docker/login-action@v4
+        if: steps.version.outputs.tag != ''
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Run GoReleaser
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-        uses: goreleaser/goreleaser-action@v7
+
+      - name: Publish release
+        if: steps.version.outputs.tag != ''
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
           distribution: goreleaser
           version: '~> v2'
@@ -112,3 +169,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Verify release artifacts
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          IMAGE_TAG: ${{ steps.version.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+          asset_count=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets | length')
+          test "$asset_count" -ge 18
+          docker buildx imagetools inspect "ghcr.io/stellwerk-labs/octl:${IMAGE_TAG}"
+          docker run --rm "ghcr.io/stellwerk-labs/octl:${IMAGE_TAG}" --version | grep -F "$IMAGE_TAG"
