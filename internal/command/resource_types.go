@@ -146,40 +146,36 @@ var ListResourceTypes = &cobra.Command{
 	},
 }
 
-var UpdateResourceType = &cobra.Command{
+var UpdateResourceTypeStatus = &cobra.Command{
 	Use:     resourceTypeUse,
 	Aliases: ObjectTypeResourceTypeAliasesSingular,
 	Args:    cobra.ExactArgs(1),
-	Short:   "Update a resource type",
-	Long: fmt.Sprintf(`Update a resource type in your organization.
-
-The following fields can be set using --set or --set-json: %s.
-`, generateTopLevelSetFields(cp.ResourceTypeUpdateBody{})),
+	Short:   "Archive or unarchive an immutable resource type",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
-
-		x, err := readSetFlagsIntoType[cp.ResourceTypeUpdateBody](cmd)
-		if err != nil {
-			return err
-		}
-
 		cpc := MustCpClient(cmd.Context())
 		orgId, err := ShouldOrg(cmd.Context())
 		if err != nil {
 			return err
 		}
-
-		slog.Debug("Updating resource type", slog.String("org_id", orgId), slog.String("id", args[0]))
-		if res, err := cpc.UpdateResourceTypeWithResponse(cmd.Context(), orgId, args[0], *x); err != nil {
-			return errors.Wrap(err, "failed to update resource type")
+		action, _ := cmd.Flags().GetString(moduleVersionActionFlag)
+		reason, _ := cmd.Flags().GetString(moduleVersionReasonFlag)
+		expected, _ := cmd.Flags().GetInt64(moduleVersionExpectedFlag)
+		if res, err := cpc.ChangeResourceTypeCatalogueStatusWithResponse(cmd.Context(), orgId, args[0],
+			cp.ChangeResourceTypeCatalogueStatusParamsCatalogueAction(action),
+			&cp.ChangeResourceTypeCatalogueStatusParams{IdempotencyKey: moduleCommandIdempotencyKey(cmd)},
+			cp.ModuleReasonedCommand{Reason: reason, ExpectedResourceVersion: expected}); err != nil {
+			return errors.Wrap(err, "failed to change resource type catalogue status")
 		} else if res.StatusCode() == http.StatusBadRequest {
 			return errors.Errorf("request is invalid: %s", res.JSON400.Message)
 		} else if res.StatusCode() == http.StatusNotFound {
 			return errors.Errorf("resource type '%s' not found in org '%s'", args[0], orgId)
+		} else if res.StatusCode() == http.StatusConflict {
+			return errors.Errorf("resource type '%s' could not change status: %s", args[0], res.JSON409.Message)
 		} else if res.StatusCode() != http.StatusOK {
-			return errors.Errorf("unexpected status code %d when updating resource type: %s", res.StatusCode(), string(res.Body))
+			return errors.Errorf("unexpected status code %d when changing resource type status: %s", res.StatusCode(), string(res.Body))
 		} else {
-			successMessageF("Resource type %s updated in organization %s.", args[0], orgId)
+			successMessageF("Resource type %s changed to %s in organization %s.", args[0], res.JSON200.CatalogueStatus, orgId)
 			printer := MustPrinter(cmd.Context())
 			return printer.Write(cmd.OutOrStdout(), *res.JSON200)
 		}
@@ -191,5 +187,12 @@ func init() {
 	DeleteCmd.AddCommand(DeleteResourceType)
 	GetCmd.AddCommand(GetResourceType)
 	GetCmd.AddCommand(ListResourceTypes)
-	UpdateCmd.AddCommand(UpdateResourceType)
+	UpdateResourceTypeStatus.Flags().String(moduleVersionActionFlag, "", "Catalogue action: archive or unarchive")
+	UpdateResourceTypeStatus.Flags().String(moduleVersionReasonFlag, "", "Mandatory audited reason")
+	UpdateResourceTypeStatus.Flags().Int64(moduleVersionExpectedFlag, 0, "Expected resource type resource version")
+	UpdateResourceTypeStatus.Flags().String(moduleVersionIdempotencyFlag, "", "Stable idempotency key")
+	_ = UpdateResourceTypeStatus.MarkFlagRequired(moduleVersionActionFlag)
+	_ = UpdateResourceTypeStatus.MarkFlagRequired(moduleVersionReasonFlag)
+	_ = UpdateResourceTypeStatus.MarkFlagRequired(moduleVersionExpectedFlag)
+	UpdateCmd.AddCommand(UpdateResourceTypeStatus)
 }

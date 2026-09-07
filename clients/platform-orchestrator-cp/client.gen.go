@@ -23,11 +23,25 @@ const (
 	UserIdHeaderScopes = "userIdHeader.Scopes"
 )
 
+// Defines values for CoreModuleVersionMigrationGeneration.
+const (
+	CoreModuleVersionMigrationGenerationManaged CoreModuleVersionMigrationGeneration = "managed"
+	CoreModuleVersionMigrationGenerationV0      CoreModuleVersionMigrationGeneration = "v0"
+	CoreModuleVersionMigrationGenerationV1      CoreModuleVersionMigrationGeneration = "v1"
+)
+
 // Defines values for EnvironmentStatus.
 const (
 	EnvironmentStatusActive       EnvironmentStatus = "active"
 	EnvironmentStatusDeleteFailed EnvironmentStatus = "delete_failed"
 	EnvironmentStatusDeleting     EnvironmentStatus = "deleting"
+)
+
+// Defines values for InternalModuleCatalogueModuleMigrationGeneration.
+const (
+	InternalModuleCatalogueModuleMigrationGenerationManaged InternalModuleCatalogueModuleMigrationGeneration = "managed"
+	InternalModuleCatalogueModuleMigrationGenerationV0      InternalModuleCatalogueModuleMigrationGeneration = "v0"
+	InternalModuleCatalogueModuleMigrationGenerationV1      InternalModuleCatalogueModuleMigrationGeneration = "v1"
 )
 
 // Defines values for InternalOrganizationSource.
@@ -44,6 +58,38 @@ const (
 	InternalOrganizationStatusDeleting     InternalOrganizationStatus = "deleting"
 )
 
+// Defines values for ModuleCatalogueStatus.
+const (
+	ModuleCatalogueStatusActive   ModuleCatalogueStatus = "active"
+	ModuleCatalogueStatusArchived ModuleCatalogueStatus = "archived"
+)
+
+// Defines values for ModuleExtensionContributionKind.
+const (
+	ModuleExtensionContributionKindContextualAction ModuleExtensionContributionKind = "contextual_action"
+	ModuleExtensionContributionKindRelatedResource  ModuleExtensionContributionKind = "related_resource"
+)
+
+// Defines values for ModuleExtensionContributionLifecycleState.
+const (
+	ModuleExtensionContributionLifecycleStateActive   ModuleExtensionContributionLifecycleState = "active"
+	ModuleExtensionContributionLifecycleStateDraft    ModuleExtensionContributionLifecycleState = "draft"
+	ModuleExtensionContributionLifecycleStateTerminal ModuleExtensionContributionLifecycleState = "terminal"
+)
+
+// Defines values for ModuleExtensionContributionUpsertBodyKind.
+const (
+	ModuleExtensionContributionUpsertBodyKindContextualAction ModuleExtensionContributionUpsertBodyKind = "contextual_action"
+	ModuleExtensionContributionUpsertBodyKindRelatedResource  ModuleExtensionContributionUpsertBodyKind = "related_resource"
+)
+
+// Defines values for ModuleExtensionContributionUpsertBodyLifecycleState.
+const (
+	ModuleExtensionContributionUpsertBodyLifecycleStateActive   ModuleExtensionContributionUpsertBodyLifecycleState = "active"
+	ModuleExtensionContributionUpsertBodyLifecycleStateDraft    ModuleExtensionContributionUpsertBodyLifecycleState = "draft"
+	ModuleExtensionContributionUpsertBodyLifecycleStateTerminal ModuleExtensionContributionUpsertBodyLifecycleState = "terminal"
+)
+
 // Defines values for ModuleParamItemType.
 const (
 	Any    ModuleParamItemType = "any"
@@ -54,6 +100,49 @@ const (
 	String ModuleParamItemType = "string"
 )
 
+// Defines values for ModuleVerificationStatus.
+const (
+	ModuleVerificationStatusUnverified ModuleVerificationStatus = "unverified"
+)
+
+// Defines values for ModuleVersionLifecycleTransactionItemAction.
+const (
+	ModuleVersionLifecycleTransactionItemActionDeprecate     ModuleVersionLifecycleTransactionItemAction = "deprecate"
+	ModuleVersionLifecycleTransactionItemActionMarkDefective ModuleVersionLifecycleTransactionItemAction = "mark-defective"
+	ModuleVersionLifecycleTransactionItemActionPromote       ModuleVersionLifecycleTransactionItemAction = "promote"
+	ModuleVersionLifecycleTransactionItemActionRestore       ModuleVersionLifecycleTransactionItemAction = "restore"
+)
+
+// Defines values for ModuleVersionPinBulkAction.
+const (
+	ModuleVersionPinBulkActionDiscard ModuleVersionPinBulkAction = "discard"
+	ModuleVersionPinBulkActionPin     ModuleVersionPinBulkAction = "pin"
+	ModuleVersionPinBulkActionUnpin   ModuleVersionPinBulkAction = "unpin"
+)
+
+// Defines values for ModuleVersionPinOverrideReconcileBodyOutcome.
+const (
+	ModuleVersionPinOverrideReconcileBodyOutcomeCancelled ModuleVersionPinOverrideReconcileBodyOutcome = "cancelled"
+	ModuleVersionPinOverrideReconcileBodyOutcomeFailed    ModuleVersionPinOverrideReconcileBodyOutcome = "failed"
+	ModuleVersionPinOverrideReconcileBodyOutcomeSucceeded ModuleVersionPinOverrideReconcileBodyOutcome = "succeeded"
+)
+
+// Defines values for ModuleVersionPinStatus.
+const (
+	ModuleVersionPinStatusActive          ModuleVersionPinStatus = "active"
+	ModuleVersionPinStatusOverridden      ModuleVersionPinStatus = "overridden"
+	ModuleVersionPinStatusOverridePending ModuleVersionPinStatus = "override_pending"
+	ModuleVersionPinStatusRemoved         ModuleVersionPinStatus = "removed"
+)
+
+// Defines values for ModuleVersionSemanticStatus.
+const (
+	ModuleVersionSemanticStatusDefault    ModuleVersionSemanticStatus = "default"
+	ModuleVersionSemanticStatusDefective  ModuleVersionSemanticStatus = "defective"
+	ModuleVersionSemanticStatusDeprecated ModuleVersionSemanticStatus = "deprecated"
+	ModuleVersionSemanticStatusProposed   ModuleVersionSemanticStatus = "proposed"
+)
+
 // Defines values for OrganizationStatus.
 const (
 	OrganizationStatusActive       OrganizationStatus = "active"
@@ -62,10 +151,26 @@ const (
 	OrganizationStatusDeleting     OrganizationStatus = "deleting"
 )
 
+// Defines values for PluginAvailabilityState.
+const (
+	PluginAvailabilityStateAvailable    PluginAvailabilityState = "available"
+	PluginAvailabilityStateIncompatible PluginAvailabilityState = "incompatible"
+	PluginAvailabilityStateNotEnabled   PluginAvailabilityState = "not_enabled"
+	PluginAvailabilityStateNotEntitled  PluginAvailabilityState = "not_entitled"
+	PluginAvailabilityStateNotInstalled PluginAvailabilityState = "not_installed"
+	PluginAvailabilityStateUnavailable  PluginAvailabilityState = "unavailable"
+)
+
 // Defines values for ProjectStatus.
 const (
 	ProjectStatusActive   ProjectStatus = "active"
 	ProjectStatusDeleting ProjectStatus = "deleting"
+)
+
+// Defines values for ResourceTypeCatalogueStatus.
+const (
+	ResourceTypeCatalogueStatusActive   ResourceTypeCatalogueStatus = "active"
+	ResourceTypeCatalogueStatusArchived ResourceTypeCatalogueStatus = "archived"
 )
 
 // Defines values for RunnerType.
@@ -83,6 +188,32 @@ const (
 	StateStorageTypeGcs        StateStorageType = "gcs"
 	StateStorageTypeKubernetes StateStorageType = "kubernetes"
 	StateStorageTypeS3         StateStorageType = "s3"
+)
+
+// Defines values for TransitionEnvironmentModuleVersionPinParamsPinAction.
+const (
+	TransitionEnvironmentModuleVersionPinParamsPinActionDiscard TransitionEnvironmentModuleVersionPinParamsPinAction = "discard"
+	TransitionEnvironmentModuleVersionPinParamsPinActionUnpin   TransitionEnvironmentModuleVersionPinParamsPinAction = "unpin"
+)
+
+// Defines values for ChangeModuleCatalogueStatusParamsCatalogueAction.
+const (
+	ChangeModuleCatalogueStatusParamsCatalogueActionArchive   ChangeModuleCatalogueStatusParamsCatalogueAction = "archive"
+	ChangeModuleCatalogueStatusParamsCatalogueActionUnarchive ChangeModuleCatalogueStatusParamsCatalogueAction = "unarchive"
+)
+
+// Defines values for TransitionModuleVersionParamsLifecycleAction.
+const (
+	TransitionModuleVersionParamsLifecycleActionDeprecate     TransitionModuleVersionParamsLifecycleAction = "deprecate"
+	TransitionModuleVersionParamsLifecycleActionMarkDefective TransitionModuleVersionParamsLifecycleAction = "mark-defective"
+	TransitionModuleVersionParamsLifecycleActionPromote       TransitionModuleVersionParamsLifecycleAction = "promote"
+	TransitionModuleVersionParamsLifecycleActionRestore       TransitionModuleVersionParamsLifecycleAction = "restore"
+)
+
+// Defines values for ChangeResourceTypeCatalogueStatusParamsCatalogueAction.
+const (
+	ChangeResourceTypeCatalogueStatusParamsCatalogueActionArchive   ChangeResourceTypeCatalogueStatusParamsCatalogueAction = "archive"
+	ChangeResourceTypeCatalogueStatusParamsCatalogueActionUnarchive ChangeResourceTypeCatalogueStatusParamsCatalogueAction = "unarchive"
 )
 
 // AvailableResourceType A page of available resource types returned from the list api.
@@ -169,6 +300,75 @@ type ConfigurationSecret struct {
 	Version int `json:"version"`
 }
 
+// CoreModuleVersion defines model for CoreModuleVersion.
+type CoreModuleVersion struct {
+	ArtifactDigest      string                               `json:"artifact_digest"`
+	CreatedAt           time.Time                            `json:"created_at"`
+	LifecycleStatus     ModuleVersionSemanticStatus          `json:"lifecycle_status"`
+	MigrationGeneration CoreModuleVersionMigrationGeneration `json:"migration_generation"`
+	ModuleSlug          string                               `json:"module_slug"`
+	ModuleUuid          openapi_types.UUID                   `json:"module_uuid"`
+	OpaqueVersionId     string                               `json:"opaque_version_id"`
+	OrgId               string                               `json:"org_id"`
+	PublishedBy         *openapi_types.UUID                  `json:"published_by,omitempty"`
+	ReleaseNotes        *string                              `json:"release_notes,omitempty"`
+	ResourceVersion     int64                                `json:"resource_version"`
+	SemanticVersion     *string                              `json:"semantic_version,omitempty"`
+	SourceRevision      string                               `json:"source_revision"`
+	Uuid                openapi_types.UUID                   `json:"uuid"`
+	VerificationStatus  ModuleVerificationStatus             `json:"verification_status"`
+}
+
+// CoreModuleVersionMigrationGeneration defines model for CoreModuleVersion.MigrationGeneration.
+type CoreModuleVersionMigrationGeneration string
+
+// CoreModuleVersionDetail defines model for CoreModuleVersionDetail.
+type CoreModuleVersionDetail struct {
+	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
+	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned"`
+
+	// CreatedAt The date and time when the module version was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Definition Configuration for an OpenTofu provider that will be used in modules
+	Definition ModuleVersion `json:"definition"`
+
+	// Dependencies A mapping of alias to resource dependencies that must be provisioned with this module
+	Dependencies map[string]ModuleDependencyManifest `json:"dependencies"`
+
+	// Description An optional text description for this module
+	Description *string `json:"description,omitempty"`
+
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
+	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
+
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
+
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+
+	// ProviderMapping A mapping of module providers to use when provisioning using this module
+	ProviderMapping map[string]string `json:"provider_mapping"`
+
+	// ResourceType The resource type that this module provisions.
+	ResourceType string            `json:"resource_type"`
+	Version      CoreModuleVersion `json:"version"`
+
+	// VersionId A unique identifier for this version of the module
+	VersionId string `json:"version_id"`
+}
+
+// CoreModuleVersionPage defines model for CoreModuleVersionPage.
+type CoreModuleVersionPage struct {
+	Items         []CoreModuleVersionDetail `json:"items"`
+	NextPageToken *string                   `json:"next_page_token,omitempty"`
+}
+
 // Environment An environment.
 type Environment struct {
 	// CreatedAt The date and time when the resource type was created
@@ -182,6 +382,9 @@ type Environment struct {
 
 	// Id Environment identifier
 	Id string `json:"id"`
+
+	// Labels Labels used by module policy and add-on selectors.
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// ProjectId Project identifier
 	ProjectId string `json:"project_id"`
@@ -215,6 +418,18 @@ type EnvironmentCreateBody struct {
 
 	// Id Environment identifier
 	Id string `json:"id"`
+
+	// Labels Labels used by module policy and add-on selectors.
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// EnvironmentDeletionImpact defines model for EnvironmentDeletionImpact.
+type EnvironmentDeletionImpact struct {
+	Blocked          bool                          `json:"blocked"`
+	Blockers         []string                      `json:"blockers"`
+	EnvironmentUuid  openapi_types.UUID            `json:"environment_uuid"`
+	Pins             []EnvironmentModuleVersionPin `json:"pins"`
+	RelatedResources []ModuleExtensionContribution `json:"related_resources"`
 }
 
 // EnvironmentInternalUpdateBody defines model for EnvironmentInternalUpdateBody.
@@ -222,6 +437,41 @@ type EnvironmentInternalUpdateBody struct {
 	// Status The status of the environment. Environments are normally active unless they have been deleted. A delete_failed status indicates that the destroy failed and a delete can be re-issued.
 	Status        *EnvironmentStatus `json:"status,omitempty"`
 	StatusMessage *string            `json:"status_message,omitempty"`
+}
+
+// EnvironmentModuleVersionPin defines model for EnvironmentModuleVersionPin.
+type EnvironmentModuleVersionPin struct {
+	ActivationEventId         openapi_types.UUID     `json:"activation_event_id"`
+	BulkOperationId           *openapi_types.UUID    `json:"bulk_operation_id,omitempty"`
+	CreatedAt                 time.Time              `json:"created_at"`
+	CreatedBy                 openapi_types.UUID     `json:"created_by"`
+	EnvironmentId             string                 `json:"environment_id"`
+	EnvironmentUuid           openapi_types.UUID     `json:"environment_uuid"`
+	Id                        openapi_types.UUID     `json:"id"`
+	ModuleUuid                openapi_types.UUID     `json:"module_uuid"`
+	OrgId                     string                 `json:"org_id"`
+	OverrideActor             *openapi_types.UUID    `json:"override_actor,omitempty"`
+	OverrideDeploymentId      *openapi_types.UUID    `json:"override_deployment_id,omitempty"`
+	OverrideOperationId       *openapi_types.UUID    `json:"override_operation_id,omitempty"`
+	OverrideReason            *string                `json:"override_reason,omitempty"`
+	OverrideTargetVersionUuid *openapi_types.UUID    `json:"override_target_version_uuid,omitempty"`
+	ProjectId                 string                 `json:"project_id"`
+	ProjectUuid               openapi_types.UUID     `json:"project_uuid"`
+	RemovedAt                 *time.Time             `json:"removed_at,omitempty"`
+	ResourceVersion           int64                  `json:"resource_version"`
+	Status                    ModuleVersionPinStatus `json:"status"`
+	UpdatedAt                 time.Time              `json:"updated_at"`
+	VersionUuid               openapi_types.UUID     `json:"version_uuid"`
+}
+
+// EnvironmentModuleVersionPinCreateBody defines model for EnvironmentModuleVersionPinCreateBody.
+type EnvironmentModuleVersionPinCreateBody struct {
+	ConfirmDefectiveVersionUuid *openapi_types.UUID `json:"confirm_defective_version_uuid,omitempty"`
+	EnvironmentUuid             openapi_types.UUID  `json:"environment_uuid"`
+	ModuleUuid                  openapi_types.UUID  `json:"module_uuid"`
+	ProjectUuid                 openapi_types.UUID  `json:"project_uuid"`
+	Reason                      string              `json:"reason"`
+	VersionUuid                 openapi_types.UUID  `json:"version_uuid"`
 }
 
 // EnvironmentPage A page of environments returned from the list api.
@@ -246,6 +496,9 @@ type EnvironmentTypeCreateBody struct {
 
 	// Id Environment type identifier
 	Id string `json:"id"`
+
+	// IsProduction Whether Environments of this type are Production targets.
+	IsProduction *bool `json:"is_production,omitempty"`
 }
 
 // EnvironmentTypePage A page of environment types returned from the list api.
@@ -268,6 +521,9 @@ type EnvironmentTypeSummary struct {
 	// Id The unique id of the environment type in this org.
 	Id string `json:"id"`
 
+	// IsProduction Authoritative Production classification. Clients must not infer this from IDs, names or labels.
+	IsProduction bool `json:"is_production"`
+
 	// Uuid Unique uid for the environment type to identify a unique lifecycle
 	Uuid openapi_types.UUID `json:"uuid"`
 }
@@ -275,13 +531,19 @@ type EnvironmentTypeSummary struct {
 // EnvironmentTypeUpdateBody A request to update an environment type in the org.
 type EnvironmentTypeUpdateBody struct {
 	// DisplayName Human readable name for the environment type. This will be generated if not provided.
-	DisplayName string `json:"display_name"`
+	DisplayName *string `json:"display_name,omitempty"`
+
+	// IsProduction Whether Environments of this type are Production targets.
+	IsProduction *bool `json:"is_production,omitempty"`
 }
 
 // EnvironmentUpdateBody A request to update an environment.
 type EnvironmentUpdateBody struct {
 	// DisplayName Environment human readable name. The id is used if this is not specified.
 	DisplayName string `json:"display_name"`
+
+	// Labels Complete replacement label set used by module policy and add-on selectors.
+	Labels *map[string]string `json:"labels,omitempty"`
 }
 
 // Error A standard error response
@@ -319,18 +581,20 @@ type InternalModuleCatalogue struct {
 
 // InternalModuleCatalogueGenerateBody The request contents to generate a module catalogue
 type InternalModuleCatalogueGenerateBody struct {
-	// AreRulesIgnored When running a destroy deployment, we only care about pinned module version and do not need to check the rules. This option can be used to skip rule evaluation.
+	// AreRulesIgnored When running a destroy deployment, only pinned module versions are required and rule evaluation is skipped.
 	AreRulesIgnored bool `json:"are_rules_ignored,omitempty"`
 
 	// PinnedModuleVersions The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
 	PinnedModuleVersions []string `json:"pinned_module_versions,omitempty"`
 
-	// PinnedProviders The normal response body only includes the modules and providers currently configured. However if we are removing nodes that still rely on providers we need to fetch their details without having the modules.
+	// PinnedProviders The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request providers retained by the previous graph.
 	PinnedProviders []string `json:"pinned_providers,omitempty"`
 }
 
 // InternalModuleCatalogueModule defines model for InternalModuleCatalogueModule.
 type InternalModuleCatalogueModule struct {
+	ArtifactDigest string `json:"artifact_digest"`
+
 	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
 	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned"`
 
@@ -346,6 +610,9 @@ type InternalModuleCatalogueModule struct {
 	// Id The unique identifier for a module
 	Id ModuleId `json:"id"`
 
+	// MigrationGeneration Authoritative persisted migration provenance. Only migrated v0 versions may reference external artifacts without a declared digest.
+	MigrationGeneration InternalModuleCatalogueModuleMigrationGeneration `json:"migration_generation"`
+
 	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
 	ModuleInputs map[string]interface{} `json:"module_inputs"`
 
@@ -357,7 +624,8 @@ type InternalModuleCatalogueModule struct {
 	ModuleSource string `json:"module_source"`
 
 	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
-	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+	ModuleSourceCode *string            `json:"module_source_code,omitempty"`
+	ModuleUuid       openapi_types.UUID `json:"module_uuid"`
 
 	// OrgId The Organization ID
 	OrgId string `json:"org_id"`
@@ -366,15 +634,24 @@ type InternalModuleCatalogueModule struct {
 	ProviderMapping map[string]string `json:"provider_mapping"`
 
 	// ResourceType The resource type that this module provisions.
-	ResourceType string                              `json:"resource_type"`
-	Rules        []InternalModuleCatalogueModuleRule `json:"rules"`
+	ResourceType   string                              `json:"resource_type"`
+	Rules          []InternalModuleCatalogueModuleRule `json:"rules"`
+	SemanticStatus ModuleVersionSemanticStatus         `json:"semantic_status"`
+
+	// SemanticVersion Canonical SemVer for managed versions; empty only for migrated v0 versions.
+	SemanticVersion string `json:"semantic_version"`
 
 	// UpdatedAt The date and time when the module was updated to this version.
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt          time.Time                `json:"updated_at"`
+	VerificationStatus ModuleVerificationStatus `json:"verification_status"`
 
 	// VersionId A unique identifier for this version of the module
-	VersionId string `json:"version_id"`
+	VersionId   string             `json:"version_id"`
+	VersionUuid openapi_types.UUID `json:"version_uuid"`
 }
+
+// InternalModuleCatalogueModuleMigrationGeneration Authoritative persisted migration provenance. Only migrated v0 versions may reference external artifacts without a declared digest.
+type InternalModuleCatalogueModuleMigrationGeneration string
 
 // InternalModuleCatalogueModuleRule A rule within a module
 type InternalModuleCatalogueModuleRule struct {
@@ -712,6 +989,48 @@ type Module struct {
 	VersionId string `json:"version_id"`
 }
 
+// ModuleCatalogueCreateBody defines model for ModuleCatalogueCreateBody.
+type ModuleCatalogueCreateBody struct {
+	Description  *string `json:"description,omitempty"`
+	DisplayName  *string `json:"display_name,omitempty"`
+	ResourceType string  `json:"resource_type"`
+
+	// Slug The unique identifier for a module
+	Slug ModuleId           `json:"slug"`
+	Tags *map[string]string `json:"tags,omitempty"`
+}
+
+// ModuleCatalogueEntry defines model for ModuleCatalogueEntry.
+type ModuleCatalogueEntry struct {
+	ArchiveReason              *string               `json:"archive_reason,omitempty"`
+	ArchivedAt                 *time.Time            `json:"archived_at,omitempty"`
+	ArchivedBy                 *openapi_types.UUID   `json:"archived_by,omitempty"`
+	CreatedAt                  time.Time             `json:"created_at"`
+	CurrentDefaultVersionUuid  *openapi_types.UUID   `json:"current_default_version_uuid,omitempty"`
+	Description                string                `json:"description"`
+	DisplayName                string                `json:"display_name"`
+	ManagedDefaultGeneration   int64                 `json:"managed_default_generation"`
+	OrgId                      string                `json:"org_id"`
+	PreviousDefaultVersionUuid *openapi_types.UUID   `json:"previous_default_version_uuid,omitempty"`
+	ResourceType               string                `json:"resource_type"`
+	ResourceVersion            int64                 `json:"resource_version"`
+	Slug                       string                `json:"slug"`
+	Status                     ModuleCatalogueStatus `json:"status"`
+	Tags                       map[string]string     `json:"tags"`
+	Uuid                       openapi_types.UUID    `json:"uuid"`
+}
+
+// ModuleCatalogueStatus defines model for ModuleCatalogueStatus.
+type ModuleCatalogueStatus string
+
+// ModuleCatalogueUpdateBody defines model for ModuleCatalogueUpdateBody.
+type ModuleCatalogueUpdateBody struct {
+	Description             string            `json:"description"`
+	DisplayName             string            `json:"display_name"`
+	ExpectedResourceVersion int64             `json:"expected_resource_version"`
+	Tags                    map[string]string `json:"tags"`
+}
+
 // ModuleCoProvisionManifest A resource to provision after or in parallel with the resource of the current module.
 type ModuleCoProvisionManifest struct {
 	// Class A resource class requested by the resource graph. 'default' is the default value.
@@ -755,6 +1074,9 @@ type ModuleCoreFields struct {
 
 // ModuleCreateBody A request to create a new module
 type ModuleCreateBody struct {
+	// ArtifactDigest Canonical digest protecting the referenced external artifact. Omitted for inline source.
+	ArtifactDigest *string `json:"artifact_digest,omitempty"`
+
 	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
 	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned,omitempty"`
 
@@ -785,6 +1107,9 @@ type ModuleCreateBody struct {
 
 	// ResourceType The resource type that this module provisions.
 	ResourceType string `json:"resource_type"`
+
+	// SemanticVersion Canonical SemVer identity of the immutable Core Module Version.
+	SemanticVersion *string `json:"semantic_version,omitempty"`
 }
 
 // ModuleDependencyManifest A dependency to provision before the current resource is provisioned
@@ -802,8 +1127,75 @@ type ModuleDependencyManifest struct {
 	Type string `json:"type"`
 }
 
+// ModuleExtensionContribution defines model for ModuleExtensionContribution.
+type ModuleExtensionContribution struct {
+	CreatedAt          time.Time                                 `json:"created_at"`
+	CreatedBy          openapi_types.UUID                        `json:"created_by"`
+	EnvironmentUuid    *openapi_types.UUID                       `json:"environment_uuid,omitempty"`
+	ExternalResourceId string                                    `json:"external_resource_id"`
+	Id                 openapi_types.UUID                        `json:"id"`
+	Kind               ModuleExtensionContributionKind           `json:"kind"`
+	Label              string                                    `json:"label"`
+	LifecycleState     ModuleExtensionContributionLifecycleState `json:"lifecycle_state"`
+	ModuleUuid         openapi_types.UUID                        `json:"module_uuid"`
+	Namespace          string                                    `json:"namespace"`
+	Payload            map[string]interface{}                    `json:"payload"`
+	TargetUrl          *string                                   `json:"target_url,omitempty"`
+	UpdatedAt          time.Time                                 `json:"updated_at"`
+	VersionUuid        *openapi_types.UUID                       `json:"version_uuid,omitempty"`
+}
+
+// ModuleExtensionContributionKind defines model for ModuleExtensionContribution.Kind.
+type ModuleExtensionContributionKind string
+
+// ModuleExtensionContributionLifecycleState defines model for ModuleExtensionContribution.LifecycleState.
+type ModuleExtensionContributionLifecycleState string
+
+// ModuleExtensionContributionUpsertBody defines model for ModuleExtensionContributionUpsertBody.
+type ModuleExtensionContributionUpsertBody struct {
+	EnvironmentUuid    *openapi_types.UUID                                 `json:"environment_uuid,omitempty"`
+	ExternalResourceId string                                              `json:"external_resource_id"`
+	Kind               ModuleExtensionContributionUpsertBodyKind           `json:"kind"`
+	Label              string                                              `json:"label"`
+	LifecycleState     ModuleExtensionContributionUpsertBodyLifecycleState `json:"lifecycle_state"`
+	Namespace          string                                              `json:"namespace"`
+	Payload            map[string]interface{}                              `json:"payload"`
+	TargetUrl          *string                                             `json:"target_url,omitempty"`
+	VersionUuid        *openapi_types.UUID                                 `json:"version_uuid,omitempty"`
+}
+
+// ModuleExtensionContributionUpsertBodyKind defines model for ModuleExtensionContributionUpsertBody.Kind.
+type ModuleExtensionContributionUpsertBodyKind string
+
+// ModuleExtensionContributionUpsertBodyLifecycleState defines model for ModuleExtensionContributionUpsertBody.LifecycleState.
+type ModuleExtensionContributionUpsertBodyLifecycleState string
+
 // ModuleId The unique identifier for a module
 type ModuleId = string
+
+// ModuleOperationReservation defines model for ModuleOperationReservation.
+type ModuleOperationReservation struct {
+	AcquiredAt        time.Time           `json:"acquired_at"`
+	AcquiredBy        openapi_types.UUID  `json:"acquired_by"`
+	Id                openapi_types.UUID  `json:"id"`
+	ModuleUuid        openapi_types.UUID  `json:"module_uuid"`
+	Namespace         string              `json:"namespace"`
+	OperationId       openapi_types.UUID  `json:"operation_id"`
+	Reason            string              `json:"reason"`
+	RelatedResourceId string              `json:"related_resource_id"`
+	ReleaseReason     *string             `json:"release_reason,omitempty"`
+	ReleasedAt        *time.Time          `json:"released_at,omitempty"`
+	ReleasedBy        *openapi_types.UUID `json:"released_by,omitempty"`
+	ResourceVersion   int64               `json:"resource_version"`
+}
+
+// ModuleOperationReservationAcquireBody defines model for ModuleOperationReservationAcquireBody.
+type ModuleOperationReservationAcquireBody struct {
+	Namespace         string             `json:"namespace"`
+	OperationId       openapi_types.UUID `json:"operation_id"`
+	Reason            string             `json:"reason"`
+	RelatedResourceId string             `json:"related_resource_id"`
+}
 
 // ModulePage A page of the list modules response.
 type ModulePage struct {
@@ -921,6 +1313,12 @@ type ModuleProviderUpdateBody struct {
 	VersionConstraint *string `json:"version_constraint,omitempty"`
 }
 
+// ModuleReasonedCommand defines model for ModuleReasonedCommand.
+type ModuleReasonedCommand struct {
+	ExpectedResourceVersion int64  `json:"expected_resource_version"`
+	Reason                  string `json:"reason"`
+}
+
 // ModuleSummary defines model for ModuleSummary.
 type ModuleSummary struct {
 	// CreatedAt The date and time when the module was created.
@@ -953,6 +1351,8 @@ type ModuleSummary struct {
 
 // ModuleUpdateBody A request to update an existing module
 type ModuleUpdateBody struct {
+	ArtifactDigest *string `json:"artifact_digest,omitempty"`
+
 	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
 	Coprovisioned *[]ModuleCoProvisionManifest `json:"coprovisioned,omitempty"`
 
@@ -977,7 +1377,13 @@ type ModuleUpdateBody struct {
 
 	// ProviderMapping A mapping of module providers to use when provisioning using this module.
 	ProviderMapping *map[string]string `json:"provider_mapping,omitempty"`
+
+	// SemanticVersion Canonical SemVer identity for the immutable Proposed version.
+	SemanticVersion *string `json:"semantic_version,omitempty"`
 }
+
+// ModuleVerificationStatus defines model for ModuleVerificationStatus.
+type ModuleVerificationStatus string
 
 // ModuleVersion defines model for ModuleVersion.
 type ModuleVersion struct {
@@ -1016,14 +1422,218 @@ type ModuleVersion struct {
 	VersionId string `json:"version_id"`
 }
 
-// ModuleVersionPage A page of the list modules versions response.
-type ModuleVersionPage struct {
-	// Items The items in this page
-	Items []ModuleVersionSummary `json:"items"`
-
-	// NextPageToken The page token to use to request the next page of items
-	NextPageToken *string `json:"next_page_token,omitempty"`
+// ModuleVersionComparison defines model for ModuleVersionComparison.
+type ModuleVersionComparison struct {
+	AddedDependencies       []string                        `json:"added_dependencies"`
+	AddedModuleInputs       []string                        `json:"added_module_inputs"`
+	AddedModuleParams       []string                        `json:"added_module_params"`
+	AddedProviderMappings   []string                        `json:"added_provider_mappings"`
+	After                   ModuleVersionComparisonSnapshot `json:"after"`
+	ArtifactDigestChanged   bool                            `json:"artifact_digest_changed"`
+	Before                  ModuleVersionComparisonSnapshot `json:"before"`
+	ChangedDependencies     []string                        `json:"changed_dependencies"`
+	ChangedModuleInputs     []string                        `json:"changed_module_inputs"`
+	ChangedModuleParams     []string                        `json:"changed_module_params"`
+	ChangedProviderMappings []string                        `json:"changed_provider_mappings"`
+	CoprovisioningChanged   bool                            `json:"coprovisioning_changed"`
+	FromVersionUuid         openapi_types.UUID              `json:"from_version_uuid"`
+	ModuleSourceChanged     bool                            `json:"module_source_changed"`
+	ModuleSourceCodeChanged bool                            `json:"module_source_code_changed"`
+	RemovedDependencies     []string                        `json:"removed_dependencies"`
+	RemovedModuleInputs     []string                        `json:"removed_module_inputs"`
+	RemovedModuleParams     []string                        `json:"removed_module_params"`
+	RemovedProviderMappings []string                        `json:"removed_provider_mappings"`
+	ResourceTypeChanged     bool                            `json:"resource_type_changed"`
+	SourceRevisionChanged   bool                            `json:"source_revision_changed"`
+	ToVersionUuid           openapi_types.UUID              `json:"to_version_uuid"`
 }
+
+// ModuleVersionComparisonSnapshot defines model for ModuleVersionComparisonSnapshot.
+type ModuleVersionComparisonSnapshot struct {
+	ArtifactDigest   string                              `json:"artifact_digest"`
+	Coprovisioned    []ModuleCoProvisionManifest         `json:"coprovisioned"`
+	Dependencies     map[string]ModuleDependencyManifest `json:"dependencies"`
+	ModuleInputs     map[string]interface{}              `json:"module_inputs"`
+	ModuleParams     map[string]ModuleParamItem          `json:"module_params"`
+	ModuleSource     string                              `json:"module_source"`
+	ModuleSourceCode *string                             `json:"module_source_code"`
+	ProviderMapping  map[string]string                   `json:"provider_mapping"`
+	ResourceType     string                              `json:"resource_type"`
+	SourceRevision   string                              `json:"source_revision"`
+}
+
+// ModuleVersionLifecycleEvent defines model for ModuleVersionLifecycleEvent.
+type ModuleVersionLifecycleEvent struct {
+	Actor                  openapi_types.UUID           `json:"actor"`
+	CorrelationId          *openapi_types.UUID          `json:"correlation_id,omitempty"`
+	CreatedAt              time.Time                    `json:"created_at"`
+	FromStatus             *ModuleVersionSemanticStatus `json:"from_status,omitempty"`
+	Id                     openapi_types.UUID           `json:"id"`
+	ModuleUuid             openapi_types.UUID           `json:"module_uuid"`
+	Payload                map[string]interface{}       `json:"payload"`
+	Reason                 *string                      `json:"reason,omitempty"`
+	Sequence               int64                        `json:"sequence"`
+	ToStatus               ModuleVersionSemanticStatus  `json:"to_status"`
+	VersionResourceVersion int64                        `json:"version_resource_version"`
+	VersionUuid            openapi_types.UUID           `json:"version_uuid"`
+}
+
+// ModuleVersionLifecycleTransactionBody defines model for ModuleVersionLifecycleTransactionBody.
+type ModuleVersionLifecycleTransactionBody struct {
+	Transitions []ModuleVersionLifecycleTransactionItem `json:"transitions"`
+}
+
+// ModuleVersionLifecycleTransactionItem defines model for ModuleVersionLifecycleTransactionItem.
+type ModuleVersionLifecycleTransactionItem struct {
+	Action                  ModuleVersionLifecycleTransactionItemAction `json:"action"`
+	ExpectedResourceVersion int64                                       `json:"expected_resource_version"`
+
+	// ModuleId The unique identifier for a module
+	ModuleId        ModuleId `json:"module_id"`
+	ModuleVersionId string   `json:"module_version_id"`
+	Reason          string   `json:"reason"`
+}
+
+// ModuleVersionLifecycleTransactionItemAction defines model for ModuleVersionLifecycleTransactionItem.Action.
+type ModuleVersionLifecycleTransactionItemAction string
+
+// ModuleVersionLifecycleTransactionResult defines model for ModuleVersionLifecycleTransactionResult.
+type ModuleVersionLifecycleTransactionResult struct {
+	CorrelationId openapi_types.UUID  `json:"correlation_id"`
+	Versions      []CoreModuleVersion `json:"versions"`
+}
+
+// ModuleVersionPinBulkAction defines model for ModuleVersionPinBulkAction.
+type ModuleVersionPinBulkAction string
+
+// ModuleVersionPinBulkCommandBody defines model for ModuleVersionPinBulkCommandBody.
+type ModuleVersionPinBulkCommandBody struct {
+	Action                       ModuleVersionPinBulkAction `json:"action"`
+	ConfirmDefectiveVersionUuids *[]openapi_types.UUID      `json:"confirm_defective_version_uuids,omitempty"`
+	EnvironmentUuids             []openapi_types.UUID       `json:"environment_uuids"`
+	ModuleUuid                   openapi_types.UUID         `json:"module_uuid"`
+	PreviewFingerprint           string                     `json:"preview_fingerprint"`
+	Reason                       string                     `json:"reason"`
+}
+
+// ModuleVersionPinBulkPreview defines model for ModuleVersionPinBulkPreview.
+type ModuleVersionPinBulkPreview struct {
+	Action      ModuleVersionPinBulkAction        `json:"action"`
+	Eligible    bool                              `json:"eligible"`
+	Fingerprint string                            `json:"fingerprint"`
+	Items       []ModuleVersionPinBulkPreviewItem `json:"items"`
+	ModuleUuid  openapi_types.UUID                `json:"module_uuid"`
+	OperationId openapi_types.UUID                `json:"operation_id"`
+}
+
+// ModuleVersionPinBulkPreviewBody defines model for ModuleVersionPinBulkPreviewBody.
+type ModuleVersionPinBulkPreviewBody struct {
+	Action                       ModuleVersionPinBulkAction `json:"action"`
+	ConfirmDefectiveVersionUuids *[]openapi_types.UUID      `json:"confirm_defective_version_uuids,omitempty"`
+	EnvironmentUuids             []openapi_types.UUID       `json:"environment_uuids"`
+	ModuleUuid                   openapi_types.UUID         `json:"module_uuid"`
+}
+
+// ModuleVersionPinBulkPreviewItem defines model for ModuleVersionPinBulkPreviewItem.
+type ModuleVersionPinBulkPreviewItem struct {
+	Eligible           bool                `json:"eligible"`
+	EnvironmentId      string              `json:"environment_id"`
+	EnvironmentType    *string             `json:"environment_type,omitempty"`
+	EnvironmentUuid    openapi_types.UUID  `json:"environment_uuid"`
+	IdempotentMatch    *bool               `json:"idempotent_match,omitempty"`
+	PinId              *openapi_types.UUID `json:"pin_id,omitempty"`
+	PinResourceVersion *int64              `json:"pin_resource_version,omitempty"`
+	Problem            *string             `json:"problem,omitempty"`
+	Production         bool                `json:"production"`
+	ProjectId          string              `json:"project_id"`
+	ProjectUuid        openapi_types.UUID  `json:"project_uuid"`
+	VersionUuid        *openapi_types.UUID `json:"version_uuid,omitempty"`
+}
+
+// ModuleVersionPinBulkResult defines model for ModuleVersionPinBulkResult.
+type ModuleVersionPinBulkResult struct {
+	Action      ModuleVersionPinBulkAction    `json:"action"`
+	OperationId openapi_types.UUID            `json:"operation_id"`
+	Pins        []EnvironmentModuleVersionPin `json:"pins"`
+}
+
+// ModuleVersionPinEvent defines model for ModuleVersionPinEvent.
+type ModuleVersionPinEvent struct {
+	ActivationEventId openapi_types.UUID      `json:"activation_event_id"`
+	Actor             openapi_types.UUID      `json:"actor"`
+	ActorType         string                  `json:"actor_type"`
+	BulkOperationId   *openapi_types.UUID     `json:"bulk_operation_id,omitempty"`
+	CreatedAt         time.Time               `json:"created_at"`
+	DeploymentId      *openapi_types.UUID     `json:"deployment_id,omitempty"`
+	EventType         string                  `json:"event_type"`
+	FromStatus        *ModuleVersionPinStatus `json:"from_status,omitempty"`
+	Id                openapi_types.UUID      `json:"id"`
+
+	// Note Immutable note text, present only when event_type is note_added.
+	Note        *string                `json:"note,omitempty"`
+	OperationId *openapi_types.UUID    `json:"operation_id,omitempty"`
+	PinId       openapi_types.UUID     `json:"pin_id"`
+	Reason      *string                `json:"reason,omitempty"`
+	Revision    int64                  `json:"revision"`
+	Sequence    int64                  `json:"sequence"`
+	ToStatus    ModuleVersionPinStatus `json:"to_status"`
+}
+
+// ModuleVersionPinNoteBody defines model for ModuleVersionPinNoteBody.
+type ModuleVersionPinNoteBody struct {
+	Note string `json:"note"`
+}
+
+// ModuleVersionPinOverrideBody defines model for ModuleVersionPinOverrideBody.
+type ModuleVersionPinOverrideBody struct {
+	ExpectedResourceVersion int64              `json:"expected_resource_version"`
+	OperationId             openapi_types.UUID `json:"operation_id"`
+	Reason                  string             `json:"reason"`
+	TargetVersionUuid       openapi_types.UUID `json:"target_version_uuid"`
+}
+
+// ModuleVersionPinOverrideReconcileBody defines model for ModuleVersionPinOverrideReconcileBody.
+type ModuleVersionPinOverrideReconcileBody struct {
+	DeploymentId            openapi_types.UUID                           `json:"deployment_id"`
+	ExpectedResourceVersion int64                                        `json:"expected_resource_version"`
+	OperationId             openapi_types.UUID                           `json:"operation_id"`
+	Outcome                 ModuleVersionPinOverrideReconcileBodyOutcome `json:"outcome"`
+	Reason                  string                                       `json:"reason"`
+}
+
+// ModuleVersionPinOverrideReconcileBodyOutcome defines model for ModuleVersionPinOverrideReconcileBody.Outcome.
+type ModuleVersionPinOverrideReconcileBodyOutcome string
+
+// ModuleVersionPinRollbackRestoreBody defines model for ModuleVersionPinRollbackRestoreBody.
+type ModuleVersionPinRollbackRestoreBody struct {
+	DeploymentId            openapi_types.UUID `json:"deployment_id"`
+	ExpectedResourceVersion int64              `json:"expected_resource_version"`
+	OperationId             openapi_types.UUID `json:"operation_id"`
+	Reason                  string             `json:"reason"`
+	RestoredVersionUuid     openapi_types.UUID `json:"restored_version_uuid"`
+}
+
+// ModuleVersionPinStatus defines model for ModuleVersionPinStatus.
+type ModuleVersionPinStatus string
+
+// ModuleVersionPublishBody defines model for ModuleVersionPublishBody.
+type ModuleVersionPublishBody struct {
+	ArtifactDigest   *string                             `json:"artifact_digest,omitempty"`
+	Coprovisioned    []ModuleCoProvisionManifest         `json:"coprovisioned"`
+	Dependencies     map[string]ModuleDependencyManifest `json:"dependencies"`
+	Description      *string                             `json:"description,omitempty"`
+	ModuleInputs     map[string]interface{}              `json:"module_inputs"`
+	ModuleParams     map[string]ModuleParamItem          `json:"module_params"`
+	ModuleSource     string                              `json:"module_source"`
+	ModuleSourceCode *string                             `json:"module_source_code,omitempty"`
+	ProviderMapping  map[string]string                   `json:"provider_mapping"`
+	ReleaseNotes     *string                             `json:"release_notes,omitempty"`
+	SemanticVersion  string                              `json:"semantic_version"`
+	SourceRevision   *string                             `json:"source_revision,omitempty"`
+}
+
+// ModuleVersionSemanticStatus defines model for ModuleVersionSemanticStatus.
+type ModuleVersionSemanticStatus string
 
 // ModuleVersionSummary defines model for ModuleVersionSummary.
 type ModuleVersionSummary struct {
@@ -1064,6 +1674,32 @@ type ModuleVersionSummaryCoreFields struct {
 	VersionId string `json:"version_id"`
 }
 
+// ModuleVersionUsage defines model for ModuleVersionUsage.
+type ModuleVersionUsage struct {
+	ActiveEnvironmentCount int                             `json:"active_environment_count"`
+	ActivePins             int                             `json:"active_pins"`
+	ByEnvironmentType      map[string]int                  `json:"by_environment_type"`
+	ByProject              map[string]int                  `json:"by_project"`
+	Environments           []ModuleVersionUsageEnvironment `json:"environments"`
+	HistoricalPins         int                             `json:"historical_pins"`
+	ModuleUuid             openapi_types.UUID              `json:"module_uuid"`
+	ObservedAt             time.Time                       `json:"observed_at"`
+	OverridePendingPins    int                             `json:"override_pending_pins"`
+	SemanticVersion        string                          `json:"semantic_version"`
+	UnknownEnvironments    []openapi_types.UUID            `json:"unknown_environments"`
+	VersionUuid            openapi_types.UUID              `json:"version_uuid"`
+}
+
+// ModuleVersionUsageEnvironment defines model for ModuleVersionUsageEnvironment.
+type ModuleVersionUsageEnvironment struct {
+	DeploymentId    openapi_types.UUID `json:"deployment_id"`
+	EnvironmentId   string             `json:"environment_id"`
+	EnvironmentType string             `json:"environment_type"`
+	EnvironmentUuid openapi_types.UUID `json:"environment_uuid"`
+	ObservedAt      time.Time          `json:"observed_at"`
+	ProjectId       string             `json:"project_id"`
+}
+
 // Organization The internal state of an organization known by the control plane.
 type Organization struct {
 	// CreatedAt The date and time when the org state was created.
@@ -1090,6 +1726,24 @@ type Organization struct {
 
 // OrganizationStatus The current status of the org.
 type OrganizationStatus string
+
+// PluginAvailabilityState defines model for PluginAvailabilityState.
+type PluginAvailabilityState string
+
+// PluginCapability defines model for PluginCapability.
+type PluginCapability struct {
+	// AdminAction Scope-safe remediation guidance for an administrator.
+	AdminAction  *string  `json:"admin_action,omitempty"`
+	Capabilities []string `json:"capabilities"`
+	DisplayName  string   `json:"display_name"`
+
+	// Id Immutable reverse-DNS plugin identity.
+	Id    string                  `json:"id"`
+	State PluginAvailabilityState `json:"state"`
+
+	// Version Immutable installed plugin artifact version when installed.
+	Version *string `json:"version,omitempty"`
+}
 
 // Project A project.
 type Project struct {
@@ -1156,8 +1810,13 @@ type ResourceId = string
 
 // ResourceType A resource type that can be used in modules.
 type ResourceType struct {
+	ArchiveReason *string             `json:"archive_reason,omitempty"`
+	ArchivedAt    *time.Time          `json:"archived_at,omitempty"`
+	ArchivedBy    *openapi_types.UUID `json:"archived_by,omitempty"`
+
 	// BuiltIn Indicates if this is a built-in resource type
-	BuiltIn bool `json:"built_in"`
+	BuiltIn         bool                        `json:"built_in"`
+	CatalogueStatus ResourceTypeCatalogueStatus `json:"catalogue_status"`
 
 	// CreatedAt The date and time when the resource type was created
 	CreatedAt time.Time `json:"created_at"`
@@ -1172,8 +1831,12 @@ type ResourceType struct {
 	IsDeveloperAccessible bool `json:"is_developer_accessible"`
 
 	// OutputSchema Schema for output parameters
-	OutputSchema map[string]interface{} `json:"output_schema"`
+	OutputSchema    map[string]interface{} `json:"output_schema"`
+	ResourceVersion int64                  `json:"resource_version"`
 }
+
+// ResourceTypeCatalogueStatus defines model for ResourceType.CatalogueStatus.
+type ResourceTypeCatalogueStatus string
 
 // ResourceTypeCreateBody A request to create a new resource type.
 type ResourceTypeCreateBody struct {
@@ -1499,6 +2162,20 @@ type ServerlessEcsRunnerJob struct {
 	TaskRoleArn *string `json:"task_role_arn,omitempty"`
 }
 
+// StableModuleVersionSuccessorBody defines model for StableModuleVersionSuccessorBody.
+type StableModuleVersionSuccessorBody struct {
+	ExpectedPrereleaseResourceVersion int64                    `json:"expected_prerelease_resource_version"`
+	Reason                            string                   `json:"reason"`
+	Version                           ModuleVersionPublishBody `json:"version"`
+}
+
+// StableModuleVersionSuccessorResult defines model for StableModuleVersionSuccessorResult.
+type StableModuleVersionSuccessorResult struct {
+	CorrelationId openapi_types.UUID `json:"correlation_id"`
+	Prerelease    CoreModuleVersion  `json:"prerelease"`
+	Stable        CoreModuleVersion  `json:"stable"`
+}
+
 // StateStorageConfiguration Configuration for the Terraform Backend used by the runner.
 type StateStorageConfiguration struct {
 	union json.RawMessage
@@ -1528,6 +2205,9 @@ type EnvUuidPathParam = openapi_types.UUID
 // ForceQueryParam defines model for forceQueryParam.
 type ForceQueryParam = bool
 
+// IdempotencyKeyHeader defines model for idempotencyKeyHeader.
+type IdempotencyKeyHeader = string
+
 // IncludeNonDeveloperAccessibleQueryParam defines model for includeNonDeveloperAccessibleQueryParam.
 type IncludeNonDeveloperAccessibleQueryParam = bool
 
@@ -1535,7 +2215,7 @@ type IncludeNonDeveloperAccessibleQueryParam = bool
 type ModuleIdPathParam = string
 
 // ModuleVersionIdPathParam defines model for moduleVersionIdPathParam.
-type ModuleVersionIdPathParam = openapi_types.UUID
+type ModuleVersionIdPathParam = string
 
 // OrgIdPathParam defines model for orgIdPathParam.
 type OrgIdPathParam = string
@@ -1594,10 +2274,75 @@ type ListInternalOrganizationsParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// BeginEnvironmentModuleVersionPinOverrideParams defines parameters for BeginEnvironmentModuleVersionPinOverride.
+type BeginEnvironmentModuleVersionPinOverrideParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ReconcileEnvironmentModuleVersionPinOverrideParams defines parameters for ReconcileEnvironmentModuleVersionPinOverride.
+type ReconcileEnvironmentModuleVersionPinOverrideParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// RestoreEnvironmentModuleVersionPinAfterRollbackParams defines parameters for RestoreEnvironmentModuleVersionPinAfterRollback.
+type RestoreEnvironmentModuleVersionPinAfterRollbackParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ListModuleExtensionContributionsParams defines parameters for ListModuleExtensionContributions.
+type ListModuleExtensionContributionsParams struct {
+	IncludeDraft    *bool `form:"include_draft,omitempty" json:"include_draft,omitempty"`
+	IncludeTerminal *bool `form:"include_terminal,omitempty" json:"include_terminal,omitempty"`
+}
+
+// UpsertModuleExtensionContributionParams defines parameters for UpsertModuleExtensionContribution.
+type UpsertModuleExtensionContributionParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ListModuleOperationReservationsParams defines parameters for ListModuleOperationReservations.
+type ListModuleOperationReservationsParams struct {
+	IncludeReleased *bool `form:"include_released,omitempty" json:"include_released,omitempty"`
+}
+
+// AcquireModuleOperationReservationParams defines parameters for AcquireModuleOperationReservation.
+type AcquireModuleOperationReservationParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ReleaseModuleOperationReservationParams defines parameters for ReleaseModuleOperationReservation.
+type ReleaseModuleOperationReservationParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // InternalForceDeleteEnvironmentParams defines parameters for InternalForceDeleteEnvironment.
 type InternalForceDeleteEnvironmentParams struct {
 	// DeleteRules Whether to delete all rules associated with the environment
 	DeleteRules *bool `form:"deleteRules,omitempty" json:"deleteRules,omitempty"`
+}
+
+// GenerateInternalModuleCatalogueParams defines parameters for GenerateInternalModuleCatalogue.
+type GenerateInternalModuleCatalogueParams struct {
+	// XStellwerkRollback Internal audited exception allowing retained Deprecated or Defective artifacts during rollback.
+	XStellwerkRollback *bool `json:"X-Stellwerk-Rollback,omitempty"`
+
+	// XStellwerkModuleOperationId Exact add-on operation allowed to consume its own override-pending Pin target.
+	XStellwerkModuleOperationId *openapi_types.UUID `json:"X-Stellwerk-Module-Operation-Id,omitempty"`
+
+	// XStellwerkModuleOperationPlanning Internal dry-run compilation for an add-on Module operation. It does not mutate or override Core Pins.
+	XStellwerkModuleOperationPlanning *bool `json:"X-Stellwerk-Module-Operation-Planning,omitempty"`
+
+	// XStellwerkRestrictedVersionConfirmations Exact Defective Module Version UUIDs confirmed by an authorised deployment caller.
+	XStellwerkRestrictedVersionConfirmations *[]openapi_types.UUID `json:"X-Stellwerk-Restricted-Version-Confirmations,omitempty"`
+
+	// XStellwerkActiveModuleVersions Exact Module coordinates observed in the Environment's last graph. This evidence permits an archived Module to carry forward only the version already active there.
+	XStellwerkActiveModuleVersions *[]string `json:"X-Stellwerk-Active-Module-Versions,omitempty"`
 }
 
 // ListInternalEnvironmentsByProjectUuidParams defines parameters for ListInternalEnvironmentsByProjectUuid.
@@ -1639,6 +2384,17 @@ type ListEnvironmentsInOrgParams struct {
 	ByEnvTypeId *[]string `form:"byEnvTypeId,omitempty" json:"byEnvTypeId,omitempty"`
 }
 
+// ListModuleCatalogueEntriesParams defines parameters for ListModuleCatalogueEntries.
+type ListModuleCatalogueEntriesParams struct {
+	IncludeArchived *bool `form:"include_archived,omitempty" json:"include_archived,omitempty"`
+}
+
+// CreateModuleCatalogueEntryParams defines parameters for CreateModuleCatalogueEntry.
+type CreateModuleCatalogueEntryParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // ListModuleProvidersParams defines parameters for ListModuleProviders.
 type ListModuleProvidersParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -1672,6 +2428,46 @@ type ListModuleRulesInOrgParams struct {
 	ByEnvId *string `form:"byEnvId,omitempty" json:"byEnvId,omitempty"`
 }
 
+// TransactModuleVersionLifecyclesParams defines parameters for TransactModuleVersionLifecycles.
+type TransactModuleVersionLifecyclesParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ListEnvironmentModuleVersionPinsParams defines parameters for ListEnvironmentModuleVersionPins.
+type ListEnvironmentModuleVersionPinsParams struct {
+	EnvironmentUuid *openapi_types.UUID `form:"environment_uuid,omitempty" json:"environment_uuid,omitempty"`
+	ModuleUuid      *openapi_types.UUID `form:"module_uuid,omitempty" json:"module_uuid,omitempty"`
+	IncludeRemoved  *bool               `form:"include_removed,omitempty" json:"include_removed,omitempty"`
+}
+
+// CreateEnvironmentModuleVersionPinParams defines parameters for CreateEnvironmentModuleVersionPin.
+type CreateEnvironmentModuleVersionPinParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ExecuteEnvironmentModuleVersionPinBulkOperationParams defines parameters for ExecuteEnvironmentModuleVersionPinBulkOperation.
+type ExecuteEnvironmentModuleVersionPinBulkOperationParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// TransitionEnvironmentModuleVersionPinParams defines parameters for TransitionEnvironmentModuleVersionPin.
+type TransitionEnvironmentModuleVersionPinParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// TransitionEnvironmentModuleVersionPinParamsPinAction defines parameters for TransitionEnvironmentModuleVersionPin.
+type TransitionEnvironmentModuleVersionPinParamsPinAction string
+
+// AppendEnvironmentModuleVersionPinNoteParams defines parameters for AppendEnvironmentModuleVersionPinNote.
+type AppendEnvironmentModuleVersionPinNoteParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // ListModulesParams defines parameters for ListModules.
 type ListModulesParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -1684,13 +2480,45 @@ type ListModulesParams struct {
 	ByResourceType *string `form:"byResourceType,omitempty" json:"byResourceType,omitempty"`
 }
 
+// ChangeModuleCatalogueStatusParams defines parameters for ChangeModuleCatalogueStatus.
+type ChangeModuleCatalogueStatusParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ChangeModuleCatalogueStatusParamsCatalogueAction defines parameters for ChangeModuleCatalogueStatus.
+type ChangeModuleCatalogueStatusParamsCatalogueAction string
+
 // ListModuleVersionsParams defines parameters for ListModuleVersions.
 type ListModuleVersionsParams struct {
 	// PerPage The maximum number of items to return in a page of results
 	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Page The page token to request from
-	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+	Page              *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+	IncludeDeprecated *bool                `form:"include_deprecated,omitempty" json:"include_deprecated,omitempty"`
+	IncludeDefective  *bool                `form:"include_defective,omitempty" json:"include_defective,omitempty"`
+}
+
+// PublishModuleVersionParams defines parameters for PublishModuleVersion.
+type PublishModuleVersionParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// TransitionModuleVersionParams defines parameters for TransitionModuleVersion.
+type TransitionModuleVersionParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// TransitionModuleVersionParamsLifecycleAction defines parameters for TransitionModuleVersion.
+type TransitionModuleVersionParamsLifecycleAction string
+
+// PublishStableModuleVersionSuccessorParams defines parameters for PublishStableModuleVersionSuccessor.
+type PublishStableModuleVersionSuccessorParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
 }
 
 // ListProjectsParams defines parameters for ListProjects.
@@ -1759,6 +2587,15 @@ type ListResourceTypesParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// ChangeResourceTypeCatalogueStatusParams defines parameters for ChangeResourceTypeCatalogueStatus.
+type ChangeResourceTypeCatalogueStatusParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ChangeResourceTypeCatalogueStatusParamsCatalogueAction defines parameters for ChangeResourceTypeCatalogueStatus.
+type ChangeResourceTypeCatalogueStatusParamsCatalogueAction string
+
 // ListRunnerRulesInOrgParams defines parameters for ListRunnerRulesInOrg.
 type ListRunnerRulesInOrgParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -1792,6 +2629,24 @@ type ListRunnersParams struct {
 // CreateInternalOrganizationJSONRequestBody defines body for CreateInternalOrganization for application/json ContentType.
 type CreateInternalOrganizationJSONRequestBody = InternalOrganizationCreateBody
 
+// BeginEnvironmentModuleVersionPinOverrideJSONRequestBody defines body for BeginEnvironmentModuleVersionPinOverride for application/json ContentType.
+type BeginEnvironmentModuleVersionPinOverrideJSONRequestBody = ModuleVersionPinOverrideBody
+
+// ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody defines body for ReconcileEnvironmentModuleVersionPinOverride for application/json ContentType.
+type ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody = ModuleVersionPinOverrideReconcileBody
+
+// RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody defines body for RestoreEnvironmentModuleVersionPinAfterRollback for application/json ContentType.
+type RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody = ModuleVersionPinRollbackRestoreBody
+
+// UpsertModuleExtensionContributionJSONRequestBody defines body for UpsertModuleExtensionContribution for application/json ContentType.
+type UpsertModuleExtensionContributionJSONRequestBody = ModuleExtensionContributionUpsertBody
+
+// AcquireModuleOperationReservationJSONRequestBody defines body for AcquireModuleOperationReservation for application/json ContentType.
+type AcquireModuleOperationReservationJSONRequestBody = ModuleOperationReservationAcquireBody
+
+// ReleaseModuleOperationReservationJSONRequestBody defines body for ReleaseModuleOperationReservation for application/json ContentType.
+type ReleaseModuleOperationReservationJSONRequestBody = ModuleReasonedCommand
+
 // InternalUpdateEnvironmentJSONRequestBody defines body for InternalUpdateEnvironment for application/json ContentType.
 type InternalUpdateEnvironmentJSONRequestBody = EnvironmentInternalUpdateBody
 
@@ -1810,6 +2665,9 @@ type CreateEnvironmentTypeJSONRequestBody = EnvironmentTypeCreateBody
 // UpdateEnvironmentTypeJSONRequestBody defines body for UpdateEnvironmentType for application/json ContentType.
 type UpdateEnvironmentTypeJSONRequestBody = EnvironmentTypeUpdateBody
 
+// CreateModuleCatalogueEntryJSONRequestBody defines body for CreateModuleCatalogueEntry for application/json ContentType.
+type CreateModuleCatalogueEntryJSONRequestBody = ModuleCatalogueCreateBody
+
 // CreateModuleProviderJSONRequestBody defines body for CreateModuleProvider for application/json ContentType.
 type CreateModuleProviderJSONRequestBody = ModuleProviderCreateBody
 
@@ -1819,11 +2677,44 @@ type UpdateModuleProviderJSONRequestBody = ModuleProviderUpdateBody
 // CreateModuleRuleInOrgJSONRequestBody defines body for CreateModuleRuleInOrg for application/json ContentType.
 type CreateModuleRuleInOrgJSONRequestBody = RuleCreateBody
 
+// TransactModuleVersionLifecyclesJSONRequestBody defines body for TransactModuleVersionLifecycles for application/json ContentType.
+type TransactModuleVersionLifecyclesJSONRequestBody = ModuleVersionLifecycleTransactionBody
+
+// CreateEnvironmentModuleVersionPinJSONRequestBody defines body for CreateEnvironmentModuleVersionPin for application/json ContentType.
+type CreateEnvironmentModuleVersionPinJSONRequestBody = EnvironmentModuleVersionPinCreateBody
+
+// ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody defines body for ExecuteEnvironmentModuleVersionPinBulkOperation for application/json ContentType.
+type ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody = ModuleVersionPinBulkCommandBody
+
+// PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody defines body for PreviewEnvironmentModuleVersionPinBulkOperation for application/json ContentType.
+type PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody = ModuleVersionPinBulkPreviewBody
+
+// TransitionEnvironmentModuleVersionPinJSONRequestBody defines body for TransitionEnvironmentModuleVersionPin for application/json ContentType.
+type TransitionEnvironmentModuleVersionPinJSONRequestBody = ModuleReasonedCommand
+
+// AppendEnvironmentModuleVersionPinNoteJSONRequestBody defines body for AppendEnvironmentModuleVersionPinNote for application/json ContentType.
+type AppendEnvironmentModuleVersionPinNoteJSONRequestBody = ModuleVersionPinNoteBody
+
 // CreateModuleJSONRequestBody defines body for CreateModule for application/json ContentType.
 type CreateModuleJSONRequestBody = ModuleCreateBody
 
 // UpdateModuleJSONRequestBody defines body for UpdateModule for application/json ContentType.
 type UpdateModuleJSONRequestBody = ModuleUpdateBody
+
+// UpdateModuleCatalogueEntryJSONRequestBody defines body for UpdateModuleCatalogueEntry for application/json ContentType.
+type UpdateModuleCatalogueEntryJSONRequestBody = ModuleCatalogueUpdateBody
+
+// ChangeModuleCatalogueStatusJSONRequestBody defines body for ChangeModuleCatalogueStatus for application/json ContentType.
+type ChangeModuleCatalogueStatusJSONRequestBody = ModuleReasonedCommand
+
+// PublishModuleVersionJSONRequestBody defines body for PublishModuleVersion for application/json ContentType.
+type PublishModuleVersionJSONRequestBody = ModuleVersionPublishBody
+
+// TransitionModuleVersionJSONRequestBody defines body for TransitionModuleVersion for application/json ContentType.
+type TransitionModuleVersionJSONRequestBody = ModuleReasonedCommand
+
+// PublishStableModuleVersionSuccessorJSONRequestBody defines body for PublishStableModuleVersionSuccessor for application/json ContentType.
+type PublishStableModuleVersionSuccessorJSONRequestBody = StableModuleVersionSuccessorBody
 
 // CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
 type CreateProjectJSONRequestBody = ProjectCreateBody
@@ -1842,6 +2733,9 @@ type CreateResourceTypeJSONRequestBody = ResourceTypeCreateBody
 
 // UpdateResourceTypeJSONRequestBody defines body for UpdateResourceType for application/json ContentType.
 type UpdateResourceTypeJSONRequestBody = ResourceTypeUpdateBody
+
+// ChangeResourceTypeCatalogueStatusJSONRequestBody defines body for ChangeResourceTypeCatalogueStatus for application/json ContentType.
+type ChangeResourceTypeCatalogueStatusJSONRequestBody = ModuleReasonedCommand
 
 // CreateRunnerRuleInOrgJSONRequestBody defines body for CreateRunnerRuleInOrg for application/json ContentType.
 type CreateRunnerRuleInOrgJSONRequestBody = RunnerRuleCreateBody
@@ -2446,6 +3340,42 @@ type ClientInterface interface {
 	// GetInternalEnvironmentByUuid request
 	GetInternalEnvironmentByUuid(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// BeginEnvironmentModuleVersionPinOverrideWithBody request with any body
+	BeginEnvironmentModuleVersionPinOverrideWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	BeginEnvironmentModuleVersionPinOverride(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, body BeginEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReconcileEnvironmentModuleVersionPinOverrideWithBody request with any body
+	ReconcileEnvironmentModuleVersionPinOverrideWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReconcileEnvironmentModuleVersionPinOverride(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, body ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RestoreEnvironmentModuleVersionPinAfterRollbackWithBody request with any body
+	RestoreEnvironmentModuleVersionPinAfterRollbackWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RestoreEnvironmentModuleVersionPinAfterRollback(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, body RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListModuleExtensionContributions request
+	ListModuleExtensionContributions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleExtensionContributionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpsertModuleExtensionContributionWithBody request with any body
+	UpsertModuleExtensionContributionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpsertModuleExtensionContribution(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, body UpsertModuleExtensionContributionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListModuleOperationReservations request
+	ListModuleOperationReservations(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleOperationReservationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AcquireModuleOperationReservationWithBody request with any body
+	AcquireModuleOperationReservationWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AcquireModuleOperationReservation(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, body AcquireModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReleaseModuleOperationReservationWithBody request with any body
+	ReleaseModuleOperationReservationWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReleaseModuleOperationReservation(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, body ReleaseModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// InternalUpdateEnvironmentWithBody request with any body
 	InternalUpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2455,9 +3385,9 @@ type ClientInterface interface {
 	InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GenerateInternalModuleCatalogueWithBody request with any body
-	GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetInternalProjectByUuid request
 	GetInternalProjectByUuid(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2512,6 +3442,14 @@ type ClientInterface interface {
 	// ListEnvironmentsInOrg request
 	ListEnvironmentsInOrg(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListModuleCatalogueEntries request
+	ListModuleCatalogueEntries(ctx context.Context, orgId OrgIdPathParam, params *ListModuleCatalogueEntriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateModuleCatalogueEntryWithBody request with any body
+	CreateModuleCatalogueEntryWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, body CreateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListModuleProviders request
 	ListModuleProviders(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2545,6 +3483,45 @@ type ClientInterface interface {
 	// GetModuleRuleInOrg request
 	GetModuleRuleInOrg(ctx context.Context, orgId OrgIdPathParam, ruleId RuleIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// TransactModuleVersionLifecyclesWithBody request with any body
+	TransactModuleVersionLifecyclesWithBody(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	TransactModuleVersionLifecycles(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, body TransactModuleVersionLifecyclesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListEnvironmentModuleVersionPins request
+	ListEnvironmentModuleVersionPins(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentModuleVersionPinsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateEnvironmentModuleVersionPinWithBody request with any body
+	CreateEnvironmentModuleVersionPinWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, body CreateEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExecuteEnvironmentModuleVersionPinBulkOperationWithBody request with any body
+	ExecuteEnvironmentModuleVersionPinBulkOperationWithBody(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ExecuteEnvironmentModuleVersionPinBulkOperation(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, body ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PreviewEnvironmentModuleVersionPinBulkOperationWithBody request with any body
+	PreviewEnvironmentModuleVersionPinBulkOperationWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PreviewEnvironmentModuleVersionPinBulkOperation(ctx context.Context, orgId OrgIdPathParam, body PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetEnvironmentModuleVersionPin request
+	GetEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TransitionEnvironmentModuleVersionPinWithBody request with any body
+	TransitionEnvironmentModuleVersionPinWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	TransitionEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, body TransitionEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListEnvironmentModuleVersionPinEvents request
+	ListEnvironmentModuleVersionPinEvents(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppendEnvironmentModuleVersionPinNoteWithBody request with any body
+	AppendEnvironmentModuleVersionPinNoteWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AppendEnvironmentModuleVersionPinNote(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, body AppendEnvironmentModuleVersionPinNoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListModules request
 	ListModules(ctx context.Context, orgId OrgIdPathParam, params *ListModulesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2564,11 +3541,51 @@ type ClientInterface interface {
 
 	UpdateModule(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetModuleCatalogueEntry request
+	GetModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateModuleCatalogueEntryWithBody request with any body
+	UpdateModuleCatalogueEntryWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChangeModuleCatalogueStatusWithBody request with any body
+	ChangeModuleCatalogueStatusWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChangeModuleCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListModuleVersions request
 	ListModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PublishModuleVersionWithBody request with any body
+	PublishModuleVersionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PublishModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, body PublishModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetModuleVersion request
 	GetModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TransitionModuleVersionWithBody request with any body
+	TransitionModuleVersionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	TransitionModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, body TransitionModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CompareModuleVersions request
+	CompareModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, otherModuleVersionId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListModuleVersionLifecycleEvents request
+	ListModuleVersionLifecycleEvents(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishStableModuleVersionSuccessorWithBody request with any body
+	PublishStableModuleVersionSuccessorWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PublishStableModuleVersionSuccessor(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetModuleVersionUsage request
+	GetModuleVersionUsage(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPluginCapability request
+	GetPluginCapability(ctx context.Context, orgId OrgIdPathParam, pluginId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListProjects request
 	ListProjects(ctx context.Context, orgId OrgIdPathParam, params *ListProjectsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2614,6 +3631,9 @@ type ClientInterface interface {
 	// ListAvailableResourceTypes request
 	ListAvailableResourceTypes(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *ListAvailableResourceTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetEnvironmentDeletionImpact request
+	GetEnvironmentDeletionImpact(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListResourceTypes request
 	ListResourceTypes(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2632,6 +3652,11 @@ type ClientInterface interface {
 	UpdateResourceTypeWithBody(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateResourceType(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, body UpdateResourceTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChangeResourceTypeCatalogueStatusWithBody request with any body
+	ChangeResourceTypeCatalogueStatusWithBody(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChangeResourceTypeCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRunnerRulesInOrg request
 	ListRunnerRulesInOrg(ctx context.Context, orgId OrgIdPathParam, params *ListRunnerRulesInOrgParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2727,6 +3752,174 @@ func (c *Client) GetInternalEnvironmentByUuid(ctx context.Context, orgId OrgIdPa
 	return c.Client.Do(req)
 }
 
+func (c *Client) BeginEnvironmentModuleVersionPinOverrideWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBeginEnvironmentModuleVersionPinOverrideRequestWithBody(c.Server, orgId, pinId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BeginEnvironmentModuleVersionPinOverride(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, body BeginEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBeginEnvironmentModuleVersionPinOverrideRequest(c.Server, orgId, pinId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReconcileEnvironmentModuleVersionPinOverrideWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReconcileEnvironmentModuleVersionPinOverrideRequestWithBody(c.Server, orgId, pinId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReconcileEnvironmentModuleVersionPinOverride(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, body ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReconcileEnvironmentModuleVersionPinOverrideRequest(c.Server, orgId, pinId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RestoreEnvironmentModuleVersionPinAfterRollbackWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRestoreEnvironmentModuleVersionPinAfterRollbackRequestWithBody(c.Server, orgId, pinId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RestoreEnvironmentModuleVersionPinAfterRollback(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, body RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRestoreEnvironmentModuleVersionPinAfterRollbackRequest(c.Server, orgId, pinId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListModuleExtensionContributions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleExtensionContributionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleExtensionContributionsRequest(c.Server, orgId, moduleId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpsertModuleExtensionContributionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpsertModuleExtensionContributionRequestWithBody(c.Server, orgId, moduleId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpsertModuleExtensionContribution(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, body UpsertModuleExtensionContributionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpsertModuleExtensionContributionRequest(c.Server, orgId, moduleId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListModuleOperationReservations(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleOperationReservationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleOperationReservationsRequest(c.Server, orgId, moduleId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AcquireModuleOperationReservationWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAcquireModuleOperationReservationRequestWithBody(c.Server, orgId, moduleId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AcquireModuleOperationReservation(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, body AcquireModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAcquireModuleOperationReservationRequest(c.Server, orgId, moduleId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReleaseModuleOperationReservationWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReleaseModuleOperationReservationRequestWithBody(c.Server, orgId, moduleId, reservationId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReleaseModuleOperationReservation(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, body ReleaseModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReleaseModuleOperationReservationRequest(c.Server, orgId, moduleId, reservationId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) InternalUpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalUpdateEnvironmentRequestWithBody(c.Server, orgId, projectId, envId, contentType, body)
 	if err != nil {
@@ -2763,8 +3956,8 @@ func (c *Client) InternalForceDeleteEnvironment(ctx context.Context, orgId OrgId
 	return c.Client.Do(req)
 }
 
-func (c *Client) GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGenerateInternalModuleCatalogueRequestWithBody(c.Server, orgId, projectId, envId, contentType, body)
+func (c *Client) GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenerateInternalModuleCatalogueRequestWithBody(c.Server, orgId, projectId, envId, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2775,8 +3968,8 @@ func (c *Client) GenerateInternalModuleCatalogueWithBody(ctx context.Context, or
 	return c.Client.Do(req)
 }
 
-func (c *Client) GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGenerateInternalModuleCatalogueRequest(c.Server, orgId, projectId, envId, body)
+func (c *Client) GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenerateInternalModuleCatalogueRequest(c.Server, orgId, projectId, envId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3015,6 +4208,42 @@ func (c *Client) ListEnvironmentsInOrg(ctx context.Context, orgId OrgIdPathParam
 	return c.Client.Do(req)
 }
 
+func (c *Client) ListModuleCatalogueEntries(ctx context.Context, orgId OrgIdPathParam, params *ListModuleCatalogueEntriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleCatalogueEntriesRequest(c.Server, orgId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateModuleCatalogueEntryWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleCatalogueEntryRequestWithBody(c.Server, orgId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, body CreateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleCatalogueEntryRequest(c.Server, orgId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListModuleProviders(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListModuleProvidersRequest(c.Server, orgId, params)
 	if err != nil {
@@ -3159,6 +4388,186 @@ func (c *Client) GetModuleRuleInOrg(ctx context.Context, orgId OrgIdPathParam, r
 	return c.Client.Do(req)
 }
 
+func (c *Client) TransactModuleVersionLifecyclesWithBody(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransactModuleVersionLifecyclesRequestWithBody(c.Server, orgId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TransactModuleVersionLifecycles(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, body TransactModuleVersionLifecyclesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransactModuleVersionLifecyclesRequest(c.Server, orgId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListEnvironmentModuleVersionPins(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentModuleVersionPinsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListEnvironmentModuleVersionPinsRequest(c.Server, orgId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEnvironmentModuleVersionPinWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEnvironmentModuleVersionPinRequestWithBody(c.Server, orgId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, body CreateEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateEnvironmentModuleVersionPinRequest(c.Server, orgId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExecuteEnvironmentModuleVersionPinBulkOperationWithBody(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExecuteEnvironmentModuleVersionPinBulkOperationRequestWithBody(c.Server, orgId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExecuteEnvironmentModuleVersionPinBulkOperation(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, body ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExecuteEnvironmentModuleVersionPinBulkOperationRequest(c.Server, orgId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PreviewEnvironmentModuleVersionPinBulkOperationWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewEnvironmentModuleVersionPinBulkOperationRequestWithBody(c.Server, orgId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PreviewEnvironmentModuleVersionPinBulkOperation(ctx context.Context, orgId OrgIdPathParam, body PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewEnvironmentModuleVersionPinBulkOperationRequest(c.Server, orgId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEnvironmentModuleVersionPinRequest(c.Server, orgId, pinId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TransitionEnvironmentModuleVersionPinWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransitionEnvironmentModuleVersionPinRequestWithBody(c.Server, orgId, pinId, pinAction, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TransitionEnvironmentModuleVersionPin(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, body TransitionEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransitionEnvironmentModuleVersionPinRequest(c.Server, orgId, pinId, pinAction, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListEnvironmentModuleVersionPinEvents(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListEnvironmentModuleVersionPinEventsRequest(c.Server, orgId, pinId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AppendEnvironmentModuleVersionPinNoteWithBody(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppendEnvironmentModuleVersionPinNoteRequestWithBody(c.Server, orgId, pinId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AppendEnvironmentModuleVersionPinNote(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, body AppendEnvironmentModuleVersionPinNoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppendEnvironmentModuleVersionPinNoteRequest(c.Server, orgId, pinId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListModules(ctx context.Context, orgId OrgIdPathParam, params *ListModulesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListModulesRequest(c.Server, orgId, params)
 	if err != nil {
@@ -3243,6 +4652,66 @@ func (c *Client) UpdateModule(ctx context.Context, orgId OrgIdPathParam, moduleI
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleCatalogueEntryRequest(c.Server, orgId, moduleId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateModuleCatalogueEntryWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateModuleCatalogueEntryRequestWithBody(c.Server, orgId, moduleId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateModuleCatalogueEntry(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateModuleCatalogueEntryRequest(c.Server, orgId, moduleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangeModuleCatalogueStatusWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeModuleCatalogueStatusRequestWithBody(c.Server, orgId, moduleId, catalogueAction, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangeModuleCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeModuleCatalogueStatusRequest(c.Server, orgId, moduleId, catalogueAction, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListModuleVersionsRequest(c.Server, orgId, moduleId, params)
 	if err != nil {
@@ -3255,8 +4724,128 @@ func (c *Client) ListModuleVersions(ctx context.Context, orgId OrgIdPathParam, m
 	return c.Client.Do(req)
 }
 
+func (c *Client) PublishModuleVersionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleVersionRequestWithBody(c.Server, orgId, moduleId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PublishModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, body PublishModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleVersionRequest(c.Server, orgId, moduleId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetModuleVersionRequest(c.Server, orgId, moduleId, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TransitionModuleVersionWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransitionModuleVersionRequestWithBody(c.Server, orgId, moduleId, moduleVersionId, lifecycleAction, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TransitionModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, body TransitionModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTransitionModuleVersionRequest(c.Server, orgId, moduleId, moduleVersionId, lifecycleAction, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CompareModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, otherModuleVersionId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCompareModuleVersionsRequest(c.Server, orgId, moduleId, moduleVersionId, otherModuleVersionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListModuleVersionLifecycleEvents(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleVersionLifecycleEventsRequest(c.Server, orgId, moduleId, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PublishStableModuleVersionSuccessorWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishStableModuleVersionSuccessorRequestWithBody(c.Server, orgId, moduleId, moduleVersionId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PublishStableModuleVersionSuccessor(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishStableModuleVersionSuccessorRequest(c.Server, orgId, moduleId, moduleVersionId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetModuleVersionUsage(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleVersionUsageRequest(c.Server, orgId, moduleId, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPluginCapability(ctx context.Context, orgId OrgIdPathParam, pluginId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPluginCapabilityRequest(c.Server, orgId, pluginId)
 	if err != nil {
 		return nil, err
 	}
@@ -3459,6 +5048,18 @@ func (c *Client) ListAvailableResourceTypes(ctx context.Context, orgId OrgIdPath
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetEnvironmentDeletionImpact(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEnvironmentDeletionImpactRequest(c.Server, orgId, projectId, envId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListResourceTypes(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListResourceTypesRequest(c.Server, orgId, params)
 	if err != nil {
@@ -3533,6 +5134,30 @@ func (c *Client) UpdateResourceTypeWithBody(ctx context.Context, orgId OrgIdPath
 
 func (c *Client) UpdateResourceType(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, body UpdateResourceTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateResourceTypeRequest(c.Server, orgId, typeId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangeResourceTypeCatalogueStatusWithBody(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeResourceTypeCatalogueStatusRequestWithBody(c.Server, orgId, typeId, catalogueAction, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangeResourceTypeCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeResourceTypeCatalogueStatusRequest(c.Server, orgId, typeId, catalogueAction, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3867,6 +5492,557 @@ func NewGetInternalEnvironmentByUuidRequest(server string, orgId OrgIdPathParam,
 	return req, nil
 }
 
+// NewBeginEnvironmentModuleVersionPinOverrideRequest calls the generic BeginEnvironmentModuleVersionPinOverride builder with application/json body
+func NewBeginEnvironmentModuleVersionPinOverrideRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, body BeginEnvironmentModuleVersionPinOverrideJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewBeginEnvironmentModuleVersionPinOverrideRequestWithBody(server, orgId, pinId, params, "application/json", bodyReader)
+}
+
+// NewBeginEnvironmentModuleVersionPinOverrideRequestWithBody generates requests for BeginEnvironmentModuleVersionPinOverride with any type of body
+func NewBeginEnvironmentModuleVersionPinOverrideRequestWithBody(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/module-version-pins/%s/actions/override", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewReconcileEnvironmentModuleVersionPinOverrideRequest calls the generic ReconcileEnvironmentModuleVersionPinOverride builder with application/json body
+func NewReconcileEnvironmentModuleVersionPinOverrideRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, body ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReconcileEnvironmentModuleVersionPinOverrideRequestWithBody(server, orgId, pinId, params, "application/json", bodyReader)
+}
+
+// NewReconcileEnvironmentModuleVersionPinOverrideRequestWithBody generates requests for ReconcileEnvironmentModuleVersionPinOverride with any type of body
+func NewReconcileEnvironmentModuleVersionPinOverrideRequestWithBody(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/module-version-pins/%s/actions/reconcile-override", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewRestoreEnvironmentModuleVersionPinAfterRollbackRequest calls the generic RestoreEnvironmentModuleVersionPinAfterRollback builder with application/json body
+func NewRestoreEnvironmentModuleVersionPinAfterRollbackRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, body RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRestoreEnvironmentModuleVersionPinAfterRollbackRequestWithBody(server, orgId, pinId, params, "application/json", bodyReader)
+}
+
+// NewRestoreEnvironmentModuleVersionPinAfterRollbackRequestWithBody generates requests for RestoreEnvironmentModuleVersionPinAfterRollback with any type of body
+func NewRestoreEnvironmentModuleVersionPinAfterRollbackRequestWithBody(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/module-version-pins/%s/actions/restore-after-rollback", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewListModuleExtensionContributionsRequest generates requests for ListModuleExtensionContributions
+func NewListModuleExtensionContributionsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleExtensionContributionsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/extension-contributions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.IncludeDraft != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_draft", runtime.ParamLocationQuery, *params.IncludeDraft); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.IncludeTerminal != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_terminal", runtime.ParamLocationQuery, *params.IncludeTerminal); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpsertModuleExtensionContributionRequest calls the generic UpsertModuleExtensionContribution builder with application/json body
+func NewUpsertModuleExtensionContributionRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, body UpsertModuleExtensionContributionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpsertModuleExtensionContributionRequestWithBody(server, orgId, moduleId, params, "application/json", bodyReader)
+}
+
+// NewUpsertModuleExtensionContributionRequestWithBody generates requests for UpsertModuleExtensionContribution with any type of body
+func NewUpsertModuleExtensionContributionRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/extension-contributions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewListModuleOperationReservationsRequest generates requests for ListModuleOperationReservations
+func NewListModuleOperationReservationsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleOperationReservationsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/operation-reservations", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.IncludeReleased != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_released", runtime.ParamLocationQuery, *params.IncludeReleased); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAcquireModuleOperationReservationRequest calls the generic AcquireModuleOperationReservation builder with application/json body
+func NewAcquireModuleOperationReservationRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, body AcquireModuleOperationReservationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAcquireModuleOperationReservationRequestWithBody(server, orgId, moduleId, params, "application/json", bodyReader)
+}
+
+// NewAcquireModuleOperationReservationRequestWithBody generates requests for AcquireModuleOperationReservation with any type of body
+func NewAcquireModuleOperationReservationRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/operation-reservations", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewReleaseModuleOperationReservationRequest calls the generic ReleaseModuleOperationReservation builder with application/json body
+func NewReleaseModuleOperationReservationRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, body ReleaseModuleOperationReservationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReleaseModuleOperationReservationRequestWithBody(server, orgId, moduleId, reservationId, params, "application/json", bodyReader)
+}
+
+// NewReleaseModuleOperationReservationRequestWithBody generates requests for ReleaseModuleOperationReservation with any type of body
+func NewReleaseModuleOperationReservationRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "reservationId", runtime.ParamLocationPath, reservationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/operation-reservations/%s/actions/release", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewInternalUpdateEnvironmentRequest calls the generic InternalUpdateEnvironment builder with application/json body
 func NewInternalUpdateEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3999,18 +6175,18 @@ func NewInternalForceDeleteEnvironmentRequest(server string, orgId OrgIdPathPara
 }
 
 // NewGenerateInternalModuleCatalogueRequest calls the generic GenerateInternalModuleCatalogue builder with application/json body
-func NewGenerateInternalModuleCatalogueRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody) (*http.Request, error) {
+func NewGenerateInternalModuleCatalogueRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewGenerateInternalModuleCatalogueRequestWithBody(server, orgId, projectId, envId, "application/json", bodyReader)
+	return NewGenerateInternalModuleCatalogueRequestWithBody(server, orgId, projectId, envId, params, "application/json", bodyReader)
 }
 
 // NewGenerateInternalModuleCatalogueRequestWithBody generates requests for GenerateInternalModuleCatalogue with any type of body
-func NewGenerateInternalModuleCatalogueRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+func NewGenerateInternalModuleCatalogueRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4055,6 +6231,65 @@ func NewGenerateInternalModuleCatalogueRequestWithBody(server string, orgId OrgI
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XStellwerkRollback != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-Stellwerk-Rollback", runtime.ParamLocationHeader, *params.XStellwerkRollback)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Rollback", headerParam0)
+		}
+
+		if params.XStellwerkModuleOperationId != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Stellwerk-Module-Operation-Id", runtime.ParamLocationHeader, *params.XStellwerkModuleOperationId)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Module-Operation-Id", headerParam1)
+		}
+
+		if params.XStellwerkModuleOperationPlanning != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Stellwerk-Module-Operation-Planning", runtime.ParamLocationHeader, *params.XStellwerkModuleOperationPlanning)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Module-Operation-Planning", headerParam2)
+		}
+
+		if params.XStellwerkRestrictedVersionConfirmations != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithLocation("simple", false, "X-Stellwerk-Restricted-Version-Confirmations", runtime.ParamLocationHeader, *params.XStellwerkRestrictedVersionConfirmations)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Restricted-Version-Confirmations", headerParam3)
+		}
+
+		if params.XStellwerkActiveModuleVersions != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithLocation("simple", false, "X-Stellwerk-Active-Module-Versions", runtime.ParamLocationHeader, *params.XStellwerkActiveModuleVersions)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Active-Module-Versions", headerParam4)
+		}
+
+	}
 
 	return req, nil
 }
@@ -4810,6 +7045,122 @@ func NewListEnvironmentsInOrgRequest(server string, orgId OrgIdPathParam, params
 	return req, nil
 }
 
+// NewListModuleCatalogueEntriesRequest generates requests for ListModuleCatalogueEntries
+func NewListModuleCatalogueEntriesRequest(server string, orgId OrgIdPathParam, params *ListModuleCatalogueEntriesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-catalogue", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.IncludeArchived != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_archived", runtime.ParamLocationQuery, *params.IncludeArchived); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateModuleCatalogueEntryRequest calls the generic CreateModuleCatalogueEntry builder with application/json body
+func NewCreateModuleCatalogueEntryRequest(server string, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, body CreateModuleCatalogueEntryJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateModuleCatalogueEntryRequestWithBody(server, orgId, params, "application/json", bodyReader)
+}
+
+// NewCreateModuleCatalogueEntryRequestWithBody generates requests for CreateModuleCatalogueEntry with any type of body
+func NewCreateModuleCatalogueEntryRequestWithBody(server string, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-catalogue", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewListModuleProvidersRequest generates requests for ListModuleProviders
 func NewListModuleProvidersRequest(server string, orgId OrgIdPathParam, params *ListModuleProvidersParams) (*http.Request, error) {
 	var err error
@@ -5367,6 +7718,544 @@ func NewGetModuleRuleInOrgRequest(server string, orgId OrgIdPathParam, ruleId Ru
 	return req, nil
 }
 
+// NewTransactModuleVersionLifecyclesRequest calls the generic TransactModuleVersionLifecycles builder with application/json body
+func NewTransactModuleVersionLifecyclesRequest(server string, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, body TransactModuleVersionLifecyclesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewTransactModuleVersionLifecyclesRequestWithBody(server, orgId, params, "application/json", bodyReader)
+}
+
+// NewTransactModuleVersionLifecyclesRequestWithBody generates requests for TransactModuleVersionLifecycles with any type of body
+func NewTransactModuleVersionLifecyclesRequestWithBody(server string, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-lifecycle-transactions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewListEnvironmentModuleVersionPinsRequest generates requests for ListEnvironmentModuleVersionPins
+func NewListEnvironmentModuleVersionPinsRequest(server string, orgId OrgIdPathParam, params *ListEnvironmentModuleVersionPinsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.EnvironmentUuid != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "environment_uuid", runtime.ParamLocationQuery, *params.EnvironmentUuid); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ModuleUuid != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "module_uuid", runtime.ParamLocationQuery, *params.ModuleUuid); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.IncludeRemoved != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_removed", runtime.ParamLocationQuery, *params.IncludeRemoved); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateEnvironmentModuleVersionPinRequest calls the generic CreateEnvironmentModuleVersionPin builder with application/json body
+func NewCreateEnvironmentModuleVersionPinRequest(server string, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, body CreateEnvironmentModuleVersionPinJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateEnvironmentModuleVersionPinRequestWithBody(server, orgId, params, "application/json", bodyReader)
+}
+
+// NewCreateEnvironmentModuleVersionPinRequestWithBody generates requests for CreateEnvironmentModuleVersionPin with any type of body
+func NewCreateEnvironmentModuleVersionPinRequestWithBody(server string, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewExecuteEnvironmentModuleVersionPinBulkOperationRequest calls the generic ExecuteEnvironmentModuleVersionPinBulkOperation builder with application/json body
+func NewExecuteEnvironmentModuleVersionPinBulkOperationRequest(server string, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, body ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewExecuteEnvironmentModuleVersionPinBulkOperationRequestWithBody(server, orgId, params, "application/json", bodyReader)
+}
+
+// NewExecuteEnvironmentModuleVersionPinBulkOperationRequestWithBody generates requests for ExecuteEnvironmentModuleVersionPinBulkOperation with any type of body
+func NewExecuteEnvironmentModuleVersionPinBulkOperationRequestWithBody(server string, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/bulk", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewPreviewEnvironmentModuleVersionPinBulkOperationRequest calls the generic PreviewEnvironmentModuleVersionPinBulkOperation builder with application/json body
+func NewPreviewEnvironmentModuleVersionPinBulkOperationRequest(server string, orgId OrgIdPathParam, body PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPreviewEnvironmentModuleVersionPinBulkOperationRequestWithBody(server, orgId, "application/json", bodyReader)
+}
+
+// NewPreviewEnvironmentModuleVersionPinBulkOperationRequestWithBody generates requests for PreviewEnvironmentModuleVersionPinBulkOperation with any type of body
+func NewPreviewEnvironmentModuleVersionPinBulkOperationRequestWithBody(server string, orgId OrgIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/bulk-preview", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetEnvironmentModuleVersionPinRequest generates requests for GetEnvironmentModuleVersionPin
+func NewGetEnvironmentModuleVersionPinRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTransitionEnvironmentModuleVersionPinRequest calls the generic TransitionEnvironmentModuleVersionPin builder with application/json body
+func NewTransitionEnvironmentModuleVersionPinRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, body TransitionEnvironmentModuleVersionPinJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewTransitionEnvironmentModuleVersionPinRequestWithBody(server, orgId, pinId, pinAction, params, "application/json", bodyReader)
+}
+
+// NewTransitionEnvironmentModuleVersionPinRequestWithBody generates requests for TransitionEnvironmentModuleVersionPin with any type of body
+func NewTransitionEnvironmentModuleVersionPinRequestWithBody(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "pinAction", runtime.ParamLocationPath, pinAction)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/%s/actions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewListEnvironmentModuleVersionPinEventsRequest generates requests for ListEnvironmentModuleVersionPinEvents
+func NewListEnvironmentModuleVersionPinEventsRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/%s/events", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppendEnvironmentModuleVersionPinNoteRequest calls the generic AppendEnvironmentModuleVersionPinNote builder with application/json body
+func NewAppendEnvironmentModuleVersionPinNoteRequest(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, body AppendEnvironmentModuleVersionPinNoteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppendEnvironmentModuleVersionPinNoteRequestWithBody(server, orgId, pinId, params, "application/json", bodyReader)
+}
+
+// NewAppendEnvironmentModuleVersionPinNoteRequestWithBody generates requests for AppendEnvironmentModuleVersionPinNote with any type of body
+func NewAppendEnvironmentModuleVersionPinNoteRequestWithBody(server string, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pinId", runtime.ParamLocationPath, pinId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-version-pins/%s/notes", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewListModulesRequest generates requests for ListModules
 func NewListModulesRequest(server string, orgId OrgIdPathParam, params *ListModulesParams) (*http.Request, error) {
 	var err error
@@ -5638,6 +8527,175 @@ func NewUpdateModuleRequestWithBody(server string, orgId OrgIdPathParam, moduleI
 	return req, nil
 }
 
+// NewGetModuleCatalogueEntryRequest generates requests for GetModuleCatalogueEntry
+func NewGetModuleCatalogueEntryRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/catalogue", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateModuleCatalogueEntryRequest calls the generic UpdateModuleCatalogueEntry builder with application/json body
+func NewUpdateModuleCatalogueEntryRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleCatalogueEntryJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateModuleCatalogueEntryRequestWithBody(server, orgId, moduleId, "application/json", bodyReader)
+}
+
+// NewUpdateModuleCatalogueEntryRequestWithBody generates requests for UpdateModuleCatalogueEntry with any type of body
+func NewUpdateModuleCatalogueEntryRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/catalogue", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewChangeModuleCatalogueStatusRequest calls the generic ChangeModuleCatalogueStatus builder with application/json body
+func NewChangeModuleCatalogueStatusRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangeModuleCatalogueStatusRequestWithBody(server, orgId, moduleId, catalogueAction, params, "application/json", bodyReader)
+}
+
+// NewChangeModuleCatalogueStatusRequestWithBody generates requests for ChangeModuleCatalogueStatus with any type of body
+func NewChangeModuleCatalogueStatusRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "catalogueAction", runtime.ParamLocationPath, catalogueAction)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/catalogue/actions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewListModuleVersionsRequest generates requests for ListModuleVersions
 func NewListModuleVersionsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams) (*http.Request, error) {
 	var err error
@@ -5706,12 +8764,111 @@ func NewListModuleVersionsRequest(server string, orgId OrgIdPathParam, moduleId 
 
 		}
 
+		if params.IncludeDeprecated != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_deprecated", runtime.ParamLocationQuery, *params.IncludeDeprecated); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.IncludeDefective != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "include_defective", runtime.ParamLocationQuery, *params.IncludeDefective); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPublishModuleVersionRequest calls the generic PublishModuleVersion builder with application/json body
+func NewPublishModuleVersionRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, body PublishModuleVersionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishModuleVersionRequestWithBody(server, orgId, moduleId, params, "application/json", bodyReader)
+}
+
+// NewPublishModuleVersionRequestWithBody generates requests for PublishModuleVersion with any type of body
+func NewPublishModuleVersionRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
 	}
 
 	return req, nil
@@ -5748,6 +8905,353 @@ func NewGetModuleVersionRequest(server string, orgId OrgIdPathParam, moduleId Mo
 	}
 
 	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTransitionModuleVersionRequest calls the generic TransitionModuleVersion builder with application/json body
+func NewTransitionModuleVersionRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, body TransitionModuleVersionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewTransitionModuleVersionRequestWithBody(server, orgId, moduleId, moduleVersionId, lifecycleAction, params, "application/json", bodyReader)
+}
+
+// NewTransitionModuleVersionRequestWithBody generates requests for TransitionModuleVersion with any type of body
+func NewTransitionModuleVersionRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithLocation("simple", false, "lifecycleAction", runtime.ParamLocationPath, lifecycleAction)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/actions/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewCompareModuleVersionsRequest generates requests for CompareModuleVersions
+func NewCompareModuleVersionsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, otherModuleVersionId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithLocation("simple", false, "otherModuleVersionId", runtime.ParamLocationPath, otherModuleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/compare/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListModuleVersionLifecycleEventsRequest generates requests for ListModuleVersionLifecycleEvents
+func NewListModuleVersionLifecycleEventsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/events", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPublishStableModuleVersionSuccessorRequest calls the generic PublishStableModuleVersionSuccessor builder with application/json body
+func NewPublishStableModuleVersionSuccessorRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishStableModuleVersionSuccessorRequestWithBody(server, orgId, moduleId, moduleVersionId, params, "application/json", bodyReader)
+}
+
+// NewPublishStableModuleVersionSuccessorRequestWithBody generates requests for PublishStableModuleVersionSuccessor with any type of body
+func NewPublishStableModuleVersionSuccessorRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/stable-successor", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetModuleVersionUsageRequest generates requests for GetModuleVersionUsage
+func NewGetModuleVersionUsageRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/usage", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPluginCapabilityRequest generates requests for GetPluginCapability
+func NewGetPluginCapabilityRequest(server string, orgId OrgIdPathParam, pluginId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pluginId", runtime.ParamLocationPath, pluginId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/plugins/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6574,6 +10078,54 @@ func NewListAvailableResourceTypesRequest(server string, orgId OrgIdPathParam, p
 	return req, nil
 }
 
+// NewGetEnvironmentDeletionImpactRequest generates requests for GetEnvironmentDeletionImpact
+func NewGetEnvironmentDeletionImpactRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "envId", runtime.ParamLocationPath, envId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/deletion-impact", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListResourceTypesRequest generates requests for ListResourceTypes
 func NewListResourceTypesRequest(server string, orgId OrgIdPathParam, params *ListResourceTypesParams) (*http.Request, error) {
 	var err error
@@ -6825,6 +10377,80 @@ func NewUpdateResourceTypeRequestWithBody(server string, orgId OrgIdPathParam, t
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewChangeResourceTypeCatalogueStatusRequest calls the generic ChangeResourceTypeCatalogueStatus builder with application/json body
+func NewChangeResourceTypeCatalogueStatusRequest(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangeResourceTypeCatalogueStatusRequestWithBody(server, orgId, typeId, catalogueAction, params, "application/json", bodyReader)
+}
+
+// NewChangeResourceTypeCatalogueStatusRequestWithBody generates requests for ChangeResourceTypeCatalogueStatus with any type of body
+func NewChangeResourceTypeCatalogueStatusRequestWithBody(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "typeId", runtime.ParamLocationPath, typeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "catalogueAction", runtime.ParamLocationPath, catalogueAction)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/resource-types/%s/actions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
 
 	return req, nil
 }
@@ -7406,6 +11032,42 @@ type ClientWithResponsesInterface interface {
 	// GetInternalEnvironmentByUuidWithResponse request
 	GetInternalEnvironmentByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalEnvironmentByUuidResponse, error)
 
+	// BeginEnvironmentModuleVersionPinOverrideWithBodyWithResponse request with any body
+	BeginEnvironmentModuleVersionPinOverrideWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BeginEnvironmentModuleVersionPinOverrideResponse, error)
+
+	BeginEnvironmentModuleVersionPinOverrideWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, body BeginEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*BeginEnvironmentModuleVersionPinOverrideResponse, error)
+
+	// ReconcileEnvironmentModuleVersionPinOverrideWithBodyWithResponse request with any body
+	ReconcileEnvironmentModuleVersionPinOverrideWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReconcileEnvironmentModuleVersionPinOverrideResponse, error)
+
+	ReconcileEnvironmentModuleVersionPinOverrideWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, body ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*ReconcileEnvironmentModuleVersionPinOverrideResponse, error)
+
+	// RestoreEnvironmentModuleVersionPinAfterRollbackWithBodyWithResponse request with any body
+	RestoreEnvironmentModuleVersionPinAfterRollbackWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RestoreEnvironmentModuleVersionPinAfterRollbackResponse, error)
+
+	RestoreEnvironmentModuleVersionPinAfterRollbackWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, body RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody, reqEditors ...RequestEditorFn) (*RestoreEnvironmentModuleVersionPinAfterRollbackResponse, error)
+
+	// ListModuleExtensionContributionsWithResponse request
+	ListModuleExtensionContributionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleExtensionContributionsParams, reqEditors ...RequestEditorFn) (*ListModuleExtensionContributionsResponse, error)
+
+	// UpsertModuleExtensionContributionWithBodyWithResponse request with any body
+	UpsertModuleExtensionContributionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertModuleExtensionContributionResponse, error)
+
+	UpsertModuleExtensionContributionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, body UpsertModuleExtensionContributionJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertModuleExtensionContributionResponse, error)
+
+	// ListModuleOperationReservationsWithResponse request
+	ListModuleOperationReservationsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleOperationReservationsParams, reqEditors ...RequestEditorFn) (*ListModuleOperationReservationsResponse, error)
+
+	// AcquireModuleOperationReservationWithBodyWithResponse request with any body
+	AcquireModuleOperationReservationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AcquireModuleOperationReservationResponse, error)
+
+	AcquireModuleOperationReservationWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, body AcquireModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*AcquireModuleOperationReservationResponse, error)
+
+	// ReleaseModuleOperationReservationWithBodyWithResponse request with any body
+	ReleaseModuleOperationReservationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReleaseModuleOperationReservationResponse, error)
+
+	ReleaseModuleOperationReservationWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, body ReleaseModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*ReleaseModuleOperationReservationResponse, error)
+
 	// InternalUpdateEnvironmentWithBodyWithResponse request with any body
 	InternalUpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error)
 
@@ -7415,9 +11077,9 @@ type ClientWithResponsesInterface interface {
 	InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error)
 
 	// GenerateInternalModuleCatalogueWithBodyWithResponse request with any body
-	GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
+	GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
 
-	GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
+	GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
 
 	// GetInternalProjectByUuidWithResponse request
 	GetInternalProjectByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalProjectByUuidResponse, error)
@@ -7472,6 +11134,14 @@ type ClientWithResponsesInterface interface {
 	// ListEnvironmentsInOrgWithResponse request
 	ListEnvironmentsInOrgWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*ListEnvironmentsInOrgResponse, error)
 
+	// ListModuleCatalogueEntriesWithResponse request
+	ListModuleCatalogueEntriesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleCatalogueEntriesParams, reqEditors ...RequestEditorFn) (*ListModuleCatalogueEntriesResponse, error)
+
+	// CreateModuleCatalogueEntryWithBodyWithResponse request with any body
+	CreateModuleCatalogueEntryWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleCatalogueEntryResponse, error)
+
+	CreateModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, body CreateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleCatalogueEntryResponse, error)
+
 	// ListModuleProvidersWithResponse request
 	ListModuleProvidersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*ListModuleProvidersResponse, error)
 
@@ -7505,6 +11175,45 @@ type ClientWithResponsesInterface interface {
 	// GetModuleRuleInOrgWithResponse request
 	GetModuleRuleInOrgWithResponse(ctx context.Context, orgId OrgIdPathParam, ruleId RuleIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleRuleInOrgResponse, error)
 
+	// TransactModuleVersionLifecyclesWithBodyWithResponse request with any body
+	TransactModuleVersionLifecyclesWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransactModuleVersionLifecyclesResponse, error)
+
+	TransactModuleVersionLifecyclesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, body TransactModuleVersionLifecyclesJSONRequestBody, reqEditors ...RequestEditorFn) (*TransactModuleVersionLifecyclesResponse, error)
+
+	// ListEnvironmentModuleVersionPinsWithResponse request
+	ListEnvironmentModuleVersionPinsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentModuleVersionPinsParams, reqEditors ...RequestEditorFn) (*ListEnvironmentModuleVersionPinsResponse, error)
+
+	// CreateEnvironmentModuleVersionPinWithBodyWithResponse request with any body
+	CreateEnvironmentModuleVersionPinWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEnvironmentModuleVersionPinResponse, error)
+
+	CreateEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, body CreateEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEnvironmentModuleVersionPinResponse, error)
+
+	// ExecuteEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse request with any body
+	ExecuteEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExecuteEnvironmentModuleVersionPinBulkOperationResponse, error)
+
+	ExecuteEnvironmentModuleVersionPinBulkOperationWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, body ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteEnvironmentModuleVersionPinBulkOperationResponse, error)
+
+	// PreviewEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse request with any body
+	PreviewEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PreviewEnvironmentModuleVersionPinBulkOperationResponse, error)
+
+	PreviewEnvironmentModuleVersionPinBulkOperationWithResponse(ctx context.Context, orgId OrgIdPathParam, body PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*PreviewEnvironmentModuleVersionPinBulkOperationResponse, error)
+
+	// GetEnvironmentModuleVersionPinWithResponse request
+	GetEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetEnvironmentModuleVersionPinResponse, error)
+
+	// TransitionEnvironmentModuleVersionPinWithBodyWithResponse request with any body
+	TransitionEnvironmentModuleVersionPinWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransitionEnvironmentModuleVersionPinResponse, error)
+
+	TransitionEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, body TransitionEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*TransitionEnvironmentModuleVersionPinResponse, error)
+
+	// ListEnvironmentModuleVersionPinEventsWithResponse request
+	ListEnvironmentModuleVersionPinEventsWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListEnvironmentModuleVersionPinEventsResponse, error)
+
+	// AppendEnvironmentModuleVersionPinNoteWithBodyWithResponse request with any body
+	AppendEnvironmentModuleVersionPinNoteWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppendEnvironmentModuleVersionPinNoteResponse, error)
+
+	AppendEnvironmentModuleVersionPinNoteWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, body AppendEnvironmentModuleVersionPinNoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppendEnvironmentModuleVersionPinNoteResponse, error)
+
 	// ListModulesWithResponse request
 	ListModulesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModulesParams, reqEditors ...RequestEditorFn) (*ListModulesResponse, error)
 
@@ -7524,11 +11233,51 @@ type ClientWithResponsesInterface interface {
 
 	UpdateModuleWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleResponse, error)
 
+	// GetModuleCatalogueEntryWithResponse request
+	GetModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleCatalogueEntryResponse, error)
+
+	// UpdateModuleCatalogueEntryWithBodyWithResponse request with any body
+	UpdateModuleCatalogueEntryWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateModuleCatalogueEntryResponse, error)
+
+	UpdateModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleCatalogueEntryResponse, error)
+
+	// ChangeModuleCatalogueStatusWithBodyWithResponse request with any body
+	ChangeModuleCatalogueStatusWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeModuleCatalogueStatusResponse, error)
+
+	ChangeModuleCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeModuleCatalogueStatusResponse, error)
+
 	// ListModuleVersionsWithResponse request
 	ListModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*ListModuleVersionsResponse, error)
 
+	// PublishModuleVersionWithBodyWithResponse request with any body
+	PublishModuleVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleVersionResponse, error)
+
+	PublishModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, body PublishModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleVersionResponse, error)
+
 	// GetModuleVersionWithResponse request
 	GetModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionResponse, error)
+
+	// TransitionModuleVersionWithBodyWithResponse request with any body
+	TransitionModuleVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransitionModuleVersionResponse, error)
+
+	TransitionModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, body TransitionModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*TransitionModuleVersionResponse, error)
+
+	// CompareModuleVersionsWithResponse request
+	CompareModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, otherModuleVersionId string, reqEditors ...RequestEditorFn) (*CompareModuleVersionsResponse, error)
+
+	// ListModuleVersionLifecycleEventsWithResponse request
+	ListModuleVersionLifecycleEventsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*ListModuleVersionLifecycleEventsResponse, error)
+
+	// PublishStableModuleVersionSuccessorWithBodyWithResponse request with any body
+	PublishStableModuleVersionSuccessorWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorResponse, error)
+
+	PublishStableModuleVersionSuccessorWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorResponse, error)
+
+	// GetModuleVersionUsageWithResponse request
+	GetModuleVersionUsageWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionUsageResponse, error)
+
+	// GetPluginCapabilityWithResponse request
+	GetPluginCapabilityWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, reqEditors ...RequestEditorFn) (*GetPluginCapabilityResponse, error)
 
 	// ListProjectsWithResponse request
 	ListProjectsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListProjectsParams, reqEditors ...RequestEditorFn) (*ListProjectsResponse, error)
@@ -7574,6 +11323,9 @@ type ClientWithResponsesInterface interface {
 	// ListAvailableResourceTypesWithResponse request
 	ListAvailableResourceTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *ListAvailableResourceTypesParams, reqEditors ...RequestEditorFn) (*ListAvailableResourceTypesResponse, error)
 
+	// GetEnvironmentDeletionImpactWithResponse request
+	GetEnvironmentDeletionImpactWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentDeletionImpactResponse, error)
+
 	// ListResourceTypesWithResponse request
 	ListResourceTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*ListResourceTypesResponse, error)
 
@@ -7592,6 +11344,11 @@ type ClientWithResponsesInterface interface {
 	UpdateResourceTypeWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateResourceTypeResponse, error)
 
 	UpdateResourceTypeWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, body UpdateResourceTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateResourceTypeResponse, error)
+
+	// ChangeResourceTypeCatalogueStatusWithBodyWithResponse request with any body
+	ChangeResourceTypeCatalogueStatusWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeResourceTypeCatalogueStatusResponse, error)
+
+	ChangeResourceTypeCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeResourceTypeCatalogueStatusResponse, error)
 
 	// ListRunnerRulesInOrgWithResponse request
 	ListRunnerRulesInOrgWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListRunnerRulesInOrgParams, reqEditors ...RequestEditorFn) (*ListRunnerRulesInOrgResponse, error)
@@ -7713,6 +11470,207 @@ func (r GetInternalEnvironmentByUuidResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetInternalEnvironmentByUuidResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BeginEnvironmentModuleVersionPinOverrideResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentModuleVersionPin
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r BeginEnvironmentModuleVersionPinOverrideResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BeginEnvironmentModuleVersionPinOverrideResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReconcileEnvironmentModuleVersionPinOverrideResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentModuleVersionPin
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ReconcileEnvironmentModuleVersionPinOverrideResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReconcileEnvironmentModuleVersionPinOverrideResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RestoreEnvironmentModuleVersionPinAfterRollbackResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentModuleVersionPin
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r RestoreEnvironmentModuleVersionPinAfterRollbackResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RestoreEnvironmentModuleVersionPinAfterRollbackResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListModuleExtensionContributionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ModuleExtensionContribution
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleExtensionContributionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleExtensionContributionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpsertModuleExtensionContributionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleExtensionContribution
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r UpsertModuleExtensionContributionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpsertModuleExtensionContributionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListModuleOperationReservationsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ModuleOperationReservation
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleOperationReservationsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleOperationReservationsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AcquireModuleOperationReservationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *ModuleOperationReservation
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r AcquireModuleOperationReservationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AcquireModuleOperationReservationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReleaseModuleOperationReservationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleOperationReservation
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ReleaseModuleOperationReservationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReleaseModuleOperationReservationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7935,6 +11893,7 @@ type InternalUpdateResourceTypeResponse struct {
 	JSON200      *ResourceType
 	JSON400      *N400BadRequest
 	JSON404      *N404NotFound
+	JSON409      *N409Conflict
 }
 
 // Status returns HTTPResponse.Status
@@ -8134,6 +12093,55 @@ func (r ListEnvironmentsInOrgResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListEnvironmentsInOrgResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListModuleCatalogueEntriesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ModuleCatalogueEntry
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleCatalogueEntriesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleCatalogueEntriesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateModuleCatalogueEntryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *ModuleCatalogueEntry
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateModuleCatalogueEntryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateModuleCatalogueEntryResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8352,6 +12360,233 @@ func (r GetModuleRuleInOrgResponse) StatusCode() int {
 	return 0
 }
 
+type TransactModuleVersionLifecyclesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionLifecycleTransactionResult
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r TransactModuleVersionLifecyclesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TransactModuleVersionLifecyclesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListEnvironmentModuleVersionPinsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]EnvironmentModuleVersionPin
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r ListEnvironmentModuleVersionPinsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListEnvironmentModuleVersionPinsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateEnvironmentModuleVersionPinResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *EnvironmentModuleVersionPin
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateEnvironmentModuleVersionPinResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateEnvironmentModuleVersionPinResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ExecuteEnvironmentModuleVersionPinBulkOperationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionPinBulkResult
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ExecuteEnvironmentModuleVersionPinBulkOperationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExecuteEnvironmentModuleVersionPinBulkOperationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PreviewEnvironmentModuleVersionPinBulkOperationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionPinBulkPreview
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r PreviewEnvironmentModuleVersionPinBulkOperationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PreviewEnvironmentModuleVersionPinBulkOperationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetEnvironmentModuleVersionPinResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentModuleVersionPin
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetEnvironmentModuleVersionPinResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetEnvironmentModuleVersionPinResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type TransitionEnvironmentModuleVersionPinResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentModuleVersionPin
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r TransitionEnvironmentModuleVersionPinResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TransitionEnvironmentModuleVersionPinResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListEnvironmentModuleVersionPinEventsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ModuleVersionPinEvent
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListEnvironmentModuleVersionPinEventsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListEnvironmentModuleVersionPinEventsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AppendEnvironmentModuleVersionPinNoteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *ModuleVersionPinEvent
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r AppendEnvironmentModuleVersionPinNoteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppendEnvironmentModuleVersionPinNoteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListModulesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8470,10 +12705,86 @@ func (r UpdateModuleResponse) StatusCode() int {
 	return 0
 }
 
+type GetModuleCatalogueEntryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleCatalogueEntry
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleCatalogueEntryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleCatalogueEntryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateModuleCatalogueEntryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleCatalogueEntry
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateModuleCatalogueEntryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateModuleCatalogueEntryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ChangeModuleCatalogueStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleCatalogueEntry
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangeModuleCatalogueStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangeModuleCatalogueStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListModuleVersionsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ModuleVersionPage
+	JSON200      *CoreModuleVersionPage
 	JSON404      *N404NotFound
 }
 
@@ -8493,10 +12804,36 @@ func (r ListModuleVersionsResponse) StatusCode() int {
 	return 0
 }
 
+type PublishModuleVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CoreModuleVersion
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishModuleVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishModuleVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetModuleVersionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ModuleVersion
+	JSON200      *CoreModuleVersionDetail
 	JSON404      *N404NotFound
 }
 
@@ -8510,6 +12847,154 @@ func (r GetModuleVersionResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetModuleVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type TransitionModuleVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CoreModuleVersion
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r TransitionModuleVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TransitionModuleVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CompareModuleVersionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionComparison
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r CompareModuleVersionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CompareModuleVersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListModuleVersionLifecycleEventsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ModuleVersionLifecycleEvent
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleVersionLifecycleEventsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleVersionLifecycleEventsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PublishStableModuleVersionSuccessorResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *StableModuleVersionSuccessorResult
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishStableModuleVersionSuccessorResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishStableModuleVersionSuccessorResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetModuleVersionUsageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionUsage
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleVersionUsageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleVersionUsageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPluginCapabilityResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginCapability
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPluginCapabilityResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPluginCapabilityResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8796,6 +13281,30 @@ func (r ListAvailableResourceTypesResponse) StatusCode() int {
 	return 0
 }
 
+type GetEnvironmentDeletionImpactResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentDeletionImpact
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetEnvironmentDeletionImpactResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetEnvironmentDeletionImpactResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListResourceTypesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8895,6 +13404,7 @@ type UpdateResourceTypeResponse struct {
 	JSON200      *ResourceType
 	JSON400      *N400BadRequest
 	JSON404      *N404NotFound
+	JSON409      *N409Conflict
 }
 
 // Status returns HTTPResponse.Status
@@ -8907,6 +13417,32 @@ func (r UpdateResourceTypeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateResourceTypeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ChangeResourceTypeCatalogueStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResourceType
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangeResourceTypeCatalogueStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangeResourceTypeCatalogueStatusResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -9168,6 +13704,126 @@ func (c *ClientWithResponses) GetInternalEnvironmentByUuidWithResponse(ctx conte
 	return ParseGetInternalEnvironmentByUuidResponse(rsp)
 }
 
+// BeginEnvironmentModuleVersionPinOverrideWithBodyWithResponse request with arbitrary body returning *BeginEnvironmentModuleVersionPinOverrideResponse
+func (c *ClientWithResponses) BeginEnvironmentModuleVersionPinOverrideWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BeginEnvironmentModuleVersionPinOverrideResponse, error) {
+	rsp, err := c.BeginEnvironmentModuleVersionPinOverrideWithBody(ctx, orgId, pinId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBeginEnvironmentModuleVersionPinOverrideResponse(rsp)
+}
+
+func (c *ClientWithResponses) BeginEnvironmentModuleVersionPinOverrideWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *BeginEnvironmentModuleVersionPinOverrideParams, body BeginEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*BeginEnvironmentModuleVersionPinOverrideResponse, error) {
+	rsp, err := c.BeginEnvironmentModuleVersionPinOverride(ctx, orgId, pinId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBeginEnvironmentModuleVersionPinOverrideResponse(rsp)
+}
+
+// ReconcileEnvironmentModuleVersionPinOverrideWithBodyWithResponse request with arbitrary body returning *ReconcileEnvironmentModuleVersionPinOverrideResponse
+func (c *ClientWithResponses) ReconcileEnvironmentModuleVersionPinOverrideWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReconcileEnvironmentModuleVersionPinOverrideResponse, error) {
+	rsp, err := c.ReconcileEnvironmentModuleVersionPinOverrideWithBody(ctx, orgId, pinId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReconcileEnvironmentModuleVersionPinOverrideResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReconcileEnvironmentModuleVersionPinOverrideWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *ReconcileEnvironmentModuleVersionPinOverrideParams, body ReconcileEnvironmentModuleVersionPinOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*ReconcileEnvironmentModuleVersionPinOverrideResponse, error) {
+	rsp, err := c.ReconcileEnvironmentModuleVersionPinOverride(ctx, orgId, pinId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReconcileEnvironmentModuleVersionPinOverrideResponse(rsp)
+}
+
+// RestoreEnvironmentModuleVersionPinAfterRollbackWithBodyWithResponse request with arbitrary body returning *RestoreEnvironmentModuleVersionPinAfterRollbackResponse
+func (c *ClientWithResponses) RestoreEnvironmentModuleVersionPinAfterRollbackWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RestoreEnvironmentModuleVersionPinAfterRollbackResponse, error) {
+	rsp, err := c.RestoreEnvironmentModuleVersionPinAfterRollbackWithBody(ctx, orgId, pinId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRestoreEnvironmentModuleVersionPinAfterRollbackResponse(rsp)
+}
+
+func (c *ClientWithResponses) RestoreEnvironmentModuleVersionPinAfterRollbackWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *RestoreEnvironmentModuleVersionPinAfterRollbackParams, body RestoreEnvironmentModuleVersionPinAfterRollbackJSONRequestBody, reqEditors ...RequestEditorFn) (*RestoreEnvironmentModuleVersionPinAfterRollbackResponse, error) {
+	rsp, err := c.RestoreEnvironmentModuleVersionPinAfterRollback(ctx, orgId, pinId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRestoreEnvironmentModuleVersionPinAfterRollbackResponse(rsp)
+}
+
+// ListModuleExtensionContributionsWithResponse request returning *ListModuleExtensionContributionsResponse
+func (c *ClientWithResponses) ListModuleExtensionContributionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleExtensionContributionsParams, reqEditors ...RequestEditorFn) (*ListModuleExtensionContributionsResponse, error) {
+	rsp, err := c.ListModuleExtensionContributions(ctx, orgId, moduleId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleExtensionContributionsResponse(rsp)
+}
+
+// UpsertModuleExtensionContributionWithBodyWithResponse request with arbitrary body returning *UpsertModuleExtensionContributionResponse
+func (c *ClientWithResponses) UpsertModuleExtensionContributionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpsertModuleExtensionContributionResponse, error) {
+	rsp, err := c.UpsertModuleExtensionContributionWithBody(ctx, orgId, moduleId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpsertModuleExtensionContributionResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpsertModuleExtensionContributionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *UpsertModuleExtensionContributionParams, body UpsertModuleExtensionContributionJSONRequestBody, reqEditors ...RequestEditorFn) (*UpsertModuleExtensionContributionResponse, error) {
+	rsp, err := c.UpsertModuleExtensionContribution(ctx, orgId, moduleId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpsertModuleExtensionContributionResponse(rsp)
+}
+
+// ListModuleOperationReservationsWithResponse request returning *ListModuleOperationReservationsResponse
+func (c *ClientWithResponses) ListModuleOperationReservationsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleOperationReservationsParams, reqEditors ...RequestEditorFn) (*ListModuleOperationReservationsResponse, error) {
+	rsp, err := c.ListModuleOperationReservations(ctx, orgId, moduleId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleOperationReservationsResponse(rsp)
+}
+
+// AcquireModuleOperationReservationWithBodyWithResponse request with arbitrary body returning *AcquireModuleOperationReservationResponse
+func (c *ClientWithResponses) AcquireModuleOperationReservationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AcquireModuleOperationReservationResponse, error) {
+	rsp, err := c.AcquireModuleOperationReservationWithBody(ctx, orgId, moduleId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAcquireModuleOperationReservationResponse(rsp)
+}
+
+func (c *ClientWithResponses) AcquireModuleOperationReservationWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *AcquireModuleOperationReservationParams, body AcquireModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*AcquireModuleOperationReservationResponse, error) {
+	rsp, err := c.AcquireModuleOperationReservation(ctx, orgId, moduleId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAcquireModuleOperationReservationResponse(rsp)
+}
+
+// ReleaseModuleOperationReservationWithBodyWithResponse request with arbitrary body returning *ReleaseModuleOperationReservationResponse
+func (c *ClientWithResponses) ReleaseModuleOperationReservationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReleaseModuleOperationReservationResponse, error) {
+	rsp, err := c.ReleaseModuleOperationReservationWithBody(ctx, orgId, moduleId, reservationId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReleaseModuleOperationReservationResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReleaseModuleOperationReservationWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reservationId openapi_types.UUID, params *ReleaseModuleOperationReservationParams, body ReleaseModuleOperationReservationJSONRequestBody, reqEditors ...RequestEditorFn) (*ReleaseModuleOperationReservationResponse, error) {
+	rsp, err := c.ReleaseModuleOperationReservation(ctx, orgId, moduleId, reservationId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReleaseModuleOperationReservationResponse(rsp)
+}
+
 // InternalUpdateEnvironmentWithBodyWithResponse request with arbitrary body returning *InternalUpdateEnvironmentResponse
 func (c *ClientWithResponses) InternalUpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error) {
 	rsp, err := c.InternalUpdateEnvironmentWithBody(ctx, orgId, projectId, envId, contentType, body, reqEditors...)
@@ -9195,16 +13851,16 @@ func (c *ClientWithResponses) InternalForceDeleteEnvironmentWithResponse(ctx con
 }
 
 // GenerateInternalModuleCatalogueWithBodyWithResponse request with arbitrary body returning *GenerateInternalModuleCatalogueResponse
-func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error) {
-	rsp, err := c.GenerateInternalModuleCatalogueWithBody(ctx, orgId, projectId, envId, contentType, body, reqEditors...)
+func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error) {
+	rsp, err := c.GenerateInternalModuleCatalogueWithBody(ctx, orgId, projectId, envId, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseGenerateInternalModuleCatalogueResponse(rsp)
 }
 
-func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error) {
-	rsp, err := c.GenerateInternalModuleCatalogue(ctx, orgId, projectId, envId, body, reqEditors...)
+func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error) {
+	rsp, err := c.GenerateInternalModuleCatalogue(ctx, orgId, projectId, envId, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -9378,6 +14034,32 @@ func (c *ClientWithResponses) ListEnvironmentsInOrgWithResponse(ctx context.Cont
 	return ParseListEnvironmentsInOrgResponse(rsp)
 }
 
+// ListModuleCatalogueEntriesWithResponse request returning *ListModuleCatalogueEntriesResponse
+func (c *ClientWithResponses) ListModuleCatalogueEntriesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleCatalogueEntriesParams, reqEditors ...RequestEditorFn) (*ListModuleCatalogueEntriesResponse, error) {
+	rsp, err := c.ListModuleCatalogueEntries(ctx, orgId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleCatalogueEntriesResponse(rsp)
+}
+
+// CreateModuleCatalogueEntryWithBodyWithResponse request with arbitrary body returning *CreateModuleCatalogueEntryResponse
+func (c *ClientWithResponses) CreateModuleCatalogueEntryWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleCatalogueEntryResponse, error) {
+	rsp, err := c.CreateModuleCatalogueEntryWithBody(ctx, orgId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleCatalogueEntryResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleCatalogueEntryParams, body CreateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleCatalogueEntryResponse, error) {
+	rsp, err := c.CreateModuleCatalogueEntry(ctx, orgId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleCatalogueEntryResponse(rsp)
+}
+
 // ListModuleProvidersWithResponse request returning *ListModuleProvidersResponse
 func (c *ClientWithResponses) ListModuleProvidersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*ListModuleProvidersResponse, error) {
 	rsp, err := c.ListModuleProviders(ctx, orgId, params, reqEditors...)
@@ -9483,6 +14165,135 @@ func (c *ClientWithResponses) GetModuleRuleInOrgWithResponse(ctx context.Context
 	return ParseGetModuleRuleInOrgResponse(rsp)
 }
 
+// TransactModuleVersionLifecyclesWithBodyWithResponse request with arbitrary body returning *TransactModuleVersionLifecyclesResponse
+func (c *ClientWithResponses) TransactModuleVersionLifecyclesWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransactModuleVersionLifecyclesResponse, error) {
+	rsp, err := c.TransactModuleVersionLifecyclesWithBody(ctx, orgId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransactModuleVersionLifecyclesResponse(rsp)
+}
+
+func (c *ClientWithResponses) TransactModuleVersionLifecyclesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *TransactModuleVersionLifecyclesParams, body TransactModuleVersionLifecyclesJSONRequestBody, reqEditors ...RequestEditorFn) (*TransactModuleVersionLifecyclesResponse, error) {
+	rsp, err := c.TransactModuleVersionLifecycles(ctx, orgId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransactModuleVersionLifecyclesResponse(rsp)
+}
+
+// ListEnvironmentModuleVersionPinsWithResponse request returning *ListEnvironmentModuleVersionPinsResponse
+func (c *ClientWithResponses) ListEnvironmentModuleVersionPinsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentModuleVersionPinsParams, reqEditors ...RequestEditorFn) (*ListEnvironmentModuleVersionPinsResponse, error) {
+	rsp, err := c.ListEnvironmentModuleVersionPins(ctx, orgId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListEnvironmentModuleVersionPinsResponse(rsp)
+}
+
+// CreateEnvironmentModuleVersionPinWithBodyWithResponse request with arbitrary body returning *CreateEnvironmentModuleVersionPinResponse
+func (c *ClientWithResponses) CreateEnvironmentModuleVersionPinWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateEnvironmentModuleVersionPinResponse, error) {
+	rsp, err := c.CreateEnvironmentModuleVersionPinWithBody(ctx, orgId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEnvironmentModuleVersionPinResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateEnvironmentModuleVersionPinParams, body CreateEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEnvironmentModuleVersionPinResponse, error) {
+	rsp, err := c.CreateEnvironmentModuleVersionPin(ctx, orgId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateEnvironmentModuleVersionPinResponse(rsp)
+}
+
+// ExecuteEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse request with arbitrary body returning *ExecuteEnvironmentModuleVersionPinBulkOperationResponse
+func (c *ClientWithResponses) ExecuteEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExecuteEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	rsp, err := c.ExecuteEnvironmentModuleVersionPinBulkOperationWithBody(ctx, orgId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExecuteEnvironmentModuleVersionPinBulkOperationResponse(rsp)
+}
+
+func (c *ClientWithResponses) ExecuteEnvironmentModuleVersionPinBulkOperationWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ExecuteEnvironmentModuleVersionPinBulkOperationParams, body ExecuteEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	rsp, err := c.ExecuteEnvironmentModuleVersionPinBulkOperation(ctx, orgId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExecuteEnvironmentModuleVersionPinBulkOperationResponse(rsp)
+}
+
+// PreviewEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse request with arbitrary body returning *PreviewEnvironmentModuleVersionPinBulkOperationResponse
+func (c *ClientWithResponses) PreviewEnvironmentModuleVersionPinBulkOperationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PreviewEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	rsp, err := c.PreviewEnvironmentModuleVersionPinBulkOperationWithBody(ctx, orgId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewEnvironmentModuleVersionPinBulkOperationResponse(rsp)
+}
+
+func (c *ClientWithResponses) PreviewEnvironmentModuleVersionPinBulkOperationWithResponse(ctx context.Context, orgId OrgIdPathParam, body PreviewEnvironmentModuleVersionPinBulkOperationJSONRequestBody, reqEditors ...RequestEditorFn) (*PreviewEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	rsp, err := c.PreviewEnvironmentModuleVersionPinBulkOperation(ctx, orgId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewEnvironmentModuleVersionPinBulkOperationResponse(rsp)
+}
+
+// GetEnvironmentModuleVersionPinWithResponse request returning *GetEnvironmentModuleVersionPinResponse
+func (c *ClientWithResponses) GetEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetEnvironmentModuleVersionPinResponse, error) {
+	rsp, err := c.GetEnvironmentModuleVersionPin(ctx, orgId, pinId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetEnvironmentModuleVersionPinResponse(rsp)
+}
+
+// TransitionEnvironmentModuleVersionPinWithBodyWithResponse request with arbitrary body returning *TransitionEnvironmentModuleVersionPinResponse
+func (c *ClientWithResponses) TransitionEnvironmentModuleVersionPinWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransitionEnvironmentModuleVersionPinResponse, error) {
+	rsp, err := c.TransitionEnvironmentModuleVersionPinWithBody(ctx, orgId, pinId, pinAction, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransitionEnvironmentModuleVersionPinResponse(rsp)
+}
+
+func (c *ClientWithResponses) TransitionEnvironmentModuleVersionPinWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, pinAction TransitionEnvironmentModuleVersionPinParamsPinAction, params *TransitionEnvironmentModuleVersionPinParams, body TransitionEnvironmentModuleVersionPinJSONRequestBody, reqEditors ...RequestEditorFn) (*TransitionEnvironmentModuleVersionPinResponse, error) {
+	rsp, err := c.TransitionEnvironmentModuleVersionPin(ctx, orgId, pinId, pinAction, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransitionEnvironmentModuleVersionPinResponse(rsp)
+}
+
+// ListEnvironmentModuleVersionPinEventsWithResponse request returning *ListEnvironmentModuleVersionPinEventsResponse
+func (c *ClientWithResponses) ListEnvironmentModuleVersionPinEventsWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListEnvironmentModuleVersionPinEventsResponse, error) {
+	rsp, err := c.ListEnvironmentModuleVersionPinEvents(ctx, orgId, pinId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListEnvironmentModuleVersionPinEventsResponse(rsp)
+}
+
+// AppendEnvironmentModuleVersionPinNoteWithBodyWithResponse request with arbitrary body returning *AppendEnvironmentModuleVersionPinNoteResponse
+func (c *ClientWithResponses) AppendEnvironmentModuleVersionPinNoteWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppendEnvironmentModuleVersionPinNoteResponse, error) {
+	rsp, err := c.AppendEnvironmentModuleVersionPinNoteWithBody(ctx, orgId, pinId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppendEnvironmentModuleVersionPinNoteResponse(rsp)
+}
+
+func (c *ClientWithResponses) AppendEnvironmentModuleVersionPinNoteWithResponse(ctx context.Context, orgId OrgIdPathParam, pinId openapi_types.UUID, params *AppendEnvironmentModuleVersionPinNoteParams, body AppendEnvironmentModuleVersionPinNoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppendEnvironmentModuleVersionPinNoteResponse, error) {
+	rsp, err := c.AppendEnvironmentModuleVersionPinNote(ctx, orgId, pinId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppendEnvironmentModuleVersionPinNoteResponse(rsp)
+}
+
 // ListModulesWithResponse request returning *ListModulesResponse
 func (c *ClientWithResponses) ListModulesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModulesParams, reqEditors ...RequestEditorFn) (*ListModulesResponse, error) {
 	rsp, err := c.ListModules(ctx, orgId, params, reqEditors...)
@@ -9544,6 +14355,49 @@ func (c *ClientWithResponses) UpdateModuleWithResponse(ctx context.Context, orgI
 	return ParseUpdateModuleResponse(rsp)
 }
 
+// GetModuleCatalogueEntryWithResponse request returning *GetModuleCatalogueEntryResponse
+func (c *ClientWithResponses) GetModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleCatalogueEntryResponse, error) {
+	rsp, err := c.GetModuleCatalogueEntry(ctx, orgId, moduleId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleCatalogueEntryResponse(rsp)
+}
+
+// UpdateModuleCatalogueEntryWithBodyWithResponse request with arbitrary body returning *UpdateModuleCatalogueEntryResponse
+func (c *ClientWithResponses) UpdateModuleCatalogueEntryWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateModuleCatalogueEntryResponse, error) {
+	rsp, err := c.UpdateModuleCatalogueEntryWithBody(ctx, orgId, moduleId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateModuleCatalogueEntryResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateModuleCatalogueEntryWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleCatalogueEntryJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleCatalogueEntryResponse, error) {
+	rsp, err := c.UpdateModuleCatalogueEntry(ctx, orgId, moduleId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateModuleCatalogueEntryResponse(rsp)
+}
+
+// ChangeModuleCatalogueStatusWithBodyWithResponse request with arbitrary body returning *ChangeModuleCatalogueStatusResponse
+func (c *ClientWithResponses) ChangeModuleCatalogueStatusWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeModuleCatalogueStatusResponse, error) {
+	rsp, err := c.ChangeModuleCatalogueStatusWithBody(ctx, orgId, moduleId, catalogueAction, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeModuleCatalogueStatusResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChangeModuleCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeModuleCatalogueStatusResponse, error) {
+	rsp, err := c.ChangeModuleCatalogueStatus(ctx, orgId, moduleId, catalogueAction, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeModuleCatalogueStatusResponse(rsp)
+}
+
 // ListModuleVersionsWithResponse request returning *ListModuleVersionsResponse
 func (c *ClientWithResponses) ListModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*ListModuleVersionsResponse, error) {
 	rsp, err := c.ListModuleVersions(ctx, orgId, moduleId, params, reqEditors...)
@@ -9553,6 +14407,23 @@ func (c *ClientWithResponses) ListModuleVersionsWithResponse(ctx context.Context
 	return ParseListModuleVersionsResponse(rsp)
 }
 
+// PublishModuleVersionWithBodyWithResponse request with arbitrary body returning *PublishModuleVersionResponse
+func (c *ClientWithResponses) PublishModuleVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleVersionResponse, error) {
+	rsp, err := c.PublishModuleVersionWithBody(ctx, orgId, moduleId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleVersionResponse(rsp)
+}
+
+func (c *ClientWithResponses) PublishModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionParams, body PublishModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleVersionResponse, error) {
+	rsp, err := c.PublishModuleVersion(ctx, orgId, moduleId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleVersionResponse(rsp)
+}
+
 // GetModuleVersionWithResponse request returning *GetModuleVersionResponse
 func (c *ClientWithResponses) GetModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionResponse, error) {
 	rsp, err := c.GetModuleVersion(ctx, orgId, moduleId, moduleVersionId, reqEditors...)
@@ -9560,6 +14431,76 @@ func (c *ClientWithResponses) GetModuleVersionWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetModuleVersionResponse(rsp)
+}
+
+// TransitionModuleVersionWithBodyWithResponse request with arbitrary body returning *TransitionModuleVersionResponse
+func (c *ClientWithResponses) TransitionModuleVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TransitionModuleVersionResponse, error) {
+	rsp, err := c.TransitionModuleVersionWithBody(ctx, orgId, moduleId, moduleVersionId, lifecycleAction, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransitionModuleVersionResponse(rsp)
+}
+
+func (c *ClientWithResponses) TransitionModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, lifecycleAction TransitionModuleVersionParamsLifecycleAction, params *TransitionModuleVersionParams, body TransitionModuleVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*TransitionModuleVersionResponse, error) {
+	rsp, err := c.TransitionModuleVersion(ctx, orgId, moduleId, moduleVersionId, lifecycleAction, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTransitionModuleVersionResponse(rsp)
+}
+
+// CompareModuleVersionsWithResponse request returning *CompareModuleVersionsResponse
+func (c *ClientWithResponses) CompareModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, otherModuleVersionId string, reqEditors ...RequestEditorFn) (*CompareModuleVersionsResponse, error) {
+	rsp, err := c.CompareModuleVersions(ctx, orgId, moduleId, moduleVersionId, otherModuleVersionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCompareModuleVersionsResponse(rsp)
+}
+
+// ListModuleVersionLifecycleEventsWithResponse request returning *ListModuleVersionLifecycleEventsResponse
+func (c *ClientWithResponses) ListModuleVersionLifecycleEventsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*ListModuleVersionLifecycleEventsResponse, error) {
+	rsp, err := c.ListModuleVersionLifecycleEvents(ctx, orgId, moduleId, moduleVersionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleVersionLifecycleEventsResponse(rsp)
+}
+
+// PublishStableModuleVersionSuccessorWithBodyWithResponse request with arbitrary body returning *PublishStableModuleVersionSuccessorResponse
+func (c *ClientWithResponses) PublishStableModuleVersionSuccessorWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorResponse, error) {
+	rsp, err := c.PublishStableModuleVersionSuccessorWithBody(ctx, orgId, moduleId, moduleVersionId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishStableModuleVersionSuccessorResponse(rsp)
+}
+
+func (c *ClientWithResponses) PublishStableModuleVersionSuccessorWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorResponse, error) {
+	rsp, err := c.PublishStableModuleVersionSuccessor(ctx, orgId, moduleId, moduleVersionId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishStableModuleVersionSuccessorResponse(rsp)
+}
+
+// GetModuleVersionUsageWithResponse request returning *GetModuleVersionUsageResponse
+func (c *ClientWithResponses) GetModuleVersionUsageWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionUsageResponse, error) {
+	rsp, err := c.GetModuleVersionUsage(ctx, orgId, moduleId, moduleVersionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleVersionUsageResponse(rsp)
+}
+
+// GetPluginCapabilityWithResponse request returning *GetPluginCapabilityResponse
+func (c *ClientWithResponses) GetPluginCapabilityWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, reqEditors ...RequestEditorFn) (*GetPluginCapabilityResponse, error) {
+	rsp, err := c.GetPluginCapability(ctx, orgId, pluginId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPluginCapabilityResponse(rsp)
 }
 
 // ListProjectsWithResponse request returning *ListProjectsResponse
@@ -9702,6 +14643,15 @@ func (c *ClientWithResponses) ListAvailableResourceTypesWithResponse(ctx context
 	return ParseListAvailableResourceTypesResponse(rsp)
 }
 
+// GetEnvironmentDeletionImpactWithResponse request returning *GetEnvironmentDeletionImpactResponse
+func (c *ClientWithResponses) GetEnvironmentDeletionImpactWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentDeletionImpactResponse, error) {
+	rsp, err := c.GetEnvironmentDeletionImpact(ctx, orgId, projectId, envId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetEnvironmentDeletionImpactResponse(rsp)
+}
+
 // ListResourceTypesWithResponse request returning *ListResourceTypesResponse
 func (c *ClientWithResponses) ListResourceTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*ListResourceTypesResponse, error) {
 	rsp, err := c.ListResourceTypes(ctx, orgId, params, reqEditors...)
@@ -9761,6 +14711,23 @@ func (c *ClientWithResponses) UpdateResourceTypeWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseUpdateResourceTypeResponse(rsp)
+}
+
+// ChangeResourceTypeCatalogueStatusWithBodyWithResponse request with arbitrary body returning *ChangeResourceTypeCatalogueStatusResponse
+func (c *ClientWithResponses) ChangeResourceTypeCatalogueStatusWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeResourceTypeCatalogueStatusResponse, error) {
+	rsp, err := c.ChangeResourceTypeCatalogueStatusWithBody(ctx, orgId, typeId, catalogueAction, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeResourceTypeCatalogueStatusResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChangeResourceTypeCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeResourceTypeCatalogueStatusResponse, error) {
+	rsp, err := c.ChangeResourceTypeCatalogueStatus(ctx, orgId, typeId, catalogueAction, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeResourceTypeCatalogueStatusResponse(rsp)
 }
 
 // ListRunnerRulesInOrgWithResponse request returning *ListRunnerRulesInOrgResponse
@@ -9994,6 +14961,389 @@ func ParseGetInternalEnvironmentByUuidResponse(rsp *http.Response) (*GetInternal
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBeginEnvironmentModuleVersionPinOverrideResponse parses an HTTP response from a BeginEnvironmentModuleVersionPinOverrideWithResponse call
+func ParseBeginEnvironmentModuleVersionPinOverrideResponse(rsp *http.Response) (*BeginEnvironmentModuleVersionPinOverrideResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BeginEnvironmentModuleVersionPinOverrideResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReconcileEnvironmentModuleVersionPinOverrideResponse parses an HTTP response from a ReconcileEnvironmentModuleVersionPinOverrideWithResponse call
+func ParseReconcileEnvironmentModuleVersionPinOverrideResponse(rsp *http.Response) (*ReconcileEnvironmentModuleVersionPinOverrideResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReconcileEnvironmentModuleVersionPinOverrideResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRestoreEnvironmentModuleVersionPinAfterRollbackResponse parses an HTTP response from a RestoreEnvironmentModuleVersionPinAfterRollbackWithResponse call
+func ParseRestoreEnvironmentModuleVersionPinAfterRollbackResponse(rsp *http.Response) (*RestoreEnvironmentModuleVersionPinAfterRollbackResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RestoreEnvironmentModuleVersionPinAfterRollbackResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListModuleExtensionContributionsResponse parses an HTTP response from a ListModuleExtensionContributionsWithResponse call
+func ParseListModuleExtensionContributionsResponse(rsp *http.Response) (*ListModuleExtensionContributionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleExtensionContributionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ModuleExtensionContribution
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpsertModuleExtensionContributionResponse parses an HTTP response from a UpsertModuleExtensionContributionWithResponse call
+func ParseUpsertModuleExtensionContributionResponse(rsp *http.Response) (*UpsertModuleExtensionContributionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpsertModuleExtensionContributionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleExtensionContribution
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListModuleOperationReservationsResponse parses an HTTP response from a ListModuleOperationReservationsWithResponse call
+func ParseListModuleOperationReservationsResponse(rsp *http.Response) (*ListModuleOperationReservationsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleOperationReservationsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ModuleOperationReservation
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAcquireModuleOperationReservationResponse parses an HTTP response from a AcquireModuleOperationReservationWithResponse call
+func ParseAcquireModuleOperationReservationResponse(rsp *http.Response) (*AcquireModuleOperationReservationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AcquireModuleOperationReservationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleOperationReservation
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReleaseModuleOperationReservationResponse parses an HTTP response from a ReleaseModuleOperationReservationWithResponse call
+func ParseReleaseModuleOperationReservationResponse(rsp *http.Response) (*ReleaseModuleOperationReservationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReleaseModuleOperationReservationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleOperationReservation
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
@@ -10353,6 +15703,13 @@ func ParseInternalUpdateResourceTypeResponse(rsp *http.Response) (*InternalUpdat
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	}
 
 	return response, nil
@@ -10637,6 +15994,93 @@ func ParseListEnvironmentsInOrgResponse(rsp *http.Response) (*ListEnvironmentsIn
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListModuleCatalogueEntriesResponse parses an HTTP response from a ListModuleCatalogueEntriesWithResponse call
+func ParseListModuleCatalogueEntriesResponse(rsp *http.Response) (*ListModuleCatalogueEntriesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleCatalogueEntriesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ModuleCatalogueEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateModuleCatalogueEntryResponse parses an HTTP response from a CreateModuleCatalogueEntryWithResponse call
+func ParseCreateModuleCatalogueEntryResponse(rsp *http.Response) (*CreateModuleCatalogueEntryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateModuleCatalogueEntryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleCatalogueEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
@@ -10975,6 +16419,443 @@ func ParseGetModuleRuleInOrgResponse(rsp *http.Response) (*GetModuleRuleInOrgRes
 	return response, nil
 }
 
+// ParseTransactModuleVersionLifecyclesResponse parses an HTTP response from a TransactModuleVersionLifecyclesWithResponse call
+func ParseTransactModuleVersionLifecyclesResponse(rsp *http.Response) (*TransactModuleVersionLifecyclesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TransactModuleVersionLifecyclesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionLifecycleTransactionResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListEnvironmentModuleVersionPinsResponse parses an HTTP response from a ListEnvironmentModuleVersionPinsWithResponse call
+func ParseListEnvironmentModuleVersionPinsResponse(rsp *http.Response) (*ListEnvironmentModuleVersionPinsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListEnvironmentModuleVersionPinsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateEnvironmentModuleVersionPinResponse parses an HTTP response from a CreateEnvironmentModuleVersionPinWithResponse call
+func ParseCreateEnvironmentModuleVersionPinResponse(rsp *http.Response) (*CreateEnvironmentModuleVersionPinResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateEnvironmentModuleVersionPinResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExecuteEnvironmentModuleVersionPinBulkOperationResponse parses an HTTP response from a ExecuteEnvironmentModuleVersionPinBulkOperationWithResponse call
+func ParseExecuteEnvironmentModuleVersionPinBulkOperationResponse(rsp *http.Response) (*ExecuteEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExecuteEnvironmentModuleVersionPinBulkOperationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionPinBulkResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePreviewEnvironmentModuleVersionPinBulkOperationResponse parses an HTTP response from a PreviewEnvironmentModuleVersionPinBulkOperationWithResponse call
+func ParsePreviewEnvironmentModuleVersionPinBulkOperationResponse(rsp *http.Response) (*PreviewEnvironmentModuleVersionPinBulkOperationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PreviewEnvironmentModuleVersionPinBulkOperationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionPinBulkPreview
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetEnvironmentModuleVersionPinResponse parses an HTTP response from a GetEnvironmentModuleVersionPinWithResponse call
+func ParseGetEnvironmentModuleVersionPinResponse(rsp *http.Response) (*GetEnvironmentModuleVersionPinResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetEnvironmentModuleVersionPinResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTransitionEnvironmentModuleVersionPinResponse parses an HTTP response from a TransitionEnvironmentModuleVersionPinWithResponse call
+func ParseTransitionEnvironmentModuleVersionPinResponse(rsp *http.Response) (*TransitionEnvironmentModuleVersionPinResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TransitionEnvironmentModuleVersionPinResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentModuleVersionPin
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListEnvironmentModuleVersionPinEventsResponse parses an HTTP response from a ListEnvironmentModuleVersionPinEventsWithResponse call
+func ParseListEnvironmentModuleVersionPinEventsResponse(rsp *http.Response) (*ListEnvironmentModuleVersionPinEventsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListEnvironmentModuleVersionPinEventsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ModuleVersionPinEvent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppendEnvironmentModuleVersionPinNoteResponse parses an HTTP response from a AppendEnvironmentModuleVersionPinNoteWithResponse call
+func ParseAppendEnvironmentModuleVersionPinNoteResponse(rsp *http.Response) (*AppendEnvironmentModuleVersionPinNoteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppendEnvironmentModuleVersionPinNoteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleVersionPinEvent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListModulesResponse parses an HTTP response from a ListModulesWithResponse call
 func ParseListModulesResponse(rsp *http.Response) (*ListModulesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -11161,6 +17042,154 @@ func ParseUpdateModuleResponse(rsp *http.Response) (*UpdateModuleResponse, error
 	return response, nil
 }
 
+// ParseGetModuleCatalogueEntryResponse parses an HTTP response from a GetModuleCatalogueEntryWithResponse call
+func ParseGetModuleCatalogueEntryResponse(rsp *http.Response) (*GetModuleCatalogueEntryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleCatalogueEntryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleCatalogueEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateModuleCatalogueEntryResponse parses an HTTP response from a UpdateModuleCatalogueEntryWithResponse call
+func ParseUpdateModuleCatalogueEntryResponse(rsp *http.Response) (*UpdateModuleCatalogueEntryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateModuleCatalogueEntryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleCatalogueEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseChangeModuleCatalogueStatusResponse parses an HTTP response from a ChangeModuleCatalogueStatusWithResponse call
+func ParseChangeModuleCatalogueStatusResponse(rsp *http.Response) (*ChangeModuleCatalogueStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangeModuleCatalogueStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleCatalogueEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListModuleVersionsResponse parses an HTTP response from a ListModuleVersionsWithResponse call
 func ParseListModuleVersionsResponse(rsp *http.Response) (*ListModuleVersionsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -11176,7 +17205,7 @@ func ParseListModuleVersionsResponse(rsp *http.Response) (*ListModuleVersionsRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ModuleVersionPage
+		var dest CoreModuleVersionPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -11188,6 +17217,60 @@ func ParseListModuleVersionsResponse(rsp *http.Response) (*ListModuleVersionsRes
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishModuleVersionResponse parses an HTTP response from a PublishModuleVersionWithResponse call
+func ParsePublishModuleVersionResponse(rsp *http.Response) (*PublishModuleVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishModuleVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CoreModuleVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
@@ -11209,11 +17292,279 @@ func ParseGetModuleVersionResponse(rsp *http.Response) (*GetModuleVersionRespons
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ModuleVersion
+		var dest CoreModuleVersionDetail
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTransitionModuleVersionResponse parses an HTTP response from a TransitionModuleVersionWithResponse call
+func ParseTransitionModuleVersionResponse(rsp *http.Response) (*TransitionModuleVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TransitionModuleVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CoreModuleVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCompareModuleVersionsResponse parses an HTTP response from a CompareModuleVersionsWithResponse call
+func ParseCompareModuleVersionsResponse(rsp *http.Response) (*CompareModuleVersionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CompareModuleVersionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionComparison
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListModuleVersionLifecycleEventsResponse parses an HTTP response from a ListModuleVersionLifecycleEventsWithResponse call
+func ParseListModuleVersionLifecycleEventsResponse(rsp *http.Response) (*ListModuleVersionLifecycleEventsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleVersionLifecycleEventsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ModuleVersionLifecycleEvent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishStableModuleVersionSuccessorResponse parses an HTTP response from a PublishStableModuleVersionSuccessorWithResponse call
+func ParsePublishStableModuleVersionSuccessorResponse(rsp *http.Response) (*PublishStableModuleVersionSuccessorResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishStableModuleVersionSuccessorResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest StableModuleVersionSuccessorResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetModuleVersionUsageResponse parses an HTTP response from a GetModuleVersionUsageWithResponse call
+func ParseGetModuleVersionUsageResponse(rsp *http.Response) (*GetModuleVersionUsageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleVersionUsageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionUsage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPluginCapabilityResponse parses an HTTP response from a GetPluginCapabilityWithResponse call
+func ParseGetPluginCapabilityResponse(rsp *http.Response) (*GetPluginCapabilityResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPluginCapabilityResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginCapability
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest N404NotFound
@@ -11651,6 +18002,46 @@ func ParseListAvailableResourceTypesResponse(rsp *http.Response) (*ListAvailable
 	return response, nil
 }
 
+// ParseGetEnvironmentDeletionImpactResponse parses an HTTP response from a GetEnvironmentDeletionImpactWithResponse call
+func ParseGetEnvironmentDeletionImpactResponse(rsp *http.Response) (*GetEnvironmentDeletionImpactResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetEnvironmentDeletionImpactResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentDeletionImpact
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListResourceTypesResponse parses an HTTP response from a ListResourceTypesWithResponse call
 func ParseListResourceTypesResponse(rsp *http.Response) (*ListResourceTypesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -11824,6 +18215,67 @@ func ParseUpdateResourceTypeResponse(rsp *http.Response) (*UpdateResourceTypeRes
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseChangeResourceTypeCatalogueStatusResponse parses an HTTP response from a ChangeResourceTypeCatalogueStatusWithResponse call
+func ParseChangeResourceTypeCatalogueStatusResponse(rsp *http.Response) (*ChangeResourceTypeCatalogueStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangeResourceTypeCatalogueStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResourceType
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

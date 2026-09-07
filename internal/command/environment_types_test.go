@@ -35,6 +35,7 @@ func TestCreate_et(t *testing.T) {
 		assert.JSONEq(t, `{
 	"id": "`+testEnvTypeId+`",
 	"display_name": "`+testEnvTypeName+`",
+	"is_production": false,
 	"created_at": "0001-01-01T00:00:00Z",
 	"uuid":"00000000-0000-0000-0000-000000000000"
 }`, stdout)
@@ -84,6 +85,7 @@ func TestGet_et(t *testing.T) {
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "my-et",
 	"display_name": "My Environment Type",
+	"is_production": false,
 	"uuid":"00000000-0000-0000-0000-000000000000"
 }`, stdout)
 	}
@@ -140,6 +142,7 @@ func TestList_et(t *testing.T) {
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "my-et",
 	"display_name": "My Environment Type",
+	"is_production": false,
 	"uuid": "00000000-0000-0000-0000-000000000000"
 }]`, stdout)
 	}
@@ -150,7 +153,7 @@ func TestUpdate_environment_type(t *testing.T) {
 	defer fin()
 
 	cpc.EXPECT().UpdateEnvironmentTypeWithResponse(gomock.Any(), orgId, testEnvTypeId, cp.EnvironmentTypeUpdateBody{
-		DisplayName: testUpdatedEnvTypeDisplayName,
+		DisplayName: ref.Ref(testUpdatedEnvTypeDisplayName),
 	}).Return(&cp.UpdateEnvironmentTypeResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 		JSON200: &cp.EnvironmentType{
@@ -166,6 +169,7 @@ func TestUpdate_environment_type(t *testing.T) {
 			"created_at": "0001-01-01T00:00:00Z",
 			"id": "my-et",
 			"display_name": "`+testUpdatedEnvTypeDisplayName+`",
+			"is_production": false,
 			"uuid": "00000000-0000-0000-0000-000000000000"
 		}`, stdout)
 	}
@@ -176,7 +180,7 @@ func TestUpdate_environment_type_not_found(t *testing.T) {
 	defer fin()
 
 	cpc.EXPECT().UpdateEnvironmentTypeWithResponse(gomock.Any(), orgId, testEnvTypeId, cp.EnvironmentTypeUpdateBody{
-		DisplayName: testUpdatedEnvTypeDisplayName,
+		DisplayName: ref.Ref(testUpdatedEnvTypeDisplayName),
 	}).Return(&cp.UpdateEnvironmentTypeResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusNotFound},
 		JSON404:      &cp.Error{Message: envTypesTestNotFound},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -27,14 +28,25 @@ var (
 	}
 )
 
+func legacyModuleWriteError(message string) error {
+	if strings.Contains(message, "semantic_version") || strings.Contains(message, "artifact_digest") {
+		return errors.Errorf("request is invalid: %s. Core Module Management requires immutable versions: use 'octl create module-catalogue-entry' and 'octl create module-version', then explicitly promote with 'octl update module-version --action promote'. Existing legacy versions remain readable; do not republish them with invented SemVer or digest metadata", message)
+	}
+	return errors.Errorf("request is invalid: %s", message)
+}
+
 var CreateModule = &cobra.Command{
 	Use:     moduleUse,
 	Aliases: ObjectTypeModuleAliasesSingular,
 	Args:    cobra.ExactArgs(1),
-	Short:   "Create a module",
+	Short:   "Create a module and initial Proposed version (compatibility command)",
 	Long: fmt.Sprintf(`Create a new module in the organization.
 
 The following fields can be set using --set or --set-json: %s.
+
+With Core Module Management, this requires a semantic_version and creates a Proposed
+version, not a Default. Prefer create module-catalogue-entry, create module-version
+and an explicit update module-version --action promote.
 `, generateTopLevelSetFields(cp.ModuleCreateBody{})),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
@@ -57,7 +69,7 @@ The following fields can be set using --set or --set-json: %s.
 		} else if res.StatusCode() == http.StatusConflict {
 			return errors.Errorf("conflict: %s", res.JSON409.Message)
 		} else if res.StatusCode() == http.StatusBadRequest {
-			return errors.Errorf("request is invalid: %s", res.JSON400.Message)
+			return legacyModuleWriteError(res.JSON400.Message)
 		} else if res.StatusCode() != http.StatusCreated {
 			return errors.Errorf("unexpected status code %d when creating module: %s", res.StatusCode(), string(res.Body))
 		} else {
@@ -158,10 +170,14 @@ var UpdateModule = &cobra.Command{
 	Use:     moduleUse,
 	Aliases: ObjectTypeModuleAliasesSingular,
 	Args:    cobra.ExactArgs(1),
-	Short:   "Update a module",
+	Short:   "Publish a Proposed module version (compatibility command)",
 	Long: fmt.Sprintf(`Update a module in the organization.
 
 The following fields can be set using --set or --set-json: %s.
+
+With Core Module Management this publishes a new immutable Proposed version and
+does not change the Default. Prefer create module-version with a complete definition,
+followed by update module-version --action promote when adoption should be the Default.
 `, generateTopLevelSetFields(cp.ModuleUpdateBody{})),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
@@ -181,7 +197,7 @@ The following fields can be set using --set or --set-json: %s.
 		if res, err := cpc.UpdateModuleWithResponse(cmd.Context(), orgId, args[0], *x); err != nil {
 			return errors.Wrap(err, "failed to update module")
 		} else if res.StatusCode() == http.StatusBadRequest {
-			return errors.Errorf("request is invalid: %s", res.JSON400.Message)
+			return legacyModuleWriteError(res.JSON400.Message)
 		} else if res.StatusCode() == http.StatusNotFound {
 			return errors.Errorf("module '%s' not found in org '%s'", args[0], orgId)
 		} else if res.StatusCode() != http.StatusOK {

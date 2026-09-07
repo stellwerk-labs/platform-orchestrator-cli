@@ -28,17 +28,20 @@ func TestCreate_create_rt(t *testing.T) {
 		OutputSchema: map[string]interface{}{listModulesTypeFlag: "object"},
 	}).Return(&cp.CreateResourceTypeResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusCreated},
-		JSON201:      &cp.ResourceType{Id: resourceTypesTestCreateId, OutputSchema: map[string]interface{}{}, IsDeveloperAccessible: true},
+		JSON201: &cp.ResourceType{Id: resourceTypesTestCreateId, OutputSchema: map[string]interface{}{}, IsDeveloperAccessible: true,
+			CatalogueStatus: cp.ResourceTypeCatalogueStatusActive, ResourceVersion: 1},
 	}, nil)
 
 	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testCreateCmd, "rt", resourceTypesTestCreateId, `--set-json={"output_schema": {"type": "object"}}`})
 	if assert.NoError(t, err) {
 		assert.JSONEq(t, `{
 	"built_in": false,
+	"catalogue_status": "active",
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "rt-1",
 	"output_schema": {},
-	"is_developer_accessible": true
+	"is_developer_accessible": true,
+	"resource_version": 1
 }`, stdout)
 	}
 }
@@ -75,9 +78,11 @@ func TestGet_rt(t *testing.T) {
 	cpc.EXPECT().GetResourceTypeWithResponse(gomock.Any(), orgId, resourceTypesTestId).Return(&cp.GetResourceTypeResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 		JSON200: &cp.ResourceType{
-			Id:           resourceTypesTestId,
-			Description:  ref.Ref("My Resource Type"),
-			OutputSchema: map[string]interface{}{},
+			Id:              resourceTypesTestId,
+			Description:     ref.Ref("My Resource Type"),
+			OutputSchema:    map[string]interface{}{},
+			CatalogueStatus: cp.ResourceTypeCatalogueStatusActive,
+			ResourceVersion: 1,
 		},
 	}, nil)
 
@@ -85,11 +90,13 @@ func TestGet_rt(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.JSONEq(t, `{
 	"built_in": false,
+	"catalogue_status": "active",
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "my-rt",
 	"description": "My Resource Type",
 	"output_schema": {},
-	"is_developer_accessible": false
+	"is_developer_accessible": false,
+	"resource_version": 1
 }`, stdout)
 	}
 }
@@ -101,9 +108,11 @@ func TestGet_rt_default_printer(t *testing.T) {
 	cpc.EXPECT().GetResourceTypeWithResponse(gomock.Any(), orgId, resourceTypesTestId).Return(&cp.GetResourceTypeResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 		JSON200: &cp.ResourceType{
-			Id:           resourceTypesTestId,
-			Description:  ref.Ref("My Resource Type"),
-			OutputSchema: map[string]interface{}{},
+			Id:              resourceTypesTestId,
+			Description:     ref.Ref("My Resource Type"),
+			OutputSchema:    map[string]interface{}{},
+			CatalogueStatus: cp.ResourceTypeCatalogueStatusActive,
+			ResourceVersion: 1,
 		},
 	}, nil)
 
@@ -146,53 +155,65 @@ func TestList_rt(t *testing.T) {
 	}, nil)
 	cpc.EXPECT().ListResourceTypesWithResponse(gomock.Any(), orgId, &cp.ListResourceTypesParams{Page: ref.Ref("next-page")}).Return(&cp.ListResourceTypesResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-		JSON200:      &cp.ResourceTypePage{Items: []cp.ResourceType{{Id: resourceTypesTestId, Description: ref.Ref("My Resource Type"), OutputSchema: map[string]interface{}{}}}},
+		JSON200: &cp.ResourceTypePage{Items: []cp.ResourceType{{Id: resourceTypesTestId, Description: ref.Ref("My Resource Type"), OutputSchema: map[string]interface{}{},
+			CatalogueStatus: cp.ResourceTypeCatalogueStatusActive, ResourceVersion: 1}}},
 	}, nil)
 
 	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testGetCmd, "rts"})
 	if assert.NoError(t, err) {
 		assert.JSONEq(t, `[{
 	"built_in": false,
+	"catalogue_status": "active",
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "my-rt",
 	"description": "My Resource Type",
 	"output_schema": {},
-	"is_developer_accessible": false
+	"is_developer_accessible": false,
+	"resource_version": 1
 }]`, stdout)
 	}
 }
 
-func TestUpdate_rt(t *testing.T) {
+func TestUpdate_rt_status(t *testing.T) {
 	orgId, cpc, _, ctx, fin := setupTestContext(t)
 	defer fin()
 
-	cpc.EXPECT().UpdateResourceTypeWithResponse(gomock.Any(), orgId, resourceTypesTestId, cp.ResourceTypeUpdateBody{Description: ref.Ref("MyRT")}).Return(&cp.UpdateResourceTypeResponse{
+	cpc.EXPECT().ChangeResourceTypeCatalogueStatusWithResponse(gomock.Any(), orgId, resourceTypesTestId,
+		cp.ChangeResourceTypeCatalogueStatusParamsCatalogueActionArchive, gomock.Any(),
+		cp.ModuleReasonedCommand{Reason: "Retired contract", ExpectedResourceVersion: 1}).Return(&cp.ChangeResourceTypeCatalogueStatusResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-		JSON200:      &cp.ResourceType{Id: resourceTypesTestId, Description: ref.Ref("MyRT"), OutputSchema: map[string]interface{}{}},
+		JSON200: &cp.ResourceType{Id: resourceTypesTestId, Description: ref.Ref("My Resource Type"), OutputSchema: map[string]interface{}{},
+			CatalogueStatus: cp.ResourceTypeCatalogueStatusArchived, ResourceVersion: 2},
 	}, nil)
 
-	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testUpdateCmd, "rt", resourceTypesTestId, "--set=description=MyRT"})
+	stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testUpdateCmd, "rt", resourceTypesTestId,
+		"--action=archive", "--reason=Retired contract", "--expected-version=1"})
 	if assert.NoError(t, err) {
 		assert.JSONEq(t, `{
 	"built_in": false,
+	"catalogue_status": "archived",
 	"created_at": "0001-01-01T00:00:00Z",
 	"id": "my-rt",
-	"description": "MyRT",
+	"description": "My Resource Type",
 	"output_schema": {},
-	"is_developer_accessible": false
+	"is_developer_accessible": false,
+	"resource_version": 2
 }`, stdout)
 	}
 }
 
-func TestUpdate_rt_not_found(t *testing.T) {
+func TestUpdate_rt_status_not_found(t *testing.T) {
 	orgId, cpc, _, ctx, fin := setupTestContext(t)
 	defer fin()
 
-	cpc.EXPECT().UpdateResourceTypeWithResponse(gomock.Any(), orgId, resourceTypesTestId, cp.ResourceTypeUpdateBody{Description: ref.Ref("MyRT")}).Return(&cp.UpdateResourceTypeResponse{
+	cpc.EXPECT().ChangeResourceTypeCatalogueStatusWithResponse(gomock.Any(), orgId, resourceTypesTestId,
+		cp.ChangeResourceTypeCatalogueStatusParamsCatalogueActionArchive, gomock.Any(),
+		cp.ModuleReasonedCommand{Reason: "Retired contract", ExpectedResourceVersion: 1}).Return(&cp.ChangeResourceTypeCatalogueStatusResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusNotFound},
 		JSON404:      &cp.Error{Message: resourceTypesTestNotFound},
 	}, nil)
 
-	_, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testUpdateCmd, "rt", resourceTypesTestId, "--set=description=MyRT"})
+	_, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, orgId, outFlag, jsonOutput, testUpdateCmd, "rt", resourceTypesTestId,
+		"--action=archive", "--reason=Retired contract", "--expected-version=1"})
 	assert.EqualError(t, err, fmt.Sprintf("resource type 'my-rt' not found in org '%s'", orgId))
 }

@@ -149,6 +149,10 @@ func (p *TablePrinter) Write(w io.Writer, item interface{}) error {
 	if item == nil {
 		return nil
 	}
+	item, err := moduleTableValue(w, item)
+	if err != nil {
+		return err
+	}
 
 	val := reflect.ValueOf(item)
 
@@ -173,6 +177,9 @@ func (p *TablePrinter) Write(w io.Writer, item interface{}) error {
 	}
 
 	columns, ok := tableColumns[firstItem.Type().Name()]
+	if !ok {
+		columns, ok = moduleTableColumns[firstItem.Type().Name()]
+	}
 	if !ok {
 		return fmt.Errorf("no table columns defined for type %s", firstItem.Type().Name())
 	}
@@ -201,7 +208,7 @@ func (p *TablePrinter) Write(w io.Writer, item interface{}) error {
 		table.AddRow(row...)
 	}
 
-	_, err := fmt.Fprintln(w, table)
+	_, err = fmt.Fprintln(w, table)
 	if err != nil {
 		return err
 	}
