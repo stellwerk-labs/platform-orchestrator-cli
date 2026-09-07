@@ -34,6 +34,13 @@ Verify the install:
 octl --help
 ```
 
+## Core Module Management
+
+Use [immutable Module versions and Pins](docs/module-management.md) to publish,
+promote, compare and inspect versions. This is Core functionality and does not
+require Progressive Rollouts. Existing mutable Module authoring and Resource Type
+updates must migrate to the new lifecycle commands.
+
 ## Collaboration
 
 CLI conventions follow `kubectl` where possible.

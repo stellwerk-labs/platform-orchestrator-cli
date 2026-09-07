@@ -132,7 +132,7 @@ var tableColumns = map[string][]string{
 	tableTypeProject:                {tableFieldId, tableFieldDisplayName, tableFieldUuid, tableFieldCreatedAt},
 	tableTypePermissionDefinition:   {tableFieldId, tableFieldDisplayName, tableFieldCategory, tableFieldLevel, tableFieldScopes},
 	tableTypeAvailableResourceType:  {tableFieldId, tableFieldName},
-	tableTypeResourceType:           {tableFieldId, tableFieldBuiltIn, tableFieldDescription, tableFieldIsDeveloperAccessible, tableFieldCreatedAt},
+	tableTypeResourceType:           {tableFieldId, tableFieldBuiltIn, tableFieldDescription, tableFieldIsDeveloperAccessible, "CatalogueStatus", tableFieldResourceVersion, tableFieldCreatedAt},
 	tableTypeRole:                   {tableFieldId, tableFieldDisplayName, tableFieldIsSystem, tableFieldPermissions, tableFieldCreatedAt},
 	tableTypeRuleSummary:            {tableFieldId, tableFieldResourceType, tableFieldResourceClass, tableFieldModuleId, tableFieldCreatedAt},
 	tableTypeRunner:                 {tableFieldId, tableFieldOrgId},

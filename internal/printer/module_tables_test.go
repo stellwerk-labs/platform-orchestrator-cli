@@ -14,6 +14,7 @@ import (
 
 const (
 	testModuleSemanticVersion = "1.2.3"
+	testModuleDeprecated      = "deprecated"
 	testModuleProposed        = "proposed"
 	testModulePinActive       = "active"
 	testModuleEnvironment     = "production"
@@ -33,7 +34,7 @@ func TestModuleManagementTablesUseRealResponseContracts(t *testing.T) {
 		{"published version", version, []string{"SemanticVersion", testModuleSemanticVersion, testModuleProposed, testModuleUnverified, version.Uuid.String()}},
 		{"version detail", cp.CoreModuleVersionDetail{Version: version}, []string{testModuleSemanticVersion, version.Uuid.String()}},
 		{"version list", []cp.CoreModuleVersionDetail{{Version: version}}, []string{testModuleSemanticVersion, testModuleProposed}},
-		{"legacy version", cp.CoreModuleVersion{MigrationGeneration: "v0", LifecycleStatus: "deprecated"}, []string{"v0", "deprecated"}},
+		{"legacy version", cp.CoreModuleVersion{MigrationGeneration: "v0", LifecycleStatus: testModuleDeprecated}, []string{"v0", testModuleDeprecated}},
 		{"lifecycle history", []cp.ModuleVersionLifecycleEvent{{ToStatus: "defective", Reason: ref.Ref("Regression"), Actor: uuid.New()}}, []string{"ToStatus", "defective", "Regression", "Actor"}},
 		{"pin detail", pin, []string{testModuleProject, testModuleEnvironment, testModulePinActive, version.Uuid.String()}},
 		{"pin list", []cp.EnvironmentModuleVersionPin{pin}, []string{testModuleProject, testModuleEnvironment, testModulePinActive}},
@@ -70,6 +71,19 @@ func TestModuleComparisonTableShowsConcreteBeforeAndAfter(t *testing.T) {
 	output.Reset()
 	require.NoError(t, (&TablePrinter{}).Write(&output, comparison))
 	require.Contains(t, output.String(), "No definition changes.")
+}
+
+func TestStableGraduationTableShowsBothImmutableVersions(t *testing.T) {
+	result := cp.StableModuleVersionSuccessorResult{
+		CorrelationId: uuid.New(),
+		Prerelease:    cp.CoreModuleVersion{Uuid: uuid.New(), SemanticVersion: ref.Ref("2.0.0-rc.1"), LifecycleStatus: testModuleDeprecated},
+		Stable:        cp.CoreModuleVersion{Uuid: uuid.New(), SemanticVersion: ref.Ref("2.0.0"), LifecycleStatus: testModuleProposed},
+	}
+	var output bytes.Buffer
+	require.NoError(t, (&TablePrinter{}).Write(&output, result))
+	for _, expected := range []string{result.CorrelationId.String(), result.Prerelease.Uuid.String(), result.Stable.Uuid.String(), "2.0.0-rc.1", "2.0.0", testModuleDeprecated, testModuleProposed} {
+		require.Contains(t, output.String(), expected)
+	}
 }
 
 func TestModuleComparisonTablePreservesNullAndEmptyDifferences(t *testing.T) {

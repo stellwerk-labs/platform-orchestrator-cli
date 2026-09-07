@@ -16,7 +16,7 @@ const (
 )
 
 var moduleTableColumns = map[string][]string{
-	"ModuleCatalogueEntry":            {"Slug", tableFieldDisplayName, tableFieldResourceType, tableFieldStatus, "CurrentDefaultVersionUuid", tableFieldResourceVersion},
+	"ModuleCatalogueEntry":            {"Slug", tableFieldUuid, tableFieldDisplayName, tableFieldResourceType, tableFieldStatus, "CurrentDefaultVersionUuid", tableFieldResourceVersion},
 	"CoreModuleVersion":               {"SemanticVersion", "MigrationGeneration", "LifecycleStatus", "VerificationStatus", tableFieldUuid, tableFieldResourceVersion, tableFieldCreatedAt},
 	"ModuleVersionLifecycleEvent":     {"Sequence", "FromStatus", "ToStatus", "Reason", "Actor", tableFieldCreatedAt},
 	"EnvironmentModuleVersionPin":     {tableFieldId, tableFieldProjectId, tableFieldEnvironmentID, "ModuleUuid", "VersionUuid", tableFieldStatus, tableFieldResourceVersion},
@@ -41,6 +41,9 @@ func moduleTableValue(w io.Writer, item interface{}) (interface{}, error) {
 	case cp.ModuleVersionLifecycleTransactionResult:
 		_, err := fmt.Fprintf(w, "Correlation: %s\n", value.CorrelationId)
 		return value.Versions, err
+	case cp.StableModuleVersionSuccessorResult:
+		_, err := fmt.Fprintf(w, "Correlation: %s\n", value.CorrelationId)
+		return []cp.CoreModuleVersion{value.Prerelease, value.Stable}, err
 	case cp.ModuleVersionPinBulkPreview:
 		_, err := fmt.Fprintf(w, "Action: %s\nModule: %s\nEligible: %t\nPreview fingerprint: %s\n", value.Action, value.ModuleUuid, value.Eligible, value.Fingerprint)
 		return value.Items, err
