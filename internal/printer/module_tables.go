@@ -97,12 +97,24 @@ func moduleVersionDiff(before, after cp.ModuleVersionComparisonSnapshot) ([]modu
 	for key := range beforeFields {
 		keys = append(keys, key)
 	}
+	for key := range afterFields {
+		if _, exists := beforeFields[key]; !exists {
+			keys = append(keys, key)
+		}
+	}
 	slices.Sort(keys)
 	rows := make([]moduleVersionDiffRow, 0, len(keys))
 	for _, key := range keys {
 		if !bytes.Equal(beforeFields[key], afterFields[key]) {
-			rows = append(rows, moduleVersionDiffRow{Field: key, Before: string(beforeFields[key]), After: string(afterFields[key])})
+			rows = append(rows, moduleVersionDiffRow{Field: key, Before: moduleVersionDiffValue(beforeFields[key]), After: moduleVersionDiffValue(afterFields[key])})
 		}
 	}
 	return rows, nil
+}
+
+func moduleVersionDiffValue(value json.RawMessage) string {
+	if value == nil {
+		return "(omitted)"
+	}
+	return string(value)
 }

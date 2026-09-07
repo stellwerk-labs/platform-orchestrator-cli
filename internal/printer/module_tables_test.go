@@ -97,6 +97,17 @@ func TestModuleComparisonTablePreservesNullAndEmptyDifferences(t *testing.T) {
 
 type moduleTableFailingWriter struct{}
 
+func TestModuleComparisonOutputDeclarationAdditionAndRemoval(t *testing.T) {
+	before := cp.ModuleVersionComparisonSnapshot{}
+	after := cp.ModuleVersionComparisonSnapshot{OutputSchema: ref.Ref(cp.ModuleOutputSchema{})}
+	rows, err := moduleVersionDiff(before, after)
+	require.NoError(t, err)
+	require.Equal(t, []moduleVersionDiffRow{{Field: "output_schema", Before: "(omitted)", After: "{}"}}, rows)
+	rows, err = moduleVersionDiff(after, before)
+	require.NoError(t, err)
+	require.Equal(t, []moduleVersionDiffRow{{Field: "output_schema", Before: "{}", After: "(omitted)"}}, rows)
+}
+
 func (moduleTableFailingWriter) Write([]byte) (int, error) { return 0, errors.New("closed output") }
 
 func TestModuleTableDoesNotSwallowOutputErrors(t *testing.T) {

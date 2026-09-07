@@ -29,7 +29,7 @@ var (
 )
 
 func legacyModuleWriteError(message string) error {
-	if strings.Contains(message, "semantic_version") || strings.Contains(message, "artifact_digest") {
+	if strings.Contains(message, "semantic_version") {
 		return errors.Errorf("request is invalid: %s. Core Module Management requires immutable versions: use 'octl create module-catalogue-entry' and 'octl create module-version', then explicitly promote with 'octl update module-version --action promote'. Existing legacy versions remain readable; do not republish them with invented SemVer or digest metadata", message)
 	}
 	return errors.Errorf("request is invalid: %s", message)

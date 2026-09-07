@@ -21,9 +21,24 @@ octl create module-version redis --set-json @redis-1.0.0.json \
 The publication file must contain the complete immutable definition, including
 `semantic_version`, source, fixed inputs, parameters, provider mappings,
 dependencies and co-provisioning. Use `octl create module-version --help` for the
-current fields. External sources require the canonical artifact digest and source
-revision; inline source must omit `artifact_digest`. An external digest is a
-publisher claim, not proof of trusted verification in this release.
+current fields. External sources require an exact `source_revision`;
+`artifact_digest` is optional, canonical and immutable when supplied. Inline
+source must omit `artifact_digest`. An external digest is a publisher claim,
+not proof of trusted verification in this release; omission remains Unverified.
+The stable version metadata response represents an absent digest claim as
+`artifact_digest: ""`. Omit the field on publication; do not send that empty
+read sentinel as a digest claim.
+
+When the Resource Type has a nonempty `output_schema`, every new publication
+must include the same author-declared `output_schema`. Equality ignores object
+key order and whitespace, but not array order. Existing versions are not rewritten.
+Resource Types can also declare an optional immutable `module_contract`, an
+offline, bounded OpenAPI 3.0 Schema Object over `module_inputs`, `module_params`,
+`provider_mapping`, `dependencies`, `coprovisioned` and `output_schema`. This
+validates declared interfaces, not the contents or runtime outputs of external
+artifacts. `create resource-type --help` exposes this field; unknown publication
+fields fail locally instead of being silently dropped. JSON/YAML version detail
+and comparison responses retain the declaration; comparison tables show its diff.
 
 Publication creates **Proposed**, not Default. To promote an eligible stable
 version, read its current command revision and supply an audit reason:

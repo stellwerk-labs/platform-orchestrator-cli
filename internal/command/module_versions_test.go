@@ -23,14 +23,15 @@ func TestManagedModuleVersionCommandsExposeConcurrencyAndAuditControls(t *testin
 }
 
 func TestLegacyModuleWriteErrorExplainsMigrationWithoutInventingHistory(t *testing.T) {
-	for _, message := range []string{"semantic_version is required", "artifact_digest is required for external source"} {
+	for _, message := range []string{"semantic_version is required"} {
 		err := legacyModuleWriteError(message)
 		require.ErrorContains(t, err, message)
 		require.ErrorContains(t, err, "octl create module-catalogue-entry")
 		require.ErrorContains(t, err, "--action promote")
 		require.ErrorContains(t, err, "do not republish")
 	}
-	assert.EqualError(t, legacyModuleWriteError("invalid id"), "request is invalid: invalid id")
+	require.EqualError(t, legacyModuleWriteError("invalid id"), "request is invalid: invalid id")
+	require.EqualError(t, legacyModuleWriteError("artifact_digest must be omitted for inline source"), "request is invalid: artifact_digest must be omitted for inline source")
 }
 
 func TestModulePinBulkPreviewAcceptsFrozenEnvironmentInput(t *testing.T) {
@@ -59,4 +60,27 @@ func TestModuleCommandIdempotencyKeyDefaultsToUUIDAndCanBeStable(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, command.Flags().Set(moduleVersionIdempotencyFlag, "release-video-demo"))
 	assert.Equal(t, "release-video-demo", moduleCommandIdempotencyKey(&command))
+}
+
+func TestModuleConformanceAuthoringFieldsAndOptionalDigest(t *testing.T) {
+	require.Contains(t, CreateResourceType.Long, "module_contract")
+	require.Contains(t, CreateManagedModuleVersion.Long, "output_schema")
+	command := &cobra.Command{}
+	command.Flags().String(createUpdateCmdSetJsonFlag, "-", "")
+	command.Flags().String(createUpdateCmdSetYamlFlag, "", "")
+	command.Flags().StringArray(createUpdateCmdSetFlag, nil, "")
+	command.SetIn(strings.NewReader(`{"module_source":"https://example.invalid/module.zip","source_revision":"0123456789abcdef","output_schema":{}}`))
+	body, err := readSetFlagsIntoType[cp.ModuleVersionPublishBody](command)
+	require.NoError(t, err)
+	require.NotNil(t, body.OutputSchema)
+	require.Empty(t, *body.OutputSchema)
+	require.Nil(t, body.ArtifactDigest)
+	command.SetIn(strings.NewReader(`{"output_schmea":{}}`))
+	_, err = readSetFlagsIntoType[cp.ModuleVersionPublishBody](command)
+	require.ErrorContains(t, err, "unknown field")
+	command.SetIn(strings.NewReader(`{"module_contract":{"type":"object","required":["module_inputs"]},"output_schema":{}}`))
+	resourceType, err := readSetFlagsIntoType[cp.ResourceTypeCreateBody](command)
+	require.NoError(t, err)
+	require.NotNil(t, resourceType.ModuleContract)
+	require.Equal(t, "object", (*resourceType.ModuleContract)["type"])
 }

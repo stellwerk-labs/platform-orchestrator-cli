@@ -24,6 +24,7 @@ check_table() {
 publish() {
   jq -n --arg version "$1" --arg color "$2" '{
     semantic_version: $version, module_source: "inline",
+    output_schema: {type:"object",properties:{name:{type:"string"}}},
     module_source_code: "variable \"color\" { type = string }\noutput \"name\" { value = var.color }",
     module_inputs: {color: $color}, module_params: {}, provider_mapping: {}, dependencies: {}, coprovisioned: []
   }' | call create module-version "$module_id" --set-json - --idempotency-key "publish-$1"
@@ -34,10 +35,11 @@ transition() {
   call update module-version "$module_id" "$version" --action "$action" --expected-version "$revision" --reason 'CLI release acceptance'
 }
 
-call create resource-type "$module_id" --set-json '{"is_developer_accessible":true,"output_schema":{"type":"object","properties":{"name":{"type":"string"}}}}' | check '.id != null'
+call create resource-type "$module_id" --set-json '{"is_developer_accessible":true,"output_schema":{"type":"object","properties":{"name":{"type":"string"}}},"module_contract":{"type":"object","required":["output_schema"]}}' | check '.module_contract.required == ["output_schema"]'
 jq -n --arg id "$module_id" '{slug:$id, resource_type:$id, display_name:"CLI Release Service"}' |
   call create module-catalogue-entry --set-json - | check '.current_default_version_uuid == null'
 first=$(publish 1.0.0 blue)
+call get module-version "$module_id" 1.0.0 | check '.output_schema.properties.name.type == "string"'
 check '.lifecycle_status == "proposed" and .verification_status == "unverified"' <<<"$first"
 [[ $(publish 1.0.0 blue | jq -r '.uuid') == $(jq -r '.uuid' <<<"$first") ]]
 transition 1.0.0 promote | check '.lifecycle_status == "default"'
@@ -57,11 +59,22 @@ prerelease_revision=$(call get module-version "$module_id" 2.0.0-rc.1 | jq -r '.
 stable_body=$(jq -n --argjson revision "$prerelease_revision" '{
   expected_prerelease_resource_version: $revision, reason: "Graduate CLI release candidate",
   version: {semantic_version: "2.0.0", module_source: "inline",
+    output_schema: {type:"object",properties:{name:{type:"string"}}},
     module_source_code: "output \"name\" { value = \"stable\" }",
     module_inputs: {}, module_params: {}, provider_mapping: {}, dependencies: {}, coprovisioned: []}
 }')
 check_table 'deprecated' create stable-module-version "$module_id" 2.0.0-rc.1 --set-json "$stable_body"
 call get module-version "$module_id" 2.0.0 | check '.version.lifecycle_status == "proposed"'
+transition 2.0.0 deprecate | check '.lifecycle_status == "deprecated"'
+call create module-version "$module_id" --set-json '{
+  "semantic_version":"3.0.0",
+  "module_source":"git::https://github.com/stellwerk-labs/first-deployment//modules/postgres?ref=4b17d97474a6cdb51d4da1b42dd041f6d4e03aee",
+  "source_revision":"4b17d97474a6cdb51d4da1b42dd041f6d4e03aee",
+  "output_schema":{"type":"object","properties":{"name":{"type":"string"}}},
+  "module_inputs":{},"module_params":{},"provider_mapping":{},"dependencies":{},"coprovisioned":[]
+}' | check '.lifecycle_status == "proposed" and .verification_status == "unverified" and .artifact_digest == ""'
+call get module-version "$module_id" 3.0.0 |
+  check '.output_schema.properties.name.type == "string" and .version.artifact_digest == ""'
 revision=$(call get module-catalogue-entry "$module_id" | jq -r '.resource_version')
 call update module-catalogue-status "$module_id" --action archive --expected-version "$revision" --reason 'Retain CLI acceptance history' |
   check '.status == "archived"'

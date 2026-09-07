@@ -352,6 +352,12 @@ type CoreModuleVersionDetail struct {
 	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
 	// ProviderMapping A mapping of module providers to use when provisioning using this module
 	ProviderMapping map[string]string `json:"provider_mapping"`
 
@@ -610,7 +616,7 @@ type InternalModuleCatalogueModule struct {
 	// Id The unique identifier for a module
 	Id ModuleId `json:"id"`
 
-	// MigrationGeneration Authoritative persisted migration provenance. Only migrated v0 versions may reference external artifacts without a declared digest.
+	// MigrationGeneration Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
 	MigrationGeneration InternalModuleCatalogueModuleMigrationGeneration `json:"migration_generation"`
 
 	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
@@ -629,6 +635,12 @@ type InternalModuleCatalogueModule struct {
 
 	// OrgId The Organization ID
 	OrgId string `json:"org_id"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
 
 	// ProviderMapping A mapping of module providers to use when provisioning using this module
 	ProviderMapping map[string]string `json:"provider_mapping"`
@@ -650,7 +662,7 @@ type InternalModuleCatalogueModule struct {
 	VersionUuid openapi_types.UUID `json:"version_uuid"`
 }
 
-// InternalModuleCatalogueModuleMigrationGeneration Authoritative persisted migration provenance. Only migrated v0 versions may reference external artifacts without a declared digest.
+// InternalModuleCatalogueModuleMigrationGeneration Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
 type InternalModuleCatalogueModuleMigrationGeneration string
 
 // InternalModuleCatalogueModuleRule A rule within a module
@@ -976,6 +988,12 @@ type Module struct {
 	// OrgId The Organization ID
 	OrgId string `json:"org_id"`
 
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
 	// ProviderMapping A mapping of module providers to use when provisioning using this module
 	ProviderMapping map[string]string `json:"provider_mapping"`
 
@@ -1070,11 +1088,17 @@ type ModuleCoreFields struct {
 
 	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
 }
 
 // ModuleCreateBody A request to create a new module
 type ModuleCreateBody struct {
-	// ArtifactDigest Canonical digest protecting the referenced external artifact. Omitted for inline source.
+	// ArtifactDigest Optional immutable external artifact digest claim, not verification evidence. Omitted for inline source.
 	ArtifactDigest *string `json:"artifact_digest,omitempty"`
 
 	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
@@ -1101,6 +1125,12 @@ type ModuleCreateBody struct {
 
 	// ModuleSourceCode The source code of the OpenTofu module backing this module. Required, if module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
 
 	// ProviderMapping A mapping of module providers to use when provisioning using this module.
 	ProviderMapping map[string]string `json:"provider_mapping,omitempty"`
@@ -1196,6 +1226,12 @@ type ModuleOperationReservationAcquireBody struct {
 	Reason            string             `json:"reason"`
 	RelatedResourceId string             `json:"related_resource_id"`
 }
+
+// ModuleOutputSchema Immutable author-declared output interface. Required on new managed
+// publication when the Resource Type output_schema is nonempty, and must
+// equal that contract as a JSON value. Never inferred from external source.
+// Historical absence is preserved and does not imply artifact verification.
+type ModuleOutputSchema map[string]interface{}
 
 // ModulePage A page of the list modules response.
 type ModulePage struct {
@@ -1375,6 +1411,12 @@ type ModuleUpdateBody struct {
 	// ModuleSourceCode The source code of the OpenTofu module backing this module.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
 	// ProviderMapping A mapping of module providers to use when provisioning using this module.
 	ProviderMapping *map[string]string `json:"provider_mapping,omitempty"`
 
@@ -1412,6 +1454,12 @@ type ModuleVersion struct {
 	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
 	// ProviderMapping A mapping of module providers to use when provisioning using this module
 	ProviderMapping map[string]string `json:"provider_mapping"`
 
@@ -1439,6 +1487,7 @@ type ModuleVersionComparison struct {
 	FromVersionUuid         openapi_types.UUID              `json:"from_version_uuid"`
 	ModuleSourceChanged     bool                            `json:"module_source_changed"`
 	ModuleSourceCodeChanged bool                            `json:"module_source_code_changed"`
+	OutputSchemaChanged     bool                            `json:"output_schema_changed"`
 	RemovedDependencies     []string                        `json:"removed_dependencies"`
 	RemovedModuleInputs     []string                        `json:"removed_module_inputs"`
 	RemovedModuleParams     []string                        `json:"removed_module_params"`
@@ -1457,9 +1506,15 @@ type ModuleVersionComparisonSnapshot struct {
 	ModuleParams     map[string]ModuleParamItem          `json:"module_params"`
 	ModuleSource     string                              `json:"module_source"`
 	ModuleSourceCode *string                             `json:"module_source_code"`
-	ProviderMapping  map[string]string                   `json:"provider_mapping"`
-	ResourceType     string                              `json:"resource_type"`
-	SourceRevision   string                              `json:"source_revision"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema    *ModuleOutputSchema `json:"output_schema,omitempty"`
+	ProviderMapping map[string]string   `json:"provider_mapping"`
+	ResourceType    string              `json:"resource_type"`
+	SourceRevision  string              `json:"source_revision"`
 }
 
 // ModuleVersionLifecycleEvent defines model for ModuleVersionLifecycleEvent.
@@ -1618,6 +1673,7 @@ type ModuleVersionPinStatus string
 
 // ModuleVersionPublishBody defines model for ModuleVersionPublishBody.
 type ModuleVersionPublishBody struct {
+	// ArtifactDigest Optional immutable external artifact digest claim. Omit for inline source. Absence never implies verification.
 	ArtifactDigest   *string                             `json:"artifact_digest,omitempty"`
 	Coprovisioned    []ModuleCoProvisionManifest         `json:"coprovisioned"`
 	Dependencies     map[string]ModuleDependencyManifest `json:"dependencies"`
@@ -1626,10 +1682,16 @@ type ModuleVersionPublishBody struct {
 	ModuleParams     map[string]ModuleParamItem          `json:"module_params"`
 	ModuleSource     string                              `json:"module_source"`
 	ModuleSourceCode *string                             `json:"module_source_code,omitempty"`
-	ProviderMapping  map[string]string                   `json:"provider_mapping"`
-	ReleaseNotes     *string                             `json:"release_notes,omitempty"`
-	SemanticVersion  string                              `json:"semantic_version"`
-	SourceRevision   *string                             `json:"source_revision,omitempty"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema    *ModuleOutputSchema `json:"output_schema,omitempty"`
+	ProviderMapping map[string]string   `json:"provider_mapping"`
+	ReleaseNotes    *string             `json:"release_notes,omitempty"`
+	SemanticVersion string              `json:"semantic_version"`
+	SourceRevision  *string             `json:"source_revision,omitempty"`
 }
 
 // ModuleVersionSemanticStatus defines model for ModuleVersionSemanticStatus.
@@ -1830,6 +1892,13 @@ type ResourceType struct {
 	// IsDeveloperAccessible Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false will not be available as types of resources in a manifest.
 	IsDeveloperAccessible bool `json:"is_developer_accessible"`
 
+	// ModuleContract Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+	// module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+	// Root type must be object. References and unsupported keywords are rejected.
+	// Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+	// declarations, not external artifacts or resolved runtime values.
+	ModuleContract *ResourceTypeModuleContract `json:"module_contract,omitempty"`
+
 	// OutputSchema Schema for output parameters
 	OutputSchema    map[string]interface{} `json:"output_schema"`
 	ResourceVersion int64                  `json:"resource_version"`
@@ -1849,9 +1918,23 @@ type ResourceTypeCreateBody struct {
 	// IsDeveloperAccessible Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. If omitted, this property defaults to true.
 	IsDeveloperAccessible *bool `json:"is_developer_accessible,omitempty"`
 
+	// ModuleContract Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+	// module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+	// Root type must be object. References and unsupported keywords are rejected.
+	// Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+	// declarations, not external artifacts or resolved runtime values.
+	ModuleContract *ResourceTypeModuleContract `json:"module_contract,omitempty"`
+
 	// OutputSchema Schema for output parameters
 	OutputSchema map[string]interface{} `json:"output_schema"`
 }
+
+// ResourceTypeModuleContract Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+// module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+// Root type must be object. References and unsupported keywords are rejected.
+// Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+// declarations, not external artifacts or resolved runtime values.
+type ResourceTypeModuleContract map[string]interface{}
 
 // ResourceTypePage A page of resource types returned from the list api.
 type ResourceTypePage struct {
