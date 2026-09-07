@@ -14,8 +14,9 @@ This documentation does not authorize any public action.
 
 An administrator must provision `public-release-candidate` with required reviewers
 and the repository's intended branch/tag restrictions. Its absence, absent
-reviewers or ambiguous registry access fail closed. No environment or package
-visibility setting is created by the workflow.
+reviewers, existing draft/published release reservation or ambiguous registry
+access fail closed. No environment or package visibility setting is created by
+the workflow.
 
 The candidate tag must already exist, canonically `vX.Y.Z-rc.N` with `N >= 1`.
 Include reviewed `docs/releases/<tag>.md` in the tagged revision. Record its exact
@@ -40,14 +41,16 @@ These policies use the official GoReleaser
 [Scoop](https://goreleaser.com/customization/publish/scoop/) prerelease upload rules,
 and [release metadata](https://goreleaser.com/customization/publish/scm/).
 
-The job reserves an existing-tag GitHub draft before publishing. GoReleaser reuses
-that draft, uploads signed assets and then publishes it as a prerelease. Keeping
-it a draft during upload also supports GitHub's immutable release model. Existing
-stable channels remain unchanged; GoReleaser may also reuse an existing stable
-draft instead of attempting to create a second release for that tag. An existing
-candidate image or release is not overwritten. If publication then fails, inspect
-the evidence and prepare a separately approved `rc.N+1`; do not move/delete the
-old tag, delete its evidence or silently reuse the consumed identifier.
+The job first verifies that no draft or published release already reserves the
+candidate tag, then reserves an existing-tag GitHub draft before publishing.
+GoReleaser reuses that draft, uploads signed assets and then publishes it as a
+prerelease. Keeping it a draft during upload also supports GitHub's immutable
+release model. Existing stable channels remain unchanged; GoReleaser may also
+reuse an existing stable draft instead of attempting to create a second release
+for that tag. An existing candidate image or release is not overwritten. If
+publication then fails, inspect the evidence and prepare a separately approved
+`rc.N+1`; do not move/delete the old tag, delete its evidence or silently reuse
+the consumed identifier.
 
 The post-publication check verifies exact tag, prerelease/non-draft status and
 signed-asset presence, then inspects/runs the exact candidate image. This is not a

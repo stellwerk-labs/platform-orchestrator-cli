@@ -2,6 +2,7 @@
 """Fail-closed checks for explicitly approved, immutable release candidates."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -11,6 +12,7 @@ from urllib.request import Request, urlopen
 
 CANDIDATE = re.compile(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.([1-9][0-9]*)")
 SHA = re.compile(r"[0-9a-f]{40}")
+REPOSITORY = "stellwerk-labs/platform-orchestrator-cli"
 
 
 def validate_identity(tag, expected_sha, head_sha, tag_sha):
@@ -33,6 +35,35 @@ def validate_environment(environment):
 def validate_absence_status(status):
     if status != 404:
         raise ValueError(f"candidate image absence is not proven (HTTP {status}); refuse publication")
+
+
+def validate_release_page(tag, releases):
+    if not isinstance(releases, list) or len(releases) > 100:
+        raise ValueError("unexpected GitHub release list")
+    for release in releases:
+        if (not isinstance(release, dict)
+                or not isinstance(release.get("tag_name"), str)
+                or not isinstance(release.get("draft"), bool)):
+            raise ValueError("unexpected GitHub release record")
+        if release["tag_name"] == tag:
+            raise ValueError("a draft or published GitHub release already reserves this tag")
+
+
+def assert_release_unreserved(tag):
+    token = os.environ.get("GH_TOKEN")
+    if not token:
+        raise ValueError("GH_TOKEN is required to detect existing draft releases as well as public releases")
+    for page in range(1, 101):
+        request = Request(
+            f"https://api.github.com/repos/{REPOSITORY}/releases?per_page=100&page={page}",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+        )
+        with urlopen(request, timeout=20) as response:
+            releases = json.load(response)
+        validate_release_page(tag, releases)
+        if len(releases) < 100:
+            return
+    raise ValueError("release-list safety limit reached; absence is not proven")
 
 
 def assert_image_absent(repository, tag):
@@ -73,6 +104,7 @@ def main():
     if args.check_image_absent:
         if not re.fullmatch(r"stellwerk-labs/octl", args.check_image_absent):
             raise ValueError("only the reviewed public CLI image destination is supported")
+        assert_release_unreserved(args.tag)
         assert_image_absent(args.check_image_absent, args.tag.removeprefix("v"))
     print(f"Verified release candidate {args.tag} at {args.sha}; no publication performed.")
 
