@@ -1,6 +1,11 @@
 # Check the documentation at https://goreleaser.com
 version: 2
 
+release:
+  prerelease: auto
+  make_latest: "{{ if .Prerelease }}false{{ else }}true{{ end }}"
+  use_existing_draft: true
+
 builds:
   - id: octl
     binary: octl
@@ -42,6 +47,7 @@ signs:
 
 homebrew_casks:
   - name: octl
+    skip_upload: auto
     homepage: "https://docs.stellwerk.dev"
     description: "The CLI for Stellwerk, octl."
     license: EUPL-1.2
@@ -58,6 +64,7 @@ homebrew_casks:
 
 scoops:
   - name: octl
+    skip_upload: auto
     homepage: "https://docs.stellwerk.dev"
     description: "The CLI for Stellwerk, octl."
     repository:
@@ -78,9 +85,9 @@ dockers_v2:
       - ghcr.io/stellwerk-labs/octl
     tags:
       - "{{ .Version }}"
-      - "{{ .Major }}"
-      - "{{ .Major }}.{{ .Minor }}"
-      - latest
+      - "{{ if not .Prerelease }}{{ .Major }}{{ end }}"
+      - "{{ if not .Prerelease }}{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
     labels:
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.created: "{{ .CommitDate }}"
