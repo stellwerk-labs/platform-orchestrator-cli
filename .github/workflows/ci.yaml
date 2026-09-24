@@ -131,7 +131,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.0.0
@@ -311,7 +311,7 @@ jobs:
 
       - name: Install Cosign
         if: steps.version.outputs.tag != ''
-        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Set up QEMU
         if: steps.version.outputs.tag != ''
