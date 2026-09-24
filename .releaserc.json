@@ -1,4 +1,18 @@
 {
   "extends": "/action/default.releaserc.json",
-  "tagFormat": "v${version}"
+  "tagFormat": "v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", {
+      "preset": "conventionalcommits",
+      "releaseRules": [
+        { "breaking": true, "release": "major" },
+        { "revert": true, "release": "patch" },
+        { "type": "feat", "release": "minor" },
+        { "type": "*", "release": "patch" }
+      ],
+      "parserOpts": {
+        "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
+      }
+    }]
+  ]
 }
