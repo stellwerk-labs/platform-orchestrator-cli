@@ -14,6 +14,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
+	"golang.org/x/mod/semver"
 )
 
 const (
@@ -46,7 +47,7 @@ const (
 )
 
 type GitHubRelease struct {
-	Name string `json:"name"`
+	TagName string `json:"tag_name"`
 }
 
 type VersionChecker struct {
@@ -172,11 +173,11 @@ func (vc *VersionChecker) fetchLatestVersion(ctx context.Context) (string, error
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	if release.Name == "" {
-		return "", fmt.Errorf("empty version name in response")
+	if !semver.IsValid(release.TagName) {
+		return "", fmt.Errorf("invalid release version tag in response")
 	}
 
-	return release.Name, nil
+	return release.TagName, nil
 }
 
 func (vc *VersionChecker) updateLastCheckTime() error {
@@ -195,24 +196,20 @@ func (vc *VersionChecker) updateLastCheckTime() error {
 }
 
 func (vc *VersionChecker) isCurrentVersionUpToDate(latestVersion string) bool {
-	if latestVersion == "" {
-		return true
-	}
-
-	current := strings.TrimPrefix(vc.currentVersion, "v")
-	latest := strings.TrimPrefix(latestVersion, "v")
-
-	currentFields := strings.Fields(current)
-	latestFields := strings.Fields(latest)
+	currentFields := strings.Fields(vc.currentVersion)
+	latestFields := strings.Fields(latestVersion)
 
 	if len(currentFields) == 0 || len(latestFields) == 0 {
 		return true
 	}
 
-	current = currentFields[0]
-	latest = latestFields[0]
+	current := "v" + strings.TrimPrefix(currentFields[0], "v")
+	latest := "v" + strings.TrimPrefix(latestFields[0], "v")
+	if !semver.IsValid(current) || !semver.IsValid(latest) {
+		return true
+	}
 
-	return current == latest || latest == ""
+	return semver.Compare(current, latest) >= 0
 }
 
 func (r *VersionCheckResult) DisplayNotification(stderr io.Writer) {
