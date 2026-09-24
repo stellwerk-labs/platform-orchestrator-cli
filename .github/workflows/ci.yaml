@@ -123,7 +123,7 @@ jobs:
         with:
           distribution: goreleaser
           version: 'v2.18.1'
-          args: release --clean
+          args: release --clean --release-notes=docs/releases/${{ inputs.release_tag }}.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}

@@ -1,7 +1,7 @@
-# Core Module Management
+# Orchestrator Module Management
 
-These commands target a server with Core Module Management. Progressive Rollouts
-is not a prerequisite. Authenticate and select your organization through the
+These commands require an Orchestrator version that supports Module Management.
+Authenticate and select your organization through the
 normal CLI configuration; keep access tokens out of command history and files
 committed to source control.
 
@@ -114,7 +114,7 @@ or digest metadata to make an old configuration appear newly managed.
 
 ## Reproduce the CLI acceptance journey locally
 
-Build with `make build`, configure `PO_API_URL` to a disposable loopback Core server
+Build with `make build`, configure `PO_API_URL` to a disposable loopback Orchestrator server
 and set its test organization and credentials through the usual environment.
 Then run:
 

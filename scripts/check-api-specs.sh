@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly cp_revision=v2.1.0
+readonly cp_revision=7e60c777be30e5d7dc0f9706cd5e4b16d5839d7c
 readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
 temp_dir=$(mktemp -d)

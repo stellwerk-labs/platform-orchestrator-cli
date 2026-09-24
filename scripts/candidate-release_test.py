@@ -75,6 +75,7 @@ class CandidateReleaseTests(unittest.TestCase):
                          "github.event_name == 'workflow_dispatch'", "environment: public-release-candidate",
                          "- candidate-preflight", "- test", "--verify-tag --prerelease --latest=false --draft",
                          "ref: ${{ inputs.candidate_sha }}", "--check-image-absent stellwerk-labs/octl",
+                         "args: release --clean --release-notes=docs/releases/${{ inputs.release_tag }}.md",
                          "GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}"):
             self.assertIn(required, publication)
         for forbidden in ("secrets.GH_PAT", "semantic-release-action@", "git tag ", ":latest"):
