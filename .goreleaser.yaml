@@ -48,8 +48,8 @@ signs:
 homebrew_casks:
   - name: octl
     skip_upload: auto
-    homepage: "https://docs.stellwerk.dev"
-    description: "The CLI for Stellwerk, octl."
+    homepage: "https://docs.stellwerk.dev/"
+    description: "Stellwerk CLI"
     license: EUPL-1.2
     binaries:
       - octl
@@ -65,8 +65,8 @@ homebrew_casks:
 scoops:
   - name: octl
     skip_upload: auto
-    homepage: "https://docs.stellwerk.dev"
-    description: "The CLI for Stellwerk, octl."
+    homepage: "https://docs.stellwerk.dev/"
+    description: "Stellwerk CLI"
     repository:
       owner: stellwerk-labs
       name: scoop-bucket

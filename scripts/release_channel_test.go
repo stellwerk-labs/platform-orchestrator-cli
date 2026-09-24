@@ -123,3 +123,15 @@ func TestCandidateSkipsStablePackageManagersAndKeepsSigning(t *testing.T) {
 		}
 	}
 }
+
+func TestChannelMetadataUsesHomebrewCompatibleStyle(t *testing.T) {
+	config := releaseConfig(t)
+	for _, section := range []string{"homebrew_casks", "scoops"} {
+		metadata := configSection(t, config, section)
+		for _, required := range []string{`homepage: "https://docs.stellwerk.dev/"`, `description: "Stellwerk CLI"`} {
+			if !strings.Contains(metadata, required) {
+				t.Fatalf("%s must retain valid shared package metadata: %s", section, required)
+			}
+		}
+	}
+}
