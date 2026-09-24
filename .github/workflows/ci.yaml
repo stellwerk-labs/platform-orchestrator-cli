@@ -26,6 +26,33 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  publication-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.release_tag, '-rc.') && inputs.candidate_sha || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
+          persist-credentials: false
+
+      - name: Checkout the exact semantic-release action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: stellwerk-labs/semantic-release-action
+          ref: b1269e93b486873118eef1646bfcd46a9d23d3a3
+          path: .release-tools
+          persist-credentials: false
+
+      - name: Test version assignment without credentials or network
+        run: |
+          set -euo pipefail
+          docker build -t cli-semantic-release-contract .release-tools
+          docker run --rm --network none \
+            --mount "type=bind,source=$PWD,target=/checkout,readonly" \
+            --entrypoint sh cli-semantic-release-contract \
+            /checkout/scripts/test-release-versioning.sh
+
   candidate-preflight:
     if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && github.event_name == 'workflow_dispatch' && contains(inputs.release_tag, '-rc.')
     runs-on: ubuntu-latest
@@ -56,6 +83,7 @@ jobs:
     if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && github.event_name == 'workflow_dispatch' && contains(inputs.release_tag, '-rc.')
     needs:
       - candidate-preflight
+      - publication-contract
       - test
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -151,7 +179,9 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.release_tag, '-rc.') && inputs.candidate_sha || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
 
       - name: Test candidate publication contract
-        run: python3 scripts/candidate-release_test.py
+        run: |
+          python3 scripts/candidate-release_test.py
+          python3 scripts/stable-release-preflight_test.py
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -206,7 +236,7 @@ jobs:
 
   release:
     if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && !contains(inputs.release_tag, '-rc.') && !contains(github.ref_name, '-rc.') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))))
-    needs: test
+    needs: [test, publication-contract]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
@@ -257,16 +287,27 @@ jobs:
           fi
 
           [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          git fetch --force origin "refs/tags/${release_tag}:refs/tags/${release_tag}"
+          git fetch origin "refs/tags/${release_tag}:refs/tags/${release_tag}"
           test "$(git rev-list -n 1 "$release_tag")" = "$(git rev-parse HEAD)"
           echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "image_tag=${release_tag#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate release credentials
+      - name: Verify fresh publication and distribution access
         if: steps.version.outputs.tag != ''
         env:
+          GH_TOKEN: ${{ github.token }}
           GH_PAT: ${{ secrets.GH_PAT }}
-        run: test -n "$GH_PAT"
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: python3 scripts/stable-release-preflight.py "$RELEASE_TAG" "$(git rev-parse HEAD)"
+
+      - name: Reserve stable draft for GoReleaser
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$RELEASE_TAG" --verify-tag --draft --latest=false \
+            --title "$RELEASE_TAG" --notes-file "docs/releases/$RELEASE_TAG.md"
 
       - name: Install Cosign
         if: steps.version.outputs.tag != ''
@@ -294,7 +335,7 @@ jobs:
         with:
           distribution: goreleaser
           version: 'v2.18.1'
-          args: release --clean
+          args: release --clean --release-notes=docs/releases/${{ steps.version.outputs.tag }}.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GH_PAT: ${{ secrets.GH_PAT }}
