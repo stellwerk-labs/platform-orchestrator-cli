@@ -3,7 +3,8 @@ package internal
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,8 +19,11 @@ import (
 )
 
 const (
-	v100 = "v1.0.0"
-	v110 = "v1.1.0"
+	v100    = "v1.0.0"
+	v110    = "v1.1.0"
+	v121    = "v1.2.1"
+	v200rc1 = "2.0.0-rc.1"
+	v200    = "v2.0.0"
 )
 
 func TestNewVersionChecker(t *testing.T) {
@@ -161,95 +165,84 @@ func TestVersionChecker_shouldCheckVersion(t *testing.T) {
 func TestVersionChecker_fetchLatestVersion(t *testing.T) {
 	testCases := []struct {
 		name           string
-		serverResponse GitHubRelease
+		serverResponse string
 		serverStatus   int
 		expectedError  bool
 		expectedResult string
 	}{
 		{
-			name: "successful fetch",
-			serverResponse: GitHubRelease{
-				Name: "v1.41.0",
-			},
+			name:           "uses tag rather than human release title",
+			serverResponse: `{"tag_name":"v1.41.0","name":"Module Management"}`,
 			serverStatus:   http.StatusOK,
 			expectedError:  false,
 			expectedResult: "v1.41.0",
 		},
 		{
 			name:           "server error",
-			serverResponse: GitHubRelease{},
+			serverResponse: `{}`,
 			serverStatus:   http.StatusInternalServerError,
 			expectedError:  true,
 			expectedResult: "",
 		},
 		{
-			name: "empty version name",
-			serverResponse: GitHubRelease{
-				Name: "",
-			},
+			name:           "missing tag is not replaced by title",
+			serverResponse: `{"name":"v1.41.0"}`,
 			serverStatus:   http.StatusOK,
 			expectedError:  true,
 			expectedResult: "",
+		},
+		{
+			name:           "invalid tag",
+			serverResponse: `{"tag_name":"not-a-version"}`,
+			serverStatus:   http.StatusOK,
+			expectedError:  true,
+		},
+		{
+			name:           "malformed response",
+			serverResponse: `{`,
+			serverStatus:   http.StatusOK,
+			expectedError:  true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, "application/vnd.github+json", r.Header.Get("Accept"))
-				assert.Equal(t, "2022-11-28", r.Header.Get("X-GitHub-Api-Version"))
-
-				w.WriteHeader(tc.serverStatus)
-				if tc.serverStatus == http.StatusOK {
-					if err := json.NewEncoder(w).Encode(tc.serverResponse); err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
-				}
-			}))
-			defer server.Close()
-
-			tmpDir := t.TempDir()
-
 			vc := &VersionChecker{
-				currentVersion: v100,
-				configDir:      tmpDir,
-				httpClient: &http.Client{
-					Timeout: versionCheckTimeout,
-				},
-				config: &config.Config{},
+				httpClient: versionCheckerTestClient(t, tc.serverStatus, tc.serverResponse),
 			}
-
-			ctx := context.Background()
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
-			require.NoError(t, err)
-
-			req.Header.Set("Accept", "application/vnd.github+json")
-			req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-
-			resp, err := vc.httpClient.Do(req)
-			require.NoError(t, err)
-			defer func() {
-				_ = resp.Body.Close()
-			}()
-
+			version, err := vc.fetchLatestVersion(context.Background())
 			if tc.expectedError {
-				if resp.StatusCode != http.StatusOK {
-					assert.NotEqual(t, http.StatusOK, resp.StatusCode)
-				} else {
-					var release GitHubRelease
-					err := json.NewDecoder(resp.Body).Decode(&release)
-					require.NoError(t, err)
-					assert.Empty(t, release.Name)
-				}
+				require.Error(t, err)
 			} else {
-				assert.Equal(t, http.StatusOK, resp.StatusCode)
-				var release GitHubRelease
-				err := json.NewDecoder(resp.Body).Decode(&release)
 				require.NoError(t, err)
-				assert.Equal(t, tc.expectedResult, release.Name)
 			}
+			assert.Equal(t, tc.expectedResult, version)
 		})
 	}
+}
+
+func versionCheckerTestClient(t *testing.T, status int, body string) *http.Client {
+	t.Helper()
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/repos/stellwerk-labs/platform-orchestrator-cli/releases/latest", r.URL.Path)
+		assert.Equal(t, "application/vnd.github+json", r.Header.Get("Accept"))
+		assert.Equal(t, "2022-11-28", r.Header.Get("X-GitHub-Api-Version"))
+		w.WriteHeader(status)
+		_, err := io.WriteString(w, body)
+		assert.NoError(t, err)
+	}))
+	t.Cleanup(server.Close)
+	client := server.Client()
+	transport := client.Transport.(*http.Transport).Clone()
+	transport.TLSClientConfig = transport.TLSClientConfig.Clone()
+	transport.TLSClientConfig.ServerName = server.Certificate().DNSNames[0]
+	transport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, server.Listener.Addr().String())
+	}
+	client.Transport = transport
+	client.Timeout = versionCheckTimeout
+	t.Cleanup(transport.CloseIdleConnections)
+	return client
 }
 
 func TestVersionChecker_updateLastCheckTime(t *testing.T) {
@@ -313,6 +306,17 @@ func TestVersionChecker_isCurrentVersionUpToDate(t *testing.T) {
 		latestVersion  string
 		expectedResult bool
 	}{
+		{"newer installed stable", v200, v121, true},
+		{"RC ahead of old stable", v200rc1, v121, true},
+		{"stable supersedes RC", v200rc1, v200, false},
+		{"stable ahead of RC", "2.0.0", "v2.0.0-rc.1", true},
+		{"numeric minor ordering", "1.9.0", "v1.10.0", false},
+		{"numeric prerelease ordering", "2.0.0-rc.2", "v2.0.0-rc.10", false},
+		{"build metadata does not order releases", "2.0.0+local", "v2.0.0+release", true},
+		{"development build", "dev", v200, true},
+		{"unknown build", "", v200, true},
+		{"invalid remote version", v200, "broken", true},
+		{"leading whitespace", "  v2.0.0 abc123", v121, true},
 		{
 			name:           "newer version available - not up to date",
 			currentVersion: v100,
@@ -463,42 +467,38 @@ func TestVersionChecker_Check(t *testing.T) {
 }
 
 func TestVersionChecker_Integration(t *testing.T) {
-	t.Run("full flow with mock server", func(t *testing.T) {
-		// Create a test server
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			response := GitHubRelease{
-				Name: "v2.0.0",
-			}
-			w.WriteHeader(http.StatusOK)
-			if err := json.NewEncoder(w).Encode(response); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		}))
-		defer server.Close()
-
+	t.Run("notifies once for a newer release", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
 		vc := &VersionChecker{
 			currentVersion: v100,
 			configDir:      tmpDir,
-			httpClient: &http.Client{
-				Timeout: versionCheckTimeout,
-			},
+			httpClient:     versionCheckerTestClient(t, http.StatusOK, `{"tag_name":"v2.0.0","name":"Module Management"}`),
 		}
 
 		// First, verify that shouldCheckVersion returns true
 		assert.True(t, vc.shouldCheckVersion())
 
-		// Update last check time
-		err := vc.updateLastCheckTime()
-		require.NoError(t, err)
+		result := vc.Check(context.Background())
+		require.NotNil(t, result)
+		assert.True(t, result.NewVersionAvailable)
+		assert.Equal(t, v200, result.LatestVersion)
+		assert.Nil(t, vc.Check(context.Background()))
 
 		// Verify that shouldCheckVersion now returns false
 		assert.False(t, vc.shouldCheckVersion())
 
 		// Verify the last check file exists
 		lastCheckFile := filepath.Join(tmpDir, versionCheckLastCheckFile)
-		_, err = os.Stat(lastCheckFile)
+		_, err := os.Stat(lastCheckFile)
 		assert.NoError(t, err)
+	})
+	t.Run("RC never recommends the older stable release", func(t *testing.T) {
+		vc := &VersionChecker{
+			currentVersion: v200rc1,
+			configDir:      t.TempDir(),
+			httpClient:     versionCheckerTestClient(t, http.StatusOK, `{"tag_name":"v1.2.1"}`),
+		}
+		assert.Nil(t, vc.Check(context.Background()))
 	})
 }

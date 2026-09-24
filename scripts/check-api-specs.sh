@@ -1,24 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly cp_revision=v2.1.0
+readonly cp_revision=7e60c777be30e5d7dc0f9706cd5e4b16d5839d7c
 readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
-readonly temp_dir="$(mktemp -d)"
+temp_dir=$(mktemp -d)
+readonly temp_dir
 trap 'rm -rf -- "$temp_dir"' EXIT
 
 check_spec() {
   local repository="$1"
   local revision="$2"
   local vendored_spec="$3"
+  local local_spec="${4:-}"
   local repository_name="${repository##*/}"
   local downloaded_spec="$temp_dir/$repository_name.yaml"
   local normalized_vendored="$temp_dir/$repository_name-vendored.yaml"
   local normalized_downloaded="$temp_dir/$repository_name-downloaded.yaml"
 
-  curl --fail --silent --show-error --location \
-    "https://raw.githubusercontent.com/$repository/$revision/openapi/spec.yaml" \
-    --output "$downloaded_spec"
+  if [ -n "$local_spec" ]; then
+    cp "$local_spec" "$downloaded_spec"
+  else
+    curl --fail --silent --show-error --location \
+      "https://raw.githubusercontent.com/$repository/$revision/openapi/spec.yaml" \
+      --output "$downloaded_spec"
+  fi
 
   awk 'NF { while (blank > 0) { print ""; blank-- } print; next } { blank++ }' "$vendored_spec" >"$normalized_vendored"
   awk 'NF { while (blank > 0) { print ""; blank-- } print; next } { blank++ }' "$downloaded_spec" >"$normalized_downloaded"
@@ -29,6 +35,6 @@ check_spec() {
   fi
 }
 
-check_spec stellwerk-labs/platform-orchestrator-cp "$cp_revision" clients/platform-orchestrator-cp/spec.yaml
-check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
-check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
+check_spec stellwerk-labs/platform-orchestrator-cp "$cp_revision" clients/platform-orchestrator-cp/spec.yaml "${CP_SPEC_PATH:-}"
+check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml "${DP_SPEC_PATH:-}"
+check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml "${IAM_SPEC_PATH:-}"

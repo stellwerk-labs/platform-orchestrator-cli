@@ -19,6 +19,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/wI2L/jsondiff v0.7.0
 	go.uber.org/mock v0.5.1
+	golang.org/x/mod v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -55,7 +56,6 @@ require (
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/mod v0.29.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect

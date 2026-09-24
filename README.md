@@ -34,6 +34,12 @@ Verify the install:
 octl --help
 ```
 
+## Orchestrator Module Management
+
+Use [immutable Module versions and Pins](docs/module-management.md) to publish,
+promote, compare and inspect versions in the Orchestrator. Existing mutable Module authoring and Resource Type
+updates must migrate to the new lifecycle commands.
+
 ## Collaboration
 
 CLI conventions follow `kubectl` where possible.

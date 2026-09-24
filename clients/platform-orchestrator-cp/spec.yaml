@@ -1,10 +1,29 @@
 openapi: 3.0.0
-
 info:
   title: ''
   version: ''
-
 paths:
+  /orgs/{orgId}/plugins/{pluginId}:
+    get:
+      operationId: getPluginCapability
+      summary: Discover an installed plugin and its availability for this organization.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pluginId
+          in: path
+          required: true
+          description: Immutable, reverse-DNS plugin identity.
+          schema: {type: string, pattern: '^[a-z0-9]+(?:[.-][a-z0-9]+)+$'}
+      responses:
+        '200':
+          description: The plugin capability state. An unknown plugin is represented as not_installed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginCapability'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
   /internal/orgs:
     get:
       operationId: listInternalOrganizations
@@ -49,7 +68,6 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /internal/orgs/{orgId}:
     get:
       operationId: getInternalOrganization
@@ -70,7 +88,6 @@ paths:
                 $ref: '#/components/schemas/InternalOrganization'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /internal/orgs/{orgId}/projects/{projectUuid}:
     get:
       operationId: getInternalProjectByUuid
@@ -92,7 +109,6 @@ paths:
                 $ref: '#/components/schemas/Project'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /internal/orgs/{orgId}/projects/{projectUuid}/envs:
     get:
       operationId: listInternalEnvironmentsByProjectUuid
@@ -116,7 +132,6 @@ paths:
                 $ref: '#/components/schemas/EnvironmentPage'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /internal/orgs/{orgId}/envs/{envUuid}:
     get:
       operationId: getInternalEnvironmentByUuid
@@ -138,7 +153,6 @@ paths:
                 $ref: '#/components/schemas/Environment'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /internal/resource-types:
     get:
       operationId: internalListResourceTypes
@@ -204,7 +218,7 @@ paths:
           $ref: '#/components/responses/409Conflict'
     patch:
       operationId: internalUpdateResourceType
-      summary: Update a built-in resource type
+      summary: Reject mutation of an immutable built-in resource type contract
       tags:
         - ResourceType
         - internal
@@ -229,7 +243,8 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '404':
           $ref: '#/components/responses/404NotFound'
-
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /internal/orgs/{orgId}/runners/{runnerId}:
     get:
       operationId: getInternalRunner
@@ -249,7 +264,6 @@ paths:
                 $ref: '#/components/schemas/InternalRunner'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /orgs:
     post:
       operationId: createOrganization
@@ -271,7 +285,6 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}:
     get:
       operationId: getOrganization
@@ -291,7 +304,6 @@ paths:
                 $ref: '#/components/schemas/Organization'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /orgs/{orgId}/env-types:
     get:
       operationId: listEnvironmentTypes
@@ -401,7 +413,6 @@ paths:
                 $ref: '#/components/schemas/EnvironmentType'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /orgs/{orgId}/projects:
     get:
       operationId: listProjects
@@ -466,7 +477,6 @@ paths:
           schema:
             type: boolean
           required: false
-
       responses:
         '204':
           description: The project is fully deleted.
@@ -576,7 +586,6 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}/projects/{projectId}/envs/{envId}:
     delete:
       operationId: deleteEnvironment
@@ -656,7 +665,29 @@ paths:
                 $ref: '#/components/schemas/Environment'
         '404':
           $ref: '#/components/responses/404NotFound'
-
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/deletion-impact:
+    get:
+      operationId: getEnvironmentDeletionImpact
+      summary: Preview retained Module Pins and add-on resources affected by Environment deletion.
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+      responses:
+        '200':
+          description: Exact current deletion impact.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentDeletionImpact'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
   /orgs/{orgId}/envs:
     get:
       operationId: listEnvironmentsInOrg
@@ -687,7 +718,6 @@ paths:
                 $ref: '#/components/schemas/EnvironmentPage'
         '404':
           $ref: '#/components/responses/404NotFound'
-
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/force-delete:
     post:
       operationId: internalForceDeleteEnvironment
@@ -717,7 +747,6 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}:
     patch:
       operationId: internalUpdateEnvironment
@@ -750,7 +779,6 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/refresh_runner:
     post:
       operationId: updateRunnerInAnEnvironment
@@ -771,12 +799,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefreshRunnerActionResult'
-
         '404':
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}/projects/{projectId}/envs/{envId}/available-resource-types:
     get:
       operationId: listAvailableResourceTypes
@@ -888,7 +914,7 @@ paths:
           $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateResourceType
-      summary: Update a resource type
+      summary: Reject mutation of an immutable resource type contract
       tags:
         - ResourceType
       security:
@@ -913,7 +939,37 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '404':
           $ref: '#/components/responses/404NotFound'
-
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/resource-types/{typeId}/actions/{catalogueAction}:
+    post:
+      operationId: changeResourceTypeCatalogueStatus
+      summary: Archive or unarchive an immutable resource type identity
+      tags: [ResourceType]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+        - name: catalogueAction
+          in: path
+          required: true
+          schema: {type: string, enum: [archive, unarchive]}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Resource type catalogue status changed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceType'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /orgs/{orgId}/module-providers:
     get:
       operationId: listModuleProviders
@@ -1061,7 +1117,6 @@ paths:
                 $ref: '#/components/schemas/RunnerPage'
         '404':
           $ref: '#/components/responses/404NotFound'
-
     post:
       operationId: createRunner
       tags:
@@ -1088,7 +1143,6 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}/runners/{runnerId}:
     get:
       operationId: getRunner
@@ -1254,7 +1308,6 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /orgs/{orgId}/modules:
     get:
       operationId: listModules
@@ -1285,7 +1338,11 @@ paths:
       operationId: createModule
       tags:
         - Modules
-      summary: Create a new modules in the org
+      summary: Create a Module with an initial immutable Proposed version
+      description: >-
+        Compatibility authoring endpoint. Requires semantic_version and a complete definition;
+        external sources may declare an optional artifact_digest. This does not promote the version.
+        New clients should create a catalogue entry, publish a version, and promote explicitly.
       security:
         - userIdHeader: []
       parameters:
@@ -1331,7 +1388,10 @@ paths:
       operationId: updateModule
       tags:
         - Modules
-      summary: Update an existing module
+      summary: Publish a new immutable Proposed version for an existing Module
+      description: >-
+        Compatibility authoring endpoint, not an in-place mutation or Default update.
+        Requires a new semantic_version. Prefer publishModuleVersion and explicit lifecycle commands.
       security:
         - userIdHeader: []
       parameters:
@@ -1360,7 +1420,11 @@ paths:
       operationId: deleteModule
       tags:
         - Modules
-      summary: Delete an existing module in the org if it is unused
+      summary: Delete an unused empty Module catalogue entry
+      description: >-
+        Requires module.archive. Published versions are never deleted. A 409 response with
+        error module_history_retained directs clients to reasoned catalogue archival.
+        Other 409 responses represent usage or deletion blockers and must not be treated as success.
       security:
         - userIdHeader: []
       parameters:
@@ -1386,15 +1450,45 @@ paths:
         - $ref: '#/components/parameters/moduleIdPathParam'
         - $ref: '#/components/parameters/perPageQueryParam'
         - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: include_deprecated
+          in: query
+          schema: {type: boolean, default: false}
+        - name: include_defective
+          in: query
+          schema: {type: boolean, default: false}
       responses:
         '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModuleVersionPage'
+                $ref: '#/components/schemas/CoreModuleVersionPage'
         '404':
           $ref: '#/components/responses/404NotFound'
+    post:
+      operationId: publishModuleVersion
+      tags: [Modules]
+      summary: Publish a complete immutable Proposed Module Version
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+      responses:
+        '201':
+          description: Immutable Proposed version published.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CoreModuleVersion'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}:
     get:
       operationId: getModuleVersion
@@ -1413,10 +1507,648 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModuleVersion'
+                $ref: '#/components/schemas/CoreModuleVersionDetail'
         '404':
           $ref: '#/components/responses/404NotFound'
-
+  /orgs/{orgId}/modules/{moduleId}/catalogue:
+    get:
+      operationId: getModuleCatalogueEntry
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+      responses:
+        '200':
+          description: Stable Module catalogue identity and metadata.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleCatalogueEntry'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    patch:
+      operationId: updateModuleCatalogueEntry
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleCatalogueUpdateBody'}
+      responses:
+        '200':
+          description: Catalogue metadata updated without publishing a version.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleCatalogueEntry'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/module-catalogue:
+    get:
+      operationId: listModuleCatalogueEntries
+      tags: [Modules]
+      summary: List stable Module identities, including empty shells
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: include_archived
+          in: query
+          schema: {type: boolean, default: false}
+      responses:
+        '200':
+          description: Module catalogue identities and mutable metadata.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ModuleCatalogueEntry'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+    post:
+      operationId: createModuleCatalogueEntry
+      tags: [Modules]
+      summary: Create an empty stable Module identity without publishing a version
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleCatalogueCreateBody'}
+      responses:
+        '201':
+          description: Empty Module shell created.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleCatalogueEntry'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/stable-successor:
+    post:
+      operationId: publishStableModuleVersionSuccessor
+      tags: [Modules]
+      summary: Atomically publish a stable successor and deprecate the exact Proposed prerelease
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/StableModuleVersionSuccessorBody'}
+      responses:
+        '201':
+          description: Stable Proposed successor and deprecated prerelease committed atomically.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/StableModuleVersionSuccessorResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/compare/{otherModuleVersionId}:
+    get:
+      operationId: compareModuleVersions
+      tags: [Modules]
+      summary: Structurally compare two immutable versions of one Module
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+        - name: otherModuleVersionId
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Deterministic structural comparison.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionComparison'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/usage:
+    get:
+      operationId: getModuleVersionUsage
+      tags: [Modules]
+      summary: Inspect observed Environment adoption and Pin usage for one immutable Module Version
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+      responses:
+        '200':
+          description: Observational usage derived from the latest trustworthy Deployment snapshots.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionUsage'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/module-version-lifecycle-transactions:
+    post:
+      operationId: transactModuleVersionLifecycles
+      tags: [Modules]
+      summary: Apply lifecycle changes across Modules in one atomic Core transaction
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionLifecycleTransactionBody'}
+      responses:
+        '200':
+          description: Every transition committed atomically.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionLifecycleTransactionResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/catalogue/actions/{catalogueAction}:
+    post:
+      operationId: changeModuleCatalogueStatus
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: catalogueAction
+          in: path
+          required: true
+          schema: {type: string, enum: [archive, unarchive]}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Catalogue state changed atomically.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleCatalogueEntry'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/actions/{lifecycleAction}:
+    post:
+      operationId: transitionModuleVersion
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+        - name: lifecycleAction
+          in: path
+          required: true
+          schema: {type: string, enum: [promote, deprecate, mark-defective, restore]}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Lifecycle transition committed with an append-only event.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CoreModuleVersion'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/events:
+    get:
+      operationId: listModuleVersionLifecycleEvents
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+      responses:
+        '200':
+          description: Append-only lifecycle history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ModuleVersionLifecycleEvent'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/module-version-pins:
+    get:
+      operationId: listEnvironmentModuleVersionPins
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: environment_uuid
+          in: query
+          schema: {type: string, format: uuid}
+        - name: module_uuid
+          in: query
+          schema: {type: string, format: uuid}
+        - name: include_removed
+          in: query
+          schema: {type: boolean, default: false}
+      responses:
+        '200':
+          description: Exact Environment Module Version Pins.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+    post:
+      operationId: createEnvironmentModuleVersionPin
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPinCreateBody'}
+      responses:
+        '201':
+          description: Exact active version pinned.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/module-version-pins/{pinId}/actions/{pinAction}:
+    post:
+      operationId: transitionEnvironmentModuleVersionPin
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: pinAction
+          in: path
+          required: true
+          schema: {type: string, enum: [unpin, discard]}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Pin transition committed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/module-version-pins/{pinId}:
+    get:
+      operationId: getEnvironmentModuleVersionPin
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Exact Pin state and immutable activation boundary.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/module-version-pins/{pinId}/events:
+    get:
+      operationId: listEnvironmentModuleVersionPinEvents
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Append-only Pin lifecycle history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ModuleVersionPinEvent'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/module-version-pins/{pinId}/notes:
+    post:
+      operationId: appendEnvironmentModuleVersionPinNote
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinNoteBody'}
+      responses:
+        '201':
+          description: Append-only note recorded without changing Pin state or activation boundary.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionPinEvent'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/module-version-pins/bulk-preview:
+    post:
+      operationId: previewEnvironmentModuleVersionPinBulkOperation
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinBulkPreviewBody'}
+      responses:
+        '200':
+          description: Frozen exact Environment decisions; no Pin was changed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionPinBulkPreview'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/module-version-pins/bulk:
+    post:
+      operationId: executeEnvironmentModuleVersionPinBulkOperation
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinBulkCommandBody'}
+      responses:
+        '200':
+          description: Every materialised Environment Pin changed atomically.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleVersionPinBulkResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/module-version-pins/{pinId}/actions/override:
+    post:
+      operationId: beginEnvironmentModuleVersionPinOverride
+      tags: [internal, Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinOverrideBody'}
+      responses:
+        '200':
+          description: Pin is operation-locked in override_pending.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/modules/{moduleId}/operation-reservations:
+    get:
+      operationId: listModuleOperationReservations
+      tags: [internal, Modules]
+      summary: List add-on reservations that exclusively protect a Module operation
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: include_released
+          in: query
+          schema: {type: boolean, default: false}
+      responses:
+        '200':
+          description: Module operation reservations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ModuleOperationReservation'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    post:
+      operationId: acquireModuleOperationReservation
+      tags: [internal, Modules]
+      summary: Acquire the Module's exclusive add-on operation reservation
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleOperationReservationAcquireBody'}
+      responses:
+        '201':
+          description: Exclusive reservation acquired or replayed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleOperationReservation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/modules/{moduleId}/operation-reservations/{reservationId}/actions/release:
+    post:
+      operationId: releaseModuleOperationReservation
+      tags: [internal, Modules]
+      summary: Release an exact add-on operation reservation
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: reservationId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Reservation released or replayed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleOperationReservation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/modules/{moduleId}/extension-contributions:
+    get:
+      operationId: listModuleExtensionContributions
+      tags: [internal, Modules]
+      summary: List namespaced related resources and contextual actions registered by add-ons
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: include_draft
+          in: query
+          schema: {type: boolean, default: false}
+        - name: include_terminal
+          in: query
+          schema: {type: boolean, default: false}
+      responses:
+        '200':
+          description: Registered extension contributions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ModuleExtensionContribution'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    post:
+      operationId: upsertModuleExtensionContribution
+      tags: [internal, Modules]
+      summary: Register or update a namespaced related resource or contextual action
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleExtensionContributionUpsertBody'}
+      responses:
+        '200':
+          description: Contribution registered or updated.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleExtensionContribution'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/module-version-pins/{pinId}/actions/reconcile-override:
+    post:
+      operationId: reconcileEnvironmentModuleVersionPinOverride
+      tags: [internal, Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinOverrideReconcileBody'}
+      responses:
+        '200':
+          description: Authoritative Deployment outcome reconciled.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /internal/orgs/{orgId}/module-version-pins/{pinId}/actions/restore-after-rollback:
+    post:
+      operationId: restoreEnvironmentModuleVersionPinAfterRollback
+      tags: [internal, Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pinId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPinRollbackRestoreBody'}
+      responses:
+        '200':
+          description: Exact previously pinned Version restored by the owning operation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /orgs/{orgId}/module-rules:
     get:
       operationId: listModuleRulesInOrg
@@ -1523,7 +2255,6 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-catalogue:
     post:
       operationId: generateInternalModuleCatalogue
@@ -1536,6 +2267,39 @@ paths:
         - $ref: '#/components/parameters/orgIdPathParam'
         - $ref: '#/components/parameters/projectIdPathParam'
         - $ref: '#/components/parameters/envIdPathParam'
+        - name: X-Stellwerk-Rollback
+          in: header
+          required: false
+          schema: {type: boolean, default: false}
+          description: Internal audited exception allowing retained Deprecated or Defective artifacts during rollback.
+        - name: X-Stellwerk-Module-Operation-Id
+          in: header
+          required: false
+          schema: {type: string, format: uuid}
+          description: Exact add-on operation allowed to consume its own override-pending Pin target.
+        - name: X-Stellwerk-Module-Operation-Planning
+          in: header
+          required: false
+          schema: {type: boolean, default: false}
+          description: Internal dry-run compilation for an add-on Module operation. It does not mutate or override Core Pins.
+        - name: X-Stellwerk-Restricted-Version-Confirmations
+          in: header
+          required: false
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items: {type: string, format: uuid}
+          description: Exact Defective Module Version UUIDs confirmed by an authorised deployment caller.
+        - name: X-Stellwerk-Active-Module-Versions
+          in: header
+          required: false
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items: {type: string}
+          description: Exact Module coordinates observed in the Environment's last graph. This evidence permits an archived Module to carry forward only the version already active there.
       requestBody:
         required: true
         content:
@@ -1553,7 +2317,6 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
-
 components:
   securitySchemes:
     userIdHeader:
@@ -1569,6 +2332,12 @@ components:
       required: true
       schema:
         type: string
+    idempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Stable caller-generated key used to deduplicate command retries.
+      schema: {type: string, minLength: 8, maxLength: 200}
     projectIdPathParam:
       name: projectId
       in: path
@@ -1647,11 +2416,10 @@ components:
       name: moduleVersionId
       in: path
       description: A Module Version ID
-      example: 01234567-89ab-cdef-0123-456789abcdef
+      example: 2.4.0
       required: true
       schema:
         type: string
-        format: uuid
     ruleIdPathParam:
       name: ruleId
       in: path
@@ -1717,7 +2485,6 @@ components:
       schema:
         type: boolean
         default: false
-
   responses:
     400BadRequest:
       description: The request was invalid. More detail can be found in the error body.
@@ -1754,6 +2521,22 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    PluginAvailabilityState:
+      type: string
+      enum: [available, not_installed, not_enabled, not_entitled, incompatible, unavailable]
+      x-enum-varnames: [PluginAvailabilityStateAvailable, PluginAvailabilityStateNotInstalled, PluginAvailabilityStateNotEnabled, PluginAvailabilityStateNotEntitled, PluginAvailabilityStateIncompatible, PluginAvailabilityStateUnavailable]
+    PluginCapability:
+      type: object
+      required: [id, display_name, state, capabilities]
+      properties:
+        id: {type: string, description: Immutable reverse-DNS plugin identity.}
+        display_name: {type: string}
+        version: {type: string, description: Immutable installed plugin artifact version when installed.}
+        state: {$ref: '#/components/schemas/PluginAvailabilityState'}
+        capabilities:
+          type: array
+          items: {type: string}
+        admin_action: {type: string, description: Scope-safe remediation guidance for an administrator.}
     Error:
       description: A standard error response
       properties:
@@ -1775,7 +2558,6 @@ components:
         - error
         - message
       type: object
-
     Organization:
       type: object
       description: The internal state of an organization known by the control plane.
@@ -1824,7 +2606,6 @@ components:
           description: The plan of the org.
           example: custom
           type: string
-
     InternalOrganization:
       allOf:
         - $ref: '#/components/schemas/Organization'
@@ -1839,7 +2620,6 @@ components:
               example: internal
           required:
             - source
-
     InternalOrganizationPage:
       type: object
       description: A page of organization state returned from the list api.
@@ -1854,7 +2634,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     InternalOrganizationCreateBody:
       type: object
       description: A request to create a new organization state in the control plane.
@@ -1875,7 +2654,6 @@ components:
           maxLength: 15
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: id_prefix must be lowercase alphanumeric including hyphens
-
     Project:
       type: object
       description: A project.
@@ -1917,7 +2695,9 @@ components:
           enum:
             - active
             - deleting
-
+          x-enum-varnames:
+            - ProjectStatusActive
+            - ProjectStatusDeleting
     ProjectPage:
       type: object
       description: A page of projects returned from the list api.
@@ -1932,7 +2712,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ProjectCreateBody:
       type: object
       description: A request to create a new project.
@@ -1953,7 +2732,6 @@ components:
           x-pattern-error: display_name contains invalid characters
           type: string
           example: Sample Project
-
     ProjectUpdateBody:
       type: object
       description: A request to update a project.
@@ -1968,7 +2746,6 @@ components:
           x-pattern-error: display_name contains invalid characters
           type: string
           example: Sample Project
-
     EnvironmentStatus:
       type: string
       description: The status of the environment. Environments are normally active unless they have been deleted. A delete_failed status indicates that the destroy failed and a delete can be re-issued.
@@ -1977,7 +2754,6 @@ components:
         - active
         - deleting
         - delete_failed
-
     Environment:
       type: object
       description: An environment.
@@ -2037,7 +2813,12 @@ components:
           description: The id of the runner to be used to deploy this environment. If not set, this will be filled in upon first deployment.
           type: string
           example: my-k8s-runner
-
+        labels:
+          description: Labels used by module policy and add-on selectors.
+          type: object
+          additionalProperties:
+            type: string
+          x-go-type-skip-optional-pointer: true
     EnvironmentPage:
       type: object
       description: A page of environments returned from the list api.
@@ -2052,7 +2833,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     EnvironmentCreateBody:
       type: object
       description: A request to create a new environment.
@@ -2080,7 +2860,13 @@ components:
           x-pattern-error: display_name contains invalid characters
           type: string
           example: My Sample Environment
-
+        labels:
+          description: Labels used by module policy and add-on selectors.
+          type: object
+          maxProperties: 50
+          additionalProperties:
+            type: string
+          x-go-type-skip-optional-pointer: true
     EnvironmentUpdateBody:
       type: object
       description: A request to update an environment.
@@ -2095,7 +2881,12 @@ components:
           x-pattern-error: display_name contains invalid characters
           type: string
           example: My Sample Environment
-
+        labels:
+          description: Complete replacement label set used by module policy and add-on selectors.
+          type: object
+          maxProperties: 50
+          additionalProperties:
+            type: string
     EnvironmentInternalUpdateBody:
       type: object
       properties:
@@ -2103,7 +2894,6 @@ components:
           $ref: '#/components/schemas/EnvironmentStatus'
         status_message:
           type: string
-
     EnvironmentTypeSummary:
       type: object
       description: Summary of an environment type in the org.
@@ -2112,6 +2902,7 @@ components:
         - uuid
         - created_at
         - display_name
+        - is_production
       properties:
         id:
           description: The unique id of the environment type in this org.
@@ -2131,11 +2922,12 @@ components:
           description: Human readable name for the environment type
           type: string
           example: Development
-
+        is_production:
+          description: Authoritative Production classification. Clients must not infer this from IDs, names or labels.
+          type: boolean
     EnvironmentType:
       allOf:
         - $ref: '#/components/schemas/EnvironmentTypeSummary'
-
     EnvironmentTypePage:
       type: object
       description: A page of environment types returned from the list api.
@@ -2150,7 +2942,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     EnvironmentTypeCreateBody:
       type: object
       description: A request to create a new environment type in the org.
@@ -2168,19 +2959,22 @@ components:
           type: string
           example: Development
           maxLength: 60
-
+        is_production:
+          description: Whether Environments of this type are Production targets.
+          type: boolean
+          default: false
     EnvironmentTypeUpdateBody:
       type: object
       description: A request to update an environment type in the org.
-      required:
-        - display_name
       properties:
         display_name:
           description: Human readable name for the environment type. This will be generated if not provided.
           type: string
           example: Development
           maxLength: 60
-
+        is_production:
+          description: Whether Environments of this type are Production targets.
+          type: boolean
     RefreshRunnerActionResult:
       type: object
       description: The response body for refreshing a runner in an environment.
@@ -2196,7 +2990,6 @@ components:
           description: If true, it means that the runner was updated to a new value. Otherwise it was not updated and `runner_id` indicates the existing value.
           type: boolean
           default: false
-
     ResourceType:
       type: object
       description: A resource type that can be used in modules.
@@ -2206,6 +2999,8 @@ components:
         - created_at
         - built_in
         - is_developer_accessible
+        - catalogue_status
+        - resource_version
       properties:
         id:
           description: Resource type identifier
@@ -2221,6 +3016,8 @@ components:
           type: object
           example: {}
           additionalProperties: true
+        module_contract:
+          $ref: '#/components/schemas/ResourceTypeModuleContract'
         created_at:
           description: The date and time when the resource type was created
           example: '2023-01-01T00:00:00Z'
@@ -2233,7 +3030,22 @@ components:
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false will not be available as types of resources in a manifest.
           type: boolean
-
+        catalogue_status:
+          type: string
+          enum: [active, archived]
+          x-enum-varnames: [ResourceTypeCatalogueStatusActive, ResourceTypeCatalogueStatusArchived]
+        resource_version:
+          type: integer
+          format: int64
+          minimum: 1
+        archived_at:
+          type: string
+          format: date-time
+        archived_by:
+          type: string
+          format: uuid
+        archive_reason:
+          type: string
     ResourceTypePage:
       type: object
       description: A page of resource types returned from the list api.
@@ -2248,7 +3060,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ResourceTypeCreateBody:
       type: object
       description: A request to create a new resource type.
@@ -2272,11 +3083,29 @@ components:
           type: object
           example: {}
           additionalProperties: true
+        module_contract:
+          $ref: '#/components/schemas/ResourceTypeModuleContract'
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. If omitted, this property defaults to true.
           type: boolean
           default: true
-
+    ResourceTypeModuleContract:
+      type: object
+      additionalProperties: true
+      description: |
+        Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+        module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+        Root type must be object. References and unsupported keywords are rejected.
+        Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+        declarations, not external artifacts or resolved runtime values.
+    ModuleOutputSchema:
+      type: object
+      additionalProperties: true
+      description: |
+        Immutable author-declared output interface. Required on new managed
+        publication when the Resource Type output_schema is nonempty, and must
+        equal that contract as a JSON value. Never inferred from external source.
+        Historical absence is preserved and does not imply artifact verification.
     ResourceTypeUpdateBody:
       type: object
       description: A request to update a resource type.
@@ -2294,7 +3123,6 @@ components:
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest.
           type: boolean
-
     AvailableResourceType:
       type: object
       description: A page of available resource types returned from the list api.
@@ -2323,7 +3151,6 @@ components:
           items:
             $ref: '#/components/schemas/AvailableResourceTypeOption'
           example: []
-
     AvailableResourceTypeOption:
       type: object
       required:
@@ -2355,7 +3182,6 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ModuleParamItem'
-
     AvailableResourceTypePage:
       type: object
       description: A page of available resource types returned from the list api.
@@ -2370,7 +3196,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ModuleProviderSummary:
       type: object
       description: A summary of configuration for an OpenTofu provider that will be used in modules
@@ -2406,7 +3231,6 @@ components:
           example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
-
     ModuleProvider:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
@@ -2431,7 +3255,6 @@ components:
               type: object
               additionalProperties: true
               x-go-type-skip-optional-pointer: true
-
     ModuleProviderPage:
       type: object
       description: A page of module providers returned from the list api.
@@ -2446,7 +3269,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ModuleProviderCreateBody:
       type: object
       description: A request to create a new module provider.
@@ -2496,7 +3318,6 @@ components:
           maxItems: 20
           additionalProperties: true
           x-go-type-skip-optional-pointer: true
-
     ModuleProviderUpdateBody:
       type: object
       description: A request to update a module provider
@@ -2519,7 +3340,6 @@ components:
           type: object
           maxItems: 20
           additionalProperties: true
-
     ModuleId:
       type: string
       description: The unique identifier for a module
@@ -2527,7 +3347,6 @@ components:
       maxLength: 100
       pattern: ^[a-z](?:-?[a-z0-9]+)+$
       x-pattern-error: module id must be a valid identifier of alphanumerics and hyphens
-
     ResourceClass:
       description: A resource class requested by the resource graph. 'default' is the default value.
       type: string
@@ -2536,7 +3355,6 @@ components:
       pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
       x-pattern-error: resource class must be a valid identifier of alphanumerics and hyphens
       example: classic
-
     ResourceId:
       description: A specific resource id requested by the resource graph
       type: string
@@ -2545,7 +3363,6 @@ components:
       maxLength: 63
       pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
-
     RunnerType:
       description: The Runner type.
       type: string
@@ -2555,7 +3372,6 @@ components:
         - kubernetes-agent
         - kubernetes-eks
         - serverless-ecs
-
     StateStorageType:
       description: Type of the Terraform Backend used by the runner.
       type: string
@@ -2564,7 +3380,6 @@ components:
         - s3
         - gcs
         - azurerm
-
     ModuleVersionSummaryCoreFields:
       type: object
       required:
@@ -2596,7 +3411,6 @@ components:
           description: An optional text description for this module
           type: string
           example: Module for an aws s3 bucket
-
     ModuleVersionSummary:
       allOf:
         - $ref: '#/components/schemas/ModuleVersionSummaryCoreFields'
@@ -2609,7 +3423,6 @@ components:
               example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
-
     ModuleVersionPage:
       type: object
       description: A page of the list modules versions response.
@@ -2624,7 +3437,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ModuleSummary:
       type: object
       description: A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
@@ -2652,7 +3464,6 @@ components:
               example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
-
     ModulePage:
       type: object
       description: A page of the list modules response.
@@ -2667,7 +3478,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-
     ModuleCoreFields:
       type: object
       required:
@@ -2676,6 +3486,8 @@ components:
         - dependencies
         - coprovisioned
       properties:
+        output_schema:
+          $ref: '#/components/schemas/ModuleOutputSchema'
         module_params:
           description: |
             The parameters supported by this module. The orchestrator enforces that any required parameters are
@@ -2700,21 +3512,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ModuleCoProvisionManifest'
-
     Module:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
         - $ref: '#/components/schemas/ModuleSummary'
         - $ref: '#/components/schemas/ModuleCoreFields'
-
     ModuleVersion:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
         - $ref: '#/components/schemas/ModuleVersionSummary'
         - $ref: '#/components/schemas/ModuleCoreFields'
-
     ModuleDependencyManifest:
       description: A dependency to provision before the current resource is provisioned
       type: object
@@ -2739,7 +3548,6 @@ components:
           additionalProperties: true
           x-go-type-skip-optional-pointer: true
           maxItems: 20
-
     ModuleCoProvisionManifest:
       description: A resource to provision after or in parallel with the resource of the current module.
       type: object
@@ -2777,7 +3585,6 @@ components:
             If true, all resources that depend on the current resource will also depend on (be provisioned after) this coprovisioned resource.
           example: false
           x-go-type-skip-optional-pointer: true
-
     ModuleParamItem:
       description: The definition of a parameter that can be provided when using this module.
       type: object
@@ -2806,7 +3613,6 @@ components:
           description: An optional description that helps a user define the correct value.
           type: string
           example: The input string value
-
     ModuleCreateBody:
       type: object
       description: A request to create a new module
@@ -2815,6 +3621,15 @@ components:
         - resource_type
         - module_source
       properties:
+        output_schema:
+          $ref: '#/components/schemas/ModuleOutputSchema'
+        semantic_version:
+          type: string
+          description: Canonical SemVer identity of the immutable Core Module Version.
+        artifact_digest:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+          description: Optional immutable external artifact digest claim, not verification evidence. Omitted for inline source.
         id:
           $ref: '#/components/schemas/ModuleId'
         description:
@@ -2872,11 +3687,18 @@ components:
           items:
             $ref: '#/components/schemas/ModuleCoProvisionManifest'
           x-go-type-skip-optional-pointer: true
-
     ModuleUpdateBody:
       type: object
       description: A request to update an existing module
       properties:
+        output_schema:
+          $ref: '#/components/schemas/ModuleOutputSchema'
+        semantic_version:
+          type: string
+          description: Canonical SemVer identity for the immutable Proposed version.
+        artifact_digest:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
         description:
           description: An optional text description for this module
           type: string
@@ -2923,7 +3745,6 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/ModuleCoProvisionManifest'
-
     RunnerPage:
       type: object
       description: A page of runners returned from the list api.
@@ -2938,7 +3759,6 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
-
     RunnerSummary:
       type: object
       description: A summary of configuration a runner.
@@ -2974,7 +3794,6 @@ components:
           $ref: '#/components/schemas/RunnerConfigurationSummary'
         state_storage_configuration:
           $ref: '#/components/schemas/StateStorageConfigurationSummary'
-
     Runner:
       type: object
       description: A summary of configuration a runner.
@@ -2991,7 +3810,6 @@ components:
               $ref: '#/components/schemas/RunnerConfiguration'
             state_storage_configuration:
               $ref: '#/components/schemas/StateStorageConfiguration'
-
     RunnerConfiguration:
       description: The data needed to configure the runner.
       oneOf:
@@ -3008,7 +3826,6 @@ components:
           kubernetes-eks: '#/components/schemas/K8sEksRunnerConfiguration'
           kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfiguration'
           serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfiguration'
-
     RunnerConfigurationUpdate:
       description: The data needed to update the runner configuration.
       oneOf:
@@ -3025,7 +3842,6 @@ components:
           kubernetes-eks: '#/components/schemas/K8sEksRunnerConfigurationUpdateBody'
           kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfigurationUpdateBody'
           serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody'
-
     InternalRunner:
       type: object
       description: A summary of configuration a runner.
@@ -3034,7 +3850,6 @@ components:
         - properties:
             runner_configuration_secret:
               $ref: '#/components/schemas/ConfigurationSecret'
-
     ConfigurationSecret:
       type: object
       description: Secret path and version of a secret stored in the internal store.
@@ -3051,7 +3866,6 @@ components:
       required:
         - path
         - version
-
     K8sRunnerJobConfig:
       description: Properties of the Kubernetes Runner Job.
       type: object
@@ -3070,7 +3884,6 @@ components:
       required:
         - namespace
         - service_account
-
     K8sRunnerGkeCluster:
       description: Configuration to access a GKE cluster.
       type: object
@@ -3098,7 +3911,6 @@ components:
         - project_id
         - location
         - auth
-
     K8sRunnerGcpTemporaryAuth:
       description: Configuration to obtain temporary access token to access a GKE cluster.
       x-go-type-skip-optional-pointer: true
@@ -3113,7 +3925,6 @@ components:
       required:
         - gcp_audience
         - gcp_service_account
-
     K8sRunnerEksCluster:
       description: Configuration to access an EKS cluster.
       type: object
@@ -3130,7 +3941,6 @@ components:
         - name
         - region
         - auth
-
     AwsTemporaryAuth:
       description: Configuration to obtain temporary AWS security credentials by assuming an IAM role.
       type: object
@@ -3154,7 +3964,6 @@ components:
           x-pattern-error: sts_region is not a valid AWS STS region
       required:
         - role_arn
-
     K8sRunnerK8sCluster:
       description: Configuration to obtain access token to a generic K8s cluster with auth
       type: object
@@ -3166,7 +3975,6 @@ components:
       required:
         - cluster_data
         - auth
-
     K8sRunnerK8sClusterAuth:
       x-go-type-skip-optional-pointer: true
       description: Configuration to obtain access to a k8s cluster.
@@ -3181,7 +3989,6 @@ components:
         service_account_token:
           description: Service account token.
           type: string
-
     K8sRunnerK8sClusterClusterData:
       description: Cluster data to access Kubernetes cluster.
       type: object
@@ -3199,7 +4006,6 @@ components:
       required:
         - certificate_authority_data
         - server
-
     K8sAgentRunnerKey:
       description: A public ed25519 key in PEM format. The caller must hold the matching private key.
       type: string
@@ -3211,7 +4017,6 @@ components:
       x-pattern-error: 'key: does not look like an ed25519 public key in PEM format'
       minLength: 1
       maxLength: 200
-
     StateStorageConfiguration:
       description: Configuration for the Terraform Backend used by the runner.
       oneOf:
@@ -3226,7 +4031,6 @@ components:
           s3: '#/components/schemas/S3StorageConfiguration'
           gcs: '#/components/schemas/GCSStorageConfiguration'
           azurerm: '#/components/schemas/AzureRMStorageConfiguration'
-
     StateStorageConfigurationSummary:
       description: Summary of the state storage configuration.
       properties:
@@ -3234,7 +4038,6 @@ components:
           $ref: '#/components/schemas/StateStorageType'
       required:
         - type
-
     K8sStorageConfiguration:
       description: Configuration to use the Kubernetes Backend as backend of this runner. The in-cluster mode is used.
       type: object
@@ -3247,7 +4050,6 @@ components:
       required:
         - namespace
         - type
-
     S3StorageConfiguration:
       description: |-
         Configuration to use an AWS S3 bucket as state storage backend of this runner. Authentication and other settings
@@ -3272,7 +4074,6 @@ components:
       required:
         - type
         - bucket
-
     GCSStorageConfiguration:
       description: |-
         Configuration to use a Google Cloud Storage (GCS) bucket as state storage backend of this runner. Authentication and other settings
@@ -3297,7 +4098,6 @@ components:
       required:
         - type
         - bucket
-
     AzureRMStorageConfiguration:
       description: |-
         Configuration to use an AzureRM Storage Account as state storage backend of this runner. Authentication and other settings
@@ -3329,7 +4129,6 @@ components:
         - type
         - storage_account_name
         - container_name
-
     RunnerCreateBody:
       type: object
       description: A request to create a new runner.
@@ -3352,7 +4151,6 @@ components:
           $ref: '#/components/schemas/RunnerConfiguration'
         state_storage_configuration:
           $ref: '#/components/schemas/StateStorageConfiguration'
-
     RunnerConfigurationSummary:
       description: A summary of the runner configuration.
       type: object
@@ -3361,7 +4159,6 @@ components:
           $ref: '#/components/schemas/RunnerType'
       required:
         - type
-
     K8sRunnerConfiguration:
       description: Runner configuration for a Kubernetes cluster.
       type: object
@@ -3376,7 +4173,6 @@ components:
         - type
         - job
         - cluster
-
     K8sGkeRunnerConfiguration:
       description: Runner configuration for a GKE cluster.
       type: object
@@ -3391,7 +4187,6 @@ components:
         - type
         - job
         - cluster
-
     K8sEksRunnerConfiguration:
       description: Runner configuration for an EKS cluster.
       type: object
@@ -3406,7 +4201,6 @@ components:
         - type
         - job
         - cluster
-
     K8sAgentRunnerConfiguration:
       description: Runner configuration for a Kubernetes Agent.
       type: object
@@ -3421,7 +4215,6 @@ components:
         - type
         - job
         - key
-
     ServerlessEcsRunnerConfiguration:
       description: Runner configuration for executing on AWS ECS Fargate.
       type: object
@@ -3436,7 +4229,6 @@ components:
         - type
         - auth
         - job
-
     ServerlessEcsRunnerJob:
       description: Job details for the AWS ECS Runner
       required:
@@ -3523,7 +4315,6 @@ components:
             pattern: ^arn:aws:((secretsmanager:[^:]+:[^:]+:secret:[^:]+-[a-zA-Z0-9]{6})|(ssm:[^:]+:[^:]+:parameter\/.+))$
             x-pattern-error: job secrets value is not a valid AWS Secret or Parameter ARN
             example: arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/database/credentials-AbCdEf
-
     RunnerUpdateBody:
       type: object
       description: A request to update a runner
@@ -3536,7 +4327,6 @@ components:
           $ref: '#/components/schemas/RunnerConfigurationUpdate'
         state_storage_configuration:
           $ref: '#/components/schemas/StateStorageConfiguration'
-
     K8sRunnerConfigurationUpdateBody:
       description: Object to update an existing runner configuration for a Kubernetes cluster.
       type: object
@@ -3549,7 +4339,6 @@ components:
           $ref: '#/components/schemas/RunnerType'
       required:
         - type
-
     K8sGkeRunnerConfigurationUpdateBody:
       description: Object to update an existing runner configuration for a GKE cluster.
       type: object
@@ -3562,7 +4351,6 @@ components:
           $ref: '#/components/schemas/RunnerType'
       required:
         - type
-
     K8sEksRunnerConfigurationUpdateBody:
       description: Object to update an existing runner configuration for an EKS cluster.
       type: object
@@ -3575,7 +4363,6 @@ components:
           $ref: '#/components/schemas/RunnerType'
       required:
         - type
-
     K8sAgentRunnerConfigurationUpdateBody:
       description: Object to update an existing runner configuration for a Kubernetes Agent.
       type: object
@@ -3588,7 +4375,6 @@ components:
           $ref: '#/components/schemas/K8sAgentRunnerKey'
       required:
         - type
-
     ServerlessEcsRunnerConfigurationUpdateBody:
       description: Runner configuration for executing on AWS ECS Fargate.
       type: object
@@ -3601,7 +4387,6 @@ components:
           $ref: '#/components/schemas/ServerlessEcsRunnerJob'
       required:
         - type
-
     RuleSummary:
       type: object
       description: A summary of a rule that matches resource requests against a module
@@ -3653,7 +4438,6 @@ components:
           description: The optional environment id that this rule matches.
           type: string
           example: my-env
-
     RulePage:
       type: object
       description: A page of rules returned from the list api.
@@ -3668,13 +4452,11 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
-
     Rule:
       type: object
       description: The full details of a rule that matches resource requests against a module
       allOf:
         - $ref: '#/components/schemas/RuleSummary'
-
     RuleCreateBody:
       type: object
       description: The properties required to create a new rule that matches modules
@@ -3709,7 +4491,6 @@ components:
           example: sample-env
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: env_id must be a valid identifier
-
     RunnerRulePage:
       type: object
       description: A page of rules returned from the list api.
@@ -3724,13 +4505,11 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
-
     RunnerRule:
       type: object
       description: The full details of a rule that matches resource requests against a module
       allOf:
         - $ref: '#/components/schemas/RunnerRuleSummary'
-
     RunnerRuleCreateBody:
       type: object
       description: The properties required to create a new rule that matches runners
@@ -3751,7 +4530,6 @@ components:
             Project identifier to match this rule. This project must exist in the org.
           type: string
           example: sample-project
-
     RunnerRuleSummary:
       type: object
       description: A summary of a rule that matches resource requests against a module
@@ -3789,7 +4567,485 @@ components:
           description: The optional env type id that this rule matches.
           type: string
           example: dev
-
+    ModuleVersionSemanticStatus:
+      type: string
+      enum: [proposed, default, deprecated, defective]
+      x-enum-varnames: [ModuleVersionSemanticStatusProposed, ModuleVersionSemanticStatusDefault, ModuleVersionSemanticStatusDeprecated, ModuleVersionSemanticStatusDefective]
+    ModuleCatalogueStatus:
+      type: string
+      enum: [active, archived]
+      x-enum-varnames: [ModuleCatalogueStatusActive, ModuleCatalogueStatusArchived]
+    ModuleVerificationStatus:
+      type: string
+      enum: [unverified]
+      x-enum-varnames: [ModuleVerificationStatusUnverified]
+    ModuleCatalogueEntry:
+      type: object
+      required: [org_id, uuid, slug, display_name, description, resource_type, tags, status, resource_version, managed_default_generation, created_at]
+      properties:
+        org_id: {type: string}
+        uuid: {type: string, format: uuid}
+        slug: {type: string}
+        display_name: {type: string}
+        description: {type: string}
+        resource_type: {type: string}
+        tags:
+          type: object
+          additionalProperties: {type: string}
+        status: {$ref: '#/components/schemas/ModuleCatalogueStatus'}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        current_default_version_uuid: {type: string, format: uuid}
+        previous_default_version_uuid: {type: string, format: uuid}
+        managed_default_generation: {type: integer, format: int64, minimum: 0}
+        created_at: {type: string, format: date-time}
+        archived_at: {type: string, format: date-time}
+        archived_by: {type: string, format: uuid}
+        archive_reason: {type: string}
+    ModuleCatalogueUpdateBody:
+      type: object
+      required: [display_name, description, tags, expected_resource_version]
+      properties:
+        display_name: {type: string, minLength: 1, maxLength: 200}
+        description: {type: string, maxLength: 2000}
+        tags:
+          type: object
+          maxProperties: 50
+          additionalProperties: {type: string, maxLength: 200}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+    ModuleCatalogueCreateBody:
+      type: object
+      required: [slug, resource_type]
+      properties:
+        slug: {$ref: '#/components/schemas/ModuleId'}
+        display_name: {type: string, minLength: 1, maxLength: 200}
+        description: {type: string, maxLength: 2000}
+        resource_type: {type: string, minLength: 2, maxLength: 200}
+        tags:
+          type: object
+          maxProperties: 50
+          additionalProperties: {type: string, maxLength: 200}
+    ModuleReasonedCommand:
+      type: object
+      required: [reason, expected_resource_version]
+      properties:
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+    ModuleVersionPublishBody:
+      type: object
+      required: [semantic_version, module_source, module_params, module_inputs, provider_mapping, dependencies, coprovisioned]
+      properties:
+        output_schema:
+          $ref: '#/components/schemas/ModuleOutputSchema'
+        semantic_version:
+          type: string
+          pattern: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$'
+        artifact_digest:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+          description: Optional immutable external artifact digest claim. Omit for inline source. Absence never implies verification.
+        source_revision: {type: string, maxLength: 500}
+        release_notes: {type: string, maxLength: 10000}
+        description: {type: string, maxLength: 2000}
+        module_source: {type: string, minLength: 2, maxLength: 200}
+        module_source_code: {type: string}
+        module_params:
+          type: object
+          additionalProperties: {$ref: '#/components/schemas/ModuleParamItem'}
+        module_inputs:
+          type: object
+          maxProperties: 20
+          additionalProperties: true
+        provider_mapping:
+          type: object
+          maxProperties: 20
+          additionalProperties: {type: string}
+        dependencies:
+          type: object
+          maxProperties: 20
+          additionalProperties: {$ref: '#/components/schemas/ModuleDependencyManifest'}
+        coprovisioned:
+          type: array
+          maxItems: 20
+          items: {$ref: '#/components/schemas/ModuleCoProvisionManifest'}
+    CoreModuleVersion:
+      type: object
+      required: [org_id, module_uuid, module_slug, uuid, opaque_version_id, migration_generation, verification_status, lifecycle_status, artifact_digest, source_revision, resource_version, created_at]
+      properties:
+        org_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        module_slug: {type: string}
+        uuid: {type: string, format: uuid}
+        semantic_version: {type: string}
+        opaque_version_id: {type: string}
+        migration_generation: {type: string, enum: [v0, v1, managed]}
+        artifact_digest: {type: string}
+        verification_status: {$ref: '#/components/schemas/ModuleVerificationStatus'}
+        lifecycle_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+        source_revision: {type: string}
+        release_notes: {type: string}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        published_by: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+    CoreModuleVersionDetail:
+      allOf:
+        - $ref: '#/components/schemas/ModuleVersion'
+        - type: object
+          required: [version, definition]
+          properties:
+            version: {$ref: '#/components/schemas/CoreModuleVersion'}
+            definition: {$ref: '#/components/schemas/ModuleVersion'}
+    CoreModuleVersionPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/CoreModuleVersionDetail'}
+        next_page_token: {type: string}
+    StableModuleVersionSuccessorBody:
+      type: object
+      required: [expected_prerelease_resource_version, reason, version]
+      properties:
+        expected_prerelease_resource_version: {type: integer, format: int64, minimum: 1}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        version: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+    StableModuleVersionSuccessorResult:
+      type: object
+      required: [prerelease, stable, correlation_id]
+      properties:
+        prerelease: {$ref: '#/components/schemas/CoreModuleVersion'}
+        stable: {$ref: '#/components/schemas/CoreModuleVersion'}
+        correlation_id: {type: string, format: uuid}
+    ModuleVersionComparison:
+      type: object
+      required:
+        - from_version_uuid
+        - to_version_uuid
+        - before
+        - after
+        - module_source_changed
+        - module_source_code_changed
+        - artifact_digest_changed
+        - source_revision_changed
+        - resource_type_changed
+        - added_module_inputs
+        - removed_module_inputs
+        - changed_module_inputs
+        - added_module_params
+        - removed_module_params
+        - changed_module_params
+        - added_provider_mappings
+        - removed_provider_mappings
+        - changed_provider_mappings
+        - added_dependencies
+        - removed_dependencies
+        - changed_dependencies
+        - coprovisioning_changed
+        - output_schema_changed
+      properties:
+        from_version_uuid: {type: string, format: uuid}
+        to_version_uuid: {type: string, format: uuid}
+        before: {$ref: '#/components/schemas/ModuleVersionComparisonSnapshot'}
+        after: {$ref: '#/components/schemas/ModuleVersionComparisonSnapshot'}
+        module_source_changed: {type: boolean}
+        module_source_code_changed: {type: boolean}
+        artifact_digest_changed: {type: boolean}
+        source_revision_changed: {type: boolean}
+        resource_type_changed: {type: boolean}
+        added_module_inputs: {type: array, items: {type: string}}
+        removed_module_inputs: {type: array, items: {type: string}}
+        changed_module_inputs: {type: array, items: {type: string}}
+        added_module_params: {type: array, items: {type: string}}
+        removed_module_params: {type: array, items: {type: string}}
+        changed_module_params: {type: array, items: {type: string}}
+        added_provider_mappings: {type: array, items: {type: string}}
+        removed_provider_mappings: {type: array, items: {type: string}}
+        changed_provider_mappings: {type: array, items: {type: string}}
+        added_dependencies: {type: array, items: {type: string}}
+        removed_dependencies: {type: array, items: {type: string}}
+        changed_dependencies: {type: array, items: {type: string}}
+        coprovisioning_changed: {type: boolean}
+        output_schema_changed: {type: boolean}
+    ModuleVersionComparisonSnapshot:
+      type: object
+      required:
+        - module_source
+        - module_source_code
+        - artifact_digest
+        - source_revision
+        - resource_type
+        - module_inputs
+        - module_params
+        - provider_mapping
+        - dependencies
+        - coprovisioned
+      properties:
+        output_schema:
+          $ref: '#/components/schemas/ModuleOutputSchema'
+        module_source: {type: string}
+        module_source_code: {type: string, nullable: true}
+        artifact_digest: {type: string}
+        source_revision: {type: string}
+        resource_type: {type: string}
+        module_inputs:
+          type: object
+          additionalProperties: true
+        module_params:
+          type: object
+          additionalProperties: {$ref: '#/components/schemas/ModuleParamItem'}
+        provider_mapping:
+          type: object
+          additionalProperties: {type: string}
+        dependencies:
+          type: object
+          additionalProperties: {$ref: '#/components/schemas/ModuleDependencyManifest'}
+        coprovisioned:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleCoProvisionManifest'}
+    ModuleVersionUsageEnvironment:
+      type: object
+      required: [project_id, environment_id, environment_uuid, environment_type, deployment_id, observed_at]
+      properties:
+        project_id: {type: string}
+        environment_id: {type: string}
+        environment_uuid: {type: string, format: uuid}
+        environment_type: {type: string}
+        deployment_id: {type: string, format: uuid}
+        observed_at: {type: string, format: date-time}
+    ModuleVersionUsage:
+      type: object
+      required: [module_uuid, version_uuid, semantic_version, active_environment_count, by_project, by_environment_type, environments, unknown_environments, observed_at, active_pins, override_pending_pins, historical_pins]
+      properties:
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        semantic_version: {type: string}
+        active_environment_count: {type: integer, minimum: 0}
+        by_project:
+          type: object
+          additionalProperties: {type: integer, minimum: 0}
+        by_environment_type:
+          type: object
+          additionalProperties: {type: integer, minimum: 0}
+        environments:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleVersionUsageEnvironment'}
+        unknown_environments:
+          type: array
+          items: {type: string, format: uuid}
+        observed_at: {type: string, format: date-time}
+        active_pins: {type: integer, minimum: 0}
+        override_pending_pins: {type: integer, minimum: 0}
+        historical_pins: {type: integer, minimum: 0}
+    ModuleVersionLifecycleTransactionItem:
+      type: object
+      required: [module_id, module_version_id, action, expected_resource_version, reason]
+      properties:
+        module_id: {$ref: '#/components/schemas/ModuleId'}
+        module_version_id: {type: string, minLength: 1}
+        action: {type: string, enum: [promote, deprecate, mark-defective, restore]}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    ModuleVersionLifecycleTransactionBody:
+      type: object
+      required: [transitions]
+      properties:
+        transitions:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: {$ref: '#/components/schemas/ModuleVersionLifecycleTransactionItem'}
+    ModuleVersionLifecycleTransactionResult:
+      type: object
+      required: [correlation_id, versions]
+      properties:
+        correlation_id: {type: string, format: uuid}
+        versions:
+          type: array
+          items: {$ref: '#/components/schemas/CoreModuleVersion'}
+    ModuleVersionLifecycleEvent:
+      type: object
+      required: [sequence, id, module_uuid, version_uuid, to_status, version_resource_version, actor, payload, created_at]
+      properties:
+        sequence: {type: integer, format: int64}
+        id: {type: string, format: uuid}
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        from_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+        to_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+        version_resource_version: {type: integer, format: int64}
+        actor: {type: string, format: uuid}
+        reason: {type: string}
+        correlation_id: {type: string, format: uuid}
+        payload: {type: object, additionalProperties: true}
+        created_at: {type: string, format: date-time}
+    ModuleVersionPinStatus:
+      type: string
+      enum: [active, override_pending, overridden, removed]
+    EnvironmentModuleVersionPin:
+      type: object
+      required: [id, org_id, project_uuid, project_id, environment_uuid, environment_id, module_uuid, version_uuid, status, resource_version, activation_event_id, created_by, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        org_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        project_id: {type: string}
+        environment_uuid: {type: string, format: uuid}
+        environment_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ModuleVersionPinStatus'}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        activation_event_id: {type: string, format: uuid}
+        bulk_operation_id: {type: string, format: uuid}
+        override_operation_id: {type: string, format: uuid}
+        override_target_version_uuid: {type: string, format: uuid}
+        override_actor: {type: string, format: uuid}
+        override_reason: {type: string}
+        override_deployment_id: {type: string, format: uuid}
+        created_by: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        removed_at: {type: string, format: date-time}
+    EnvironmentModuleVersionPinCreateBody:
+      type: object
+      required: [project_uuid, environment_uuid, module_uuid, version_uuid, reason]
+      properties:
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        confirm_defective_version_uuid: {type: string, format: uuid}
+    ModuleVersionPinEvent:
+      type: object
+      required: [sequence, id, pin_id, revision, event_type, to_status, activation_event_id, actor, actor_type, created_at]
+      properties:
+        sequence: {type: integer, format: int64}
+        id: {type: string, format: uuid}
+        pin_id: {type: string, format: uuid}
+        revision: {type: integer, format: int64, minimum: 1}
+        event_type: {type: string}
+        from_status: {$ref: '#/components/schemas/ModuleVersionPinStatus'}
+        to_status: {$ref: '#/components/schemas/ModuleVersionPinStatus'}
+        activation_event_id: {type: string, format: uuid}
+        actor: {type: string, format: uuid}
+        actor_type: {type: string}
+        reason: {type: string}
+        note:
+          type: string
+          description: Immutable note text, present only when event_type is note_added.
+        operation_id: {type: string, format: uuid}
+        deployment_id: {type: string, format: uuid}
+        bulk_operation_id: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+    ModuleVersionPinNoteBody:
+      type: object
+      required: [note]
+      properties:
+        note: {type: string, minLength: 1, maxLength: 2000}
+    ModuleVersionPinBulkAction:
+      type: string
+      enum: [pin, unpin, discard]
+    ModuleVersionPinBulkPreviewBody:
+      type: object
+      required: [action, module_uuid, environment_uuids]
+      properties:
+        action: {$ref: '#/components/schemas/ModuleVersionPinBulkAction'}
+        module_uuid: {type: string, format: uuid}
+        environment_uuids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        confirm_defective_version_uuids:
+          type: array
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    ModuleVersionPinBulkPreviewItem:
+      type: object
+      required: [environment_uuid, project_uuid, environment_id, project_id, eligible, production]
+      properties:
+        environment_uuid: {type: string, format: uuid}
+        project_uuid: {type: string, format: uuid}
+        environment_id: {type: string}
+        project_id: {type: string}
+        environment_type: {type: string}
+        production: {type: boolean}
+        eligible: {type: boolean}
+        version_uuid: {type: string, format: uuid}
+        pin_id: {type: string, format: uuid}
+        pin_resource_version: {type: integer, format: int64}
+        idempotent_match: {type: boolean}
+        problem: {type: string}
+    ModuleVersionPinBulkPreview:
+      type: object
+      required: [operation_id, fingerprint, action, module_uuid, eligible, items]
+      properties:
+        operation_id: {type: string, format: uuid}
+        fingerprint: {type: string}
+        action: {$ref: '#/components/schemas/ModuleVersionPinBulkAction'}
+        module_uuid: {type: string, format: uuid}
+        eligible: {type: boolean}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleVersionPinBulkPreviewItem'}
+    ModuleVersionPinBulkCommandBody:
+      type: object
+      required: [action, module_uuid, environment_uuids, preview_fingerprint, reason]
+      properties:
+        action: {$ref: '#/components/schemas/ModuleVersionPinBulkAction'}
+        module_uuid: {type: string, format: uuid}
+        environment_uuids:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        preview_fingerprint: {type: string, minLength: 64, maxLength: 64}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        confirm_defective_version_uuids:
+          type: array
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    ModuleVersionPinBulkResult:
+      type: object
+      required: [operation_id, action, pins]
+      properties:
+        operation_id: {type: string, format: uuid}
+        action: {$ref: '#/components/schemas/ModuleVersionPinBulkAction'}
+        pins:
+          type: array
+          items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+    ModuleVersionPinOverrideBody:
+      type: object
+      required: [expected_resource_version, operation_id, target_version_uuid, reason]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        operation_id: {type: string, format: uuid}
+        target_version_uuid: {type: string, format: uuid}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    ModuleVersionPinOverrideReconcileBody:
+      type: object
+      required: [expected_resource_version, operation_id, outcome, deployment_id, reason]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        operation_id: {type: string, format: uuid}
+        outcome:
+          type: string
+          enum: [succeeded, failed, cancelled]
+          x-enum-varnames: [ModuleVersionPinOverrideReconcileBodyOutcomeSucceeded, ModuleVersionPinOverrideReconcileBodyOutcomeFailed, ModuleVersionPinOverrideReconcileBodyOutcomeCancelled]
+        deployment_id: {type: string, format: uuid}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    ModuleVersionPinRollbackRestoreBody:
+      type: object
+      required: [expected_resource_version, operation_id, deployment_id, restored_version_uuid, reason]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        operation_id: {type: string, format: uuid}
+        deployment_id: {type: string, format: uuid}
+        restored_version_uuid: {type: string, format: uuid}
+        reason: {type: string, minLength: 1, maxLength: 2000}
     InternalModuleCatalogue:
       type: object
       description: A collation of all the applicable modules, and providers for an environment. A module is applicable if there is at least one rule for it that matches the requested environment.
@@ -3805,7 +5061,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ModuleProvider'
-
     InternalModuleCatalogueModuleRule:
       type: object
       description: A rule within a module
@@ -3832,7 +5087,6 @@ components:
           description: The optional environment id that this rule matches.
           type: string
           example: my-env
-
     InternalModuleCatalogueModule:
       type: object
       description: A module within a catalogue
@@ -3840,12 +5094,37 @@ components:
         - $ref: '#/components/schemas/Module'
         - required:
             - rules
+            - artifact_digest
+            - semantic_status
+            - module_uuid
+            - version_uuid
+            - semantic_version
+            - migration_generation
+            - verification_status
           properties:
             rules:
               type: array
               items:
                 $ref: '#/components/schemas/InternalModuleCatalogueModuleRule'
-
+            artifact_digest:
+              type: string
+            semantic_status:
+              $ref: '#/components/schemas/ModuleVersionSemanticStatus'
+            module_uuid:
+              type: string
+              format: uuid
+            version_uuid:
+              type: string
+              format: uuid
+            semantic_version:
+              type: string
+              description: Canonical SemVer for managed versions; empty only for migrated v0 versions.
+            migration_generation:
+              type: string
+              enum: [v0, v1, managed]
+              description: Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
+            verification_status:
+              $ref: '#/components/schemas/ModuleVerificationStatus'
     InternalModuleCatalogueGenerateBody:
       type: object
       description: The request contents to generate a module catalogue
@@ -3859,7 +5138,7 @@ components:
             example: my-module@01234567-89ab-cdef-0123-456789abcdef
           x-go-type-skip-optional-pointer: true
         pinned_providers:
-          description: The normal response body only includes the modules and providers currently configured. However if we are removing nodes that still rely on providers we need to fetch their details without having the modules.
+          description: The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request providers retained by the previous graph.
           type: array
           items:
             description: The provider type and id separated by a '.'.
@@ -3867,7 +5146,77 @@ components:
             example: aws.default
           x-go-type-skip-optional-pointer: true
         are_rules_ignored:
-          description: When running a destroy deployment, we only care about pinned module version and do not need to check the rules. This option can be used to skip rule evaluation.
+          description: When running a destroy deployment, only pinned module versions are required and rule evaluation is skipped.
           type: boolean
           example: false
           x-go-type-skip-optional-pointer: true
+    ModuleOperationReservation:
+      type: object
+      required: [id, module_uuid, namespace, operation_id, related_resource_id, reason, resource_version, acquired_by, acquired_at]
+      properties:
+        id: {type: string, format: uuid}
+        module_uuid: {type: string, format: uuid}
+        namespace: {type: string, pattern: '^[a-z][a-z0-9.-]*$'}
+        operation_id: {type: string, format: uuid}
+        related_resource_id: {type: string}
+        reason: {type: string}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        acquired_by: {type: string, format: uuid}
+        acquired_at: {type: string, format: date-time}
+        released_by: {type: string, format: uuid}
+        released_at: {type: string, format: date-time}
+        release_reason: {type: string}
+    ModuleOperationReservationAcquireBody:
+      type: object
+      required: [namespace, operation_id, related_resource_id, reason]
+      properties:
+        namespace: {type: string, pattern: '^[a-z][a-z0-9.-]*$'}
+        operation_id: {type: string, format: uuid}
+        related_resource_id: {type: string, minLength: 1}
+        reason: {type: string, minLength: 1}
+    ModuleExtensionContribution:
+      type: object
+      required: [id, module_uuid, namespace, external_resource_id, kind, lifecycle_state, label, payload, created_by, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        namespace: {type: string, pattern: '^[a-z][a-z0-9.-]*$'}
+        external_resource_id: {type: string}
+        kind: {type: string, enum: [related_resource, contextual_action]}
+        lifecycle_state: {type: string, enum: [draft, active, terminal]}
+        label: {type: string}
+        target_url: {type: string}
+        payload: {type: object, additionalProperties: true}
+        created_by: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ModuleExtensionContributionUpsertBody:
+      type: object
+      required: [namespace, external_resource_id, kind, lifecycle_state, label, payload]
+      properties:
+        version_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        namespace: {type: string, pattern: '^[a-z][a-z0-9.-]*$'}
+        external_resource_id: {type: string, minLength: 1}
+        kind: {type: string, enum: [related_resource, contextual_action]}
+        lifecycle_state: {type: string, enum: [draft, active, terminal]}
+        label: {type: string, minLength: 1}
+        target_url: {type: string}
+        payload: {type: object, additionalProperties: true}
+    EnvironmentDeletionImpact:
+      type: object
+      required: [environment_uuid, blocked, blockers, pins, related_resources]
+      properties:
+        environment_uuid: {type: string, format: uuid}
+        blocked: {type: boolean}
+        blockers:
+          type: array
+          items: {type: string}
+        pins:
+          type: array
+          items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+        related_resources:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleExtensionContribution'}
