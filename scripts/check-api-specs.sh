@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly cp_revision=7e60c777be30e5d7dc0f9706cd5e4b16d5839d7c
+# CP spec SHA-256 is pinned locally; it will be re-sourced against a public CP
+# release commit once the plugin-foundation export is qualified and published.
+# See clients/platform-orchestrator-cp/SOURCE.md for the full provenance record.
+readonly cp_spec_sha=a8e547bdaaa17c544330c1b68f034b65673f095f935e8e8a94d1aa7a17cf7777
+readonly legacy_cp_spec_sha=41a1f9a231d9dc0c5850e381a44caa938330099b7ff730b0b834f8d950e2f1e1
 readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
-temp_dir=$(mktemp -d)
+temp_dir="$(mktemp -d)"
 readonly temp_dir
 trap 'rm -rf -- "$temp_dir"' EXIT
 
@@ -12,19 +16,14 @@ check_spec() {
   local repository="$1"
   local revision="$2"
   local vendored_spec="$3"
-  local local_spec="${4:-}"
   local repository_name="${repository##*/}"
   local downloaded_spec="$temp_dir/$repository_name.yaml"
   local normalized_vendored="$temp_dir/$repository_name-vendored.yaml"
   local normalized_downloaded="$temp_dir/$repository_name-downloaded.yaml"
 
-  if [ -n "$local_spec" ]; then
-    cp "$local_spec" "$downloaded_spec"
-  else
-    curl --fail --silent --show-error --location \
-      "https://raw.githubusercontent.com/$repository/$revision/openapi/spec.yaml" \
-      --output "$downloaded_spec"
-  fi
+  curl --fail --silent --show-error --location \
+    "https://raw.githubusercontent.com/$repository/$revision/openapi/spec.yaml" \
+    --output "$downloaded_spec"
 
   awk 'NF { while (blank > 0) { print ""; blank-- } print; next } { blank++ }' "$vendored_spec" >"$normalized_vendored"
   awk 'NF { while (blank > 0) { print ""; blank-- } print; next } { blank++ }' "$downloaded_spec" >"$normalized_downloaded"
@@ -35,6 +34,24 @@ check_spec() {
   fi
 }
 
-check_spec stellwerk-labs/platform-orchestrator-cp "$cp_revision" clients/platform-orchestrator-cp/spec.yaml "${CP_SPEC_PATH:-}"
-check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml "${DP_SPEC_PATH:-}"
-check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml "${IAM_SPEC_PATH:-}"
+check_spec_sha() {
+  local vendored_spec="$1"
+  local expected_sha="$2"
+  local label="$3"
+  local actual_sha
+  actual_sha="$(shasum -a 256 "$vendored_spec" | awk '{print $1}')"
+  if [[ "$actual_sha" != "$expected_sha" ]]; then
+    echo "$label: $vendored_spec SHA-256 $actual_sha does not match pinned $expected_sha" >&2
+    return 1
+  fi
+}
+
+check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "core contract"
+check_spec_sha clients/platform-orchestrator-cp/legacy-enterprise-spec.yaml "$legacy_cp_spec_sha" "rollouts compatibility source"
+
+check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
+check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
+
+./scripts/check-native-plugin-api-spec.sh \
+  clients/platform-orchestrator-plugin/spec.yaml \
+  clients/platform-orchestrator-plugin/SOURCE.md

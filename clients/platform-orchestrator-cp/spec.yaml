@@ -1,8 +1,603 @@
 openapi: 3.0.0
 info:
-  title: ''
-  version: ''
+  title: Stellwerk Control Plane API
+  version: unreleased
 paths:
+  /orgs/{orgId}/plugins/{pluginId}/entitlement:
+    get:
+      operationId: getPluginEntitlement
+      summary: Read this installation's current offline licence decision as its configured service.
+      description: Only the exact configured plugin service identity may read this non-secret preflight, including before an operation grant exists. It exposes no issuer keys, signed documents or Core resource data. This decision never grants IAM authority and is not an execution credential; every Core effect reauthorizes independently. Missing licence and disabled states are returned explicitly so recovery can stop forward work safely.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Current scoped plugin availability and entitlement projection, never signed evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginCapability'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/deployment-admissions/{admissionId}:
+    post:
+      operationId: authorizeDeploymentAdmission
+      summary: Protect one ordinary Data Plane admission against concurrent Pin changes.
+      description: Restricted to the operator-bound authenticated Data Plane service. Rechecks the original actor's deployment permission and exact immutable scope. Persists a guard before DP commits a Deployment. No plugin capability grants access. A settled identity can never authorize another Deployment.
+      tags: [Deployment admissions]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: admissionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DeploymentAdmissionRequest'}
+      responses:
+        '200':
+          description: Exact active guard. Execution still belongs exclusively to the Data Plane.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentAdmissionReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/deployment-admissions/{admissionId}/seal-absence:
+    post:
+      operationId: sealDeploymentAdmissionAbsence
+      summary: Permanently close an uncommitted admission, including a delayed authorize request.
+      description: Restricted to the operator-bound Data Plane service. DP must first persist exact intent and an absent tombstone under its admission-key lock, proving no Deployment committed. Core stores an immutable absent receipt even if authorize has not arrived, or settles the exact existing active guard. A late authorize can never reopen this identity. Recovery does not recheck the original actor's permission or require a live Environment. Changed intent or a different terminal outcome conflicts. Timeout or a not-found read alone is never absence evidence.
+      tags: [Deployment admissions]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: admissionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DeploymentAdmissionRequest'}
+      responses:
+        '200':
+          description: Exact permanent absent receipt. This never creates execution authority.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentAdmissionReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/deployment-admissions/{admissionId}/settle:
+    post:
+      operationId: settleDeploymentAdmission
+      summary: Settle an exact ordinary admission from the authenticated Data Plane's durable outcome.
+      description: Only the operator-bound DP service can report authoritative terminal receipt evidence. An absent outcome requires a sealed DP tombstone under the admission-key lock after transaction rollback; timeout is never evidence. The original actor need not retain permissions for safety reconciliation. Scope, request digest and completion are immutable.
+      tags: [Deployment admissions]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: admissionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [project_uuid, environment_uuid, request_digest, outcome]
+              properties:
+                project_uuid: {type: string, format: uuid}
+                environment_uuid: {type: string, format: uuid}
+                request_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+                outcome:
+                  type: string
+                  enum: [succeeded, failed, cancelled, terminated, absent]
+                  x-enum-varnames: [AdmissionOutcomeSucceeded, AdmissionOutcomeFailed, AdmissionOutcomeCancelled, AdmissionOutcomeTerminated, AdmissionOutcomeAbsent]
+      responses:
+        '200':
+          description: Exact immutable completion receipt.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentAdmissionReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/plugins/{pluginId}/projects/{projectUuid}/envs/{environmentUuid}/deployments/{deploymentId}/{materialKind}:
+    get:
+      operationId: getPluginDeploymentMaterial
+      summary: Retrieve plugin-owned Deployment material using the caller's independent Orchestrator permission.
+      description: Requires current ordinary deployment_read authorization. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: projectUuid, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environmentUuid, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: deploymentId, in: path, required: true, schema: {type: string, format: uuid}}
+        - name: materialKind
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [logs, outputs]
+            x-enum-varnames: [PluginDeploymentMaterialLogs, PluginDeploymentMaterialOutputs]
+      responses:
+        '200':
+          description: Original decrypted bytes, bounded to 16 MiB and returned as an attachment. Outputs retain the original JSON bytes without reserialization.
+          headers:
+            Content-Disposition: {schema: {type: string}}
+            Cache-Control: {schema: {type: string}}
+            X-Content-Type-Options: {schema: {type: string}}
+          content:
+            text/plain:
+              schema: {type: string}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '413':
+          description: Material exceeds the bounded download size.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/deployments:
+    post:
+      operationId: submitPluginDeployment
+      summary: Admit one exact planned Deployment through the normal Data Plane path.
+      description: Requires the configured plugin service, a current active operation fence and current scoped actor authorization. Core records the exact dispatch before contacting the Data Plane. Only a DP-owned immutable plan snapshot or the same operation's forward Deployment may be referenced. An uncertain response must be reconciled, never replaced with a new dispatch identity.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginDeploymentSubmitRequest'}
+      responses:
+        '200':
+          description: Exact upstream status and JSON response. A non-success upstream status is not successful admission.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInvocationResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/deployments/{dispatchId}/reconcile:
+    post:
+      operationId: reconcilePluginDeployment
+      summary: Recover an exact dispatch and settle its protection only from authoritative Data Plane evidence.
+      description: Does not submit Data Plane work. An original_request can recover an intent missing from Core, preserving its original fence and exact request identity separately from the current grant_fence. Active recovery revalidates normal admission authority before recording the intent. With withdraw=true, Core records or withdraws the exact non-admitting intent before waiting on the Data Plane receipt lock. Only then can authoritative absence settle an unstarted dispatch. Terminal outcomes can be recovered after suspension or entitlement expiry with current scoped authorization.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: dispatchId, in: path, required: true, schema: {type: string, minLength: 1, maxLength: 128}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [grant_fence, withdraw]
+              properties:
+                grant_fence: {type: integer, format: int64, minimum: 1}
+                withdraw: {type: boolean}
+                original_request:
+                  description: The retained original submit request, unchanged. Required only when Core has not recorded the dispatch; if supplied for a recorded dispatch it must match its immutable intent.
+                  $ref: '#/components/schemas/PluginDeploymentSubmitRequest'
+      responses:
+        '200':
+          description: Exact upstream receipt or absence, with its status. Protection remains until terminal or withdrawn-and-absent evidence is proven.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInvocationResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/pins:
+    post:
+      operationId: applyPluginPinOperation
+      summary: Apply an atomic, operation-bound Pin override or reconciliation.
+      description: Begin requires a fresh explicit user command and a dedicated override capability. Reconciliation and restoration use authoritative DP receipts, not plugin assertions. This service port cannot Unpin or permanently discard protection.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginPinOperationRequest'}
+      responses:
+        '200':
+          description: Atomic Pin result, retained for exact actor-bound retries.
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/pins/receipts/{requestId}:
+    get:
+      operationId: getPluginPinOperationReceipt
+      summary: Recover a committed Pin command result without replaying a user proof.
+      description: Requires the configured plugin service, the current operation fence and the current controller's scoped permission for the recorded action. Returns the exact historical result, not live Pin state. Works after suspension or entitlement expiry; never renews authority or performs a transition. A missing receipt does not prove that a request cannot still arrive, and does not authorize a new begin command.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: requestId, in: path, required: true, schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9._-]+$'}}
+        - {name: grant_fence, in: query, required: true, schema: {type: integer, format: int64, minimum: 1}}
+      responses:
+        '200':
+          description: Exact committed command identity, action and Pin result.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginPinOperationReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/deployment-reads:
+    post:
+      operationId: readPluginDeploymentData
+      summary: Authorize and forward a closed Deployment inspection or planning request.
+      description: Core resolves immutable ownership, checks the delegated actor and declared service port, and signs an exact request to its fixed Data Plane. Only metadata and safe plan projections are returned. This endpoint cannot admit or execute a Deployment, or retrieve logs, outputs or secret values.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginDeploymentReadRequest'}
+      responses:
+        '200':
+          description: Exact Data Plane response and status for external-deployment.readiness, external-deployment.plan or external-deployment.read. The Data Plane OpenAPI schemas define each body; non-success upstream status remains a failure, not a successful empty result.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInvocationResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/module-versions/proposed:
+    get:
+      operationId: listProposedModuleVersions
+      summary: List Proposed versions of active Modules.
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      responses:
+        '200':
+          description: Proposed Module Version metadata, independent of add-on availability.
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/ModuleVersionLifecycle'}}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/plugins/{pluginId}/inventory:
+    post:
+      operationId: readPluginInventory
+      summary: Read an authorized, bounded and consistent snapshot of Core metadata.
+      description: Requires the configured plugin service identity and a request-bound user delegation for the declared inventory.read port. Contains no Module source, provider configuration or Deployment material.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginInventoryRequest'}
+      responses:
+        '200':
+          description: Repeatable-read metadata snapshot. Deployment readiness and effective-base data remain owned by the Data Plane.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInventory'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/authorization-checks:
+    post:
+      operationId: checkPluginAuthorization
+      summary: Evaluate one configured plugin-local capability using current IAM state.
+      description: The configured plugin service may evaluate only operator-declared capabilities in its own namespace. A request is authorized by either an exact fresh gateway proof or a current persisted operation fence. Core derives the actor from that authority, resolves all resource membership in the path organization, and returns no identity metadata.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginAuthorizationCheckRequest'}
+      responses:
+        '200':
+          description: Current IAM decision. A denial discloses no subject metadata.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginAuthorizationCheckResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}:
+    get:
+      operationId: getPluginOperationGrant
+      summary: Recover persisted operation bounds using the configured plugin service identity.
+      description: Read-only recovery does not renew or activate the grant and grants no authority to execute it.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Current immutable operation bounds and fencing generation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginOperationGrant'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/resource-events:
+    get:
+      operationId: readPluginResourceEvents
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      description: Read durable Core resource metadata within a frozen operation. Only the configured plugin service may call; current controller authorization is required, including during safety recovery. Cursors are opaque and scoped to this operation.
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+        - name: after
+          in: query
+          schema: {type: string, maxLength: 2048}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 200, default: 100}
+      responses:
+        '200':
+          description: Commit-ordered metadata and the next durable cursor. No definitions, notes, logs or outputs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events, next_cursor, organization_timezone]
+                properties:
+                  events:
+                    type: array
+                    items: {$ref: '#/components/schemas/PluginResourceEvent'}
+                  next_cursor: {type: string}
+                  organization_timezone: {type: string}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/events:
+    post:
+      operationId: publishPluginEvent
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      description: Idempotently publish an event through the Core transactional outbox. The event type is plugin.<immutable-plugin-id>.<local-name>, with one non-dotted local name such as rollout-completed, preventing impersonation of Core or nested plugin namespaces. Broker delivery uses io.platform-orchestrator.<event-type> in the existing platform stream without changing the CloudEvent type or payload. Delivery is at least once; consumers deduplicate by event_id. Never include secret values or deployment material.
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [event_id, grant_fence, type, occurred_at, data]
+              properties:
+                event_id: {type: string, format: uuid}
+                grant_fence: {type: integer, format: int64, minimum: 1}
+                type: {type: string, minLength: 1, maxLength: 200}
+                occurred_at: {type: string, format: date-time}
+                data: {type: object, additionalProperties: true}
+      responses:
+        '204': {description: "Publication durably accepted, or the exact receipt replayed."}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/control:
+    post:
+      operationId: controlPluginOperationGrant
+      summary: Suspend or release existing delegated operation authority without replaying a human request.
+      description: Configured plugin service only. The existing frozen intent and operator policy must both delegate the requested action. Core derives the current controller from its grant and rechecks scoped IAM. Only suspend and release are allowed; this route never prepares, expands or reactivates authority. Exact request ID, fence, action and reason are idempotent. Safety control remains available after disablement or entitlement expiry; incompatible and unavailable installations fail closed. Releasing a grant does not remove Deployment barriers or pending Pin protection.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [grant_fence, request_id, action, reason]
+              properties:
+                grant_fence: {type: integer, format: int64, minimum: 1}
+                request_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9._-]+$'}
+                reason: {type: string, minLength: 1, maxLength: 1000}
+                action:
+                  type: string
+                  enum: [suspend, release]
+                  x-enum-varnames: [PluginGrantControlSuspend, PluginGrantControlRelease]
+      responses:
+        '200':
+          description: Exact resulting operation grant, with a rotated fencing generation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginOperationGrant'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/modules:
+    post:
+      operationId: applyPluginModuleOperation
+      summary: Atomically reserve, release, promote or restore the exact frozen Module set.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginModuleOperationRequest'}
+      responses:
+        '200':
+          description: Durable atomic operation receipt. Replay still requires current authorization.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginModuleOperationReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/authorize:
+    post:
+      operationId: authorizePluginOperation
+      summary: Persist or control a bounded operation using the configured service identity and original delegated command.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginOperationAuthorizationRequest'}
+      responses:
+        '200':
+          description: Persisted immutable operation bounds and current fencing generation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginOperationGrant'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/check:
+    post:
+      operationId: checkPluginOperationDispatch
+      summary: Reauthorize an exact persisted plugin dispatch for the configured deployment service.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginDispatchCheck'}
+      responses:
+        '200':
+          description: Exact authorized dispatch, never an unbounded bearer credential.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginDispatchAuthorization'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
+  /orgs/{orgId}/plugins:
+    get:
+      operationId: listPluginContributions
+      summary: Discover registered plugin UI contributions for this organization.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      responses:
+        '200':
+          description: Contributions permitted for this organization. An empty list is normal.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginContributionPage'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+  /orgs/{orgId}/plugins/{pluginId}/invoke:
+    post:
+      operationId: invokePluginOperation
+      summary: Invoke an explicitly registered add-on operation with delegated actor identity.
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - name: pluginId
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginInvocation'}
+      responses:
+        '200':
+          description: The plugin's JSON response and original status. Authorization is checked by the gateway and plugin.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInvocationResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '503': {$ref: '#/components/responses/503ServiceUnavailable'}
   /orgs/{orgId}/plugins/{pluginId}:
     get:
       operationId: getPluginCapability
@@ -548,7 +1143,7 @@ paths:
             type: array
             items:
               type: string
-          example: development
+          example: [development]
           required: false
       responses:
         '200':
@@ -707,7 +1302,7 @@ paths:
             type: array
             items:
               type: string
-          example: development
+          example: [development]
           required: false
       responses:
         '200':
@@ -1721,7 +2316,14 @@ paths:
         - name: lifecycleAction
           in: path
           required: true
-          schema: {type: string, enum: [promote, deprecate, mark-defective, restore]}
+          schema:
+            type: string
+            enum: [promote, deprecate, mark-defective, restore]
+            x-enum-varnames:
+              - TransitionModuleVersionParamsLifecycleActionPromote
+              - TransitionModuleVersionParamsLifecycleActionDeprecate
+              - TransitionModuleVersionParamsLifecycleActionMarkDefective
+              - TransitionModuleVersionParamsLifecycleActionRestore
         - $ref: '#/components/parameters/idempotencyKeyHeader'
       requestBody:
         required: true
@@ -2486,6 +3088,11 @@ components:
         type: boolean
         default: false
   responses:
+    503ServiceUnavailable:
+      description: The installed plugin cannot currently serve this request.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
     400BadRequest:
       description: The request was invalid. More detail can be found in the error body.
       content:
@@ -2521,10 +3128,529 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    PluginDeploymentSubmitRequest:
+      type: object
+      additionalProperties: false
+      required: [grant_fence, request_id, environment_uuid, mode]
+      properties:
+        grant_fence: {type: integer, format: int64, minimum: 1}
+        request_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[a-zA-Z0-9_-]+$'}
+        environment_uuid: {type: string, format: uuid}
+        first_forward_deployment_id:
+          description: Optional assertion of the immutable first forward Deployment in this operation and Environment. Data Plane owns the lineage; omission cannot reset an existing rollback base.
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [deploy, rollback]
+          x-enum-varnames: [PluginDeploymentSubmitModeDeploy, PluginDeploymentSubmitModeRollback]
+        plan:
+          type: object
+          additionalProperties: false
+          required: [snapshot_id, fingerprint, module_versions]
+          properties:
+            snapshot_id: {type: string, format: uuid}
+            fingerprint: {type: string, pattern: '^sha256:[a-f0-9]{64}$'}
+            module_versions:
+              type: object
+              minProperties: 1
+              maxProperties: 1000
+              additionalProperties: {type: string, format: uuid}
+        rollback:
+          type: object
+          additionalProperties: false
+          required: [forward_deployment_id]
+          properties:
+            forward_deployment_id: {type: string, format: uuid}
+            retry_of_rollback_deployment_id:
+              description: Explicit retry of this operation's own authoritatively failed rollback Deployment. It must remain the current Environment head and target the same immutable rollback base. Does not permit automatic infrastructure retries.
+              type: string
+              format: uuid
+        approval:
+          type: object
+          additionalProperties: false
+          required: [actor_id, scope]
+          properties:
+            actor_id: {type: string, format: uuid}
+            scope:
+              type: string
+              enum: [environment, project]
+              x-enum-varnames: [PluginDeploymentApprovalScopeEnvironment, PluginDeploymentApprovalScopeProject]
+        approved_pin_boundaries:
+          description: Omit only for an approval-free operation. Otherwise include every target Module UUID and the approval's latest Pin activation UUID, or the nil UUID if no Pin activation ever existed. Requires approval actor and scope.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+    DeploymentAdmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [actor_id, project_uuid, environment_uuid, request_digest, mode, module_versions]
+      properties:
+        actor_id: {type: string, format: uuid}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        request_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+        mode:
+          type: string
+          enum: [deploy, rollback, destroy]
+          x-enum-varnames: [AdmissionModeDeploy, AdmissionModeRollback, AdmissionModeDestroy]
+        module_versions:
+          description: Exact resolved Module UUID to Version UUID graph admitted for execution.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        carry_forward_module_versions:
+          description: Exact subset of module_versions retained from the Environment's effective base. This evidence permits an archived Module to carry forward only its already-active Version.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        confirmed_restricted_version_uuids:
+          description: Exact Defective target Version UUIDs used by this compiled Deployment and explicitly confirmed by the authorised caller.
+          type: array
+          maxItems: 1000
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    DeploymentAdmissionReceipt:
+      type: object
+      additionalProperties: false
+      required: [admission_id, project_uuid, environment_uuid, request_digest, epoch, state, mode]
+      properties:
+        admission_id: {type: string, format: uuid}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        request_digest: {type: string}
+        epoch: {type: integer, format: int64, minimum: 1}
+        mode: {type: string}
+        state:
+          type: string
+          enum: [active, settled]
+          x-enum-varnames: [AdmissionStateActive, AdmissionStateSettled]
+        outcome: {type: string}
+    PluginPinOperationRequest:
+      type: object
+      additionalProperties: false
+      required: [action, grant_fence, request_id, reason, targets]
+      properties:
+        action:
+          type: string
+          enum: [begin, reconcile, restore, cancel]
+          x-enum-varnames: [PluginPinBegin, PluginPinReconcile, PluginPinRestore, PluginPinCancel]
+        grant_fence: {type: integer, format: int64, minimum: 1}
+        request_id: {type: string, minLength: 1, maxLength: 128}
+        reason: {type: string, minLength: 1, maxLength: 4096}
+        proof: {$ref: '#/components/schemas/PluginDelegationProof'}
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required: [pin_id, expected_resource_version]
+            properties:
+              pin_id: {type: string, format: uuid}
+              expected_resource_version: {type: integer, format: int64, minimum: 1}
+              target_version_uuid: {type: string, format: uuid, description: Required only for begin.}
+              deployment_id: {type: string, format: uuid, description: Required only for reconcile or restore.}
+    PluginPinOperationReceipt:
+      type: object
+      additionalProperties: false
+      required: [operation_id, request_id, action, pins]
+      properties:
+        operation_id: {type: string, format: uuid}
+        request_id: {type: string}
+        action: {type: string, enum: [begin, reconcile, restore, cancel]}
+        pins:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}
+    PluginDeploymentReadRequest:
+      type: object
+      additionalProperties: false
+      required: [kind, environments]
+      properties:
+        proof: {$ref: '#/components/schemas/PluginDelegationProof'}
+        operation_id: {type: string, format: uuid, description: Background inspection uses this immutable grant and grant_fence instead of a user proof. Current actor authorization is always rechecked.}
+        grant_fence: {type: integer, format: int64, minimum: 1}
+        request_id: {type: string, minLength: 1, maxLength: 128, description: Required for background inspection. Preserve across retries of the same logical inspection.}
+        kind:
+          type: string
+          enum: [readiness, plan, deployment, dispatch]
+          x-enum-varnames: [PluginDeploymentReadRequestKindReadiness, PluginDeploymentReadRequestKindPlan, PluginDeploymentReadRequestKindDeployment, PluginDeploymentReadRequestKindDispatch]
+        environments:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required: [project_id, env_id]
+            properties:
+              project_id: {type: string, minLength: 1, maxLength: 200}
+              env_id: {type: string, minLength: 1, maxLength: 200}
+        module_versions:
+          description: For plan only. Module slug or UUID to exact immutable Version UUID. Core supplies the corresponding version coordinate and artifact digest.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        deployment_id: {type: string, format: uuid, description: Required for deployment inspection of exactly one Environment.}
+        dispatch_id: {type: string, minLength: 1, maxLength: 128, description: "Required for receipt inspection after a lost dispatch response. This is a read, never a retry of execution."}
+    ModuleVersionLifecycle:
+      type: object
+      required: [module_id, module_uuid, version, version_uuid, artifact_digest, status, created_at]
+      properties:
+        module_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        version: {type: string}
+        version_uuid: {type: string, format: uuid}
+        artifact_digest: {type: string, description: Optional external artifact claim. Empty for inline source or when omitted at publication.}
+        status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+        created_at: {type: string, format: date-time}
+    PluginResourceEvent:
+      type: object
+      required: [event_id, type, occurred_at]
+      properties:
+        event_id: {type: string, format: uuid}
+        type: {type: string}
+        occurred_at: {type: string, format: date-time}
+        environment_uuid: {type: string, format: uuid}
+        project_uuid: {type: string, format: uuid}
+        module_uuid: {type: string, format: uuid}
+        version_uuid: {type: string, format: uuid}
+        pin_id: {type: string, format: uuid}
+        activation_event_id: {type: string, format: uuid}
+        operation_id: {type: string, format: uuid}
+        actor_id: {type: string, format: uuid}
+        from_status: {type: string}
+        to_status: {type: string}
+        transition: {type: string}
+        reason: {type: string}
+    PluginInventorySelector:
+      type: object
+      additionalProperties: false
+      properties:
+        environment_ids: {type: array, maxItems: 10000, uniqueItems: true, items: {type: string, format: uuid}}
+        project_ids: {type: array, maxItems: 1000, uniqueItems: true, items: {type: string, minLength: 1}}
+        environment_types: {type: array, maxItems: 1000, uniqueItems: true, items: {type: string, minLength: 1}}
+        labels: {type: object, maxProperties: 50, additionalProperties: {type: string}}
+    PluginInventoryRequest:
+      type: object
+      additionalProperties: false
+      required: [proof, selector, module_ids]
+      properties:
+        proof: {$ref: '#/components/schemas/PluginDelegationProof'}
+        selector: {$ref: '#/components/schemas/PluginInventorySelector'}
+        module_ids: {type: array, maxItems: 1000, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 200}}
+    PluginInventory:
+      type: object
+      required: [environments, environment_types, modules, versions, pins, pin_events]
+      properties:
+        environments: {type: array, items: {$ref: '#/components/schemas/Environment'}}
+        environment_types: {type: array, items: {$ref: '#/components/schemas/EnvironmentType'}}
+        modules: {type: array, items: {$ref: '#/components/schemas/ModuleCatalogueEntry'}}
+        versions: {type: array, items: {$ref: '#/components/schemas/CoreModuleVersion'}}
+        pins: {type: array, items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}}
+        pin_events: {type: array, items: {$ref: '#/components/schemas/ModuleVersionPinEvent'}}
+    PluginContributionPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PluginContribution'}
+    PluginContribution:
+      type: object
+      required: [id, display_name, state, mode, operations]
+      properties:
+        id: {type: string}
+        display_name: {type: string}
+        version: {type: string}
+        state: {$ref: '#/components/schemas/PluginAvailabilityState'}
+        mode: {type: string, enum: [full, read_only, safety_only, hidden]}
+        entitlement: {$ref: '#/components/schemas/PluginEntitlementStatus'}
+        ui:
+          type: object
+          required: [sdk_version, origin, entrypoint, route_prefix, navigation_label]
+          properties:
+            sdk_version: {type: string, enum: ['1']}
+            origin: {type: string, format: uri}
+            entrypoint: {type: string}
+            route_prefix: {type: string}
+            navigation_label: {type: string}
+            contextual_actions:
+              type: array
+              maxItems: 100
+              description: Declarative navigation into the plugin, not Core authorization or executable UI code. Present only in full mode with the required operation advertised.
+              items:
+                type: object
+                additionalProperties: false
+                required: [id, resource_type, label, required_operation_id, route, when]
+                properties:
+                  id: {type: string}
+                  resource_type: {type: string, enum: [module_version]}
+                  label: {type: string, minLength: 1, maxLength: 100}
+                  required_operation_id: {type: string}
+                  primary: {type: boolean}
+                  route:
+                    type: object
+                    additionalProperties: false
+                    required: [path]
+                    properties:
+                      path: {type: string, pattern: '^[a-z0-9](?:[a-z0-9/-]*[a-z0-9])?$'}
+                      query:
+                        type: object
+                        additionalProperties: {type: string, enum: ['$module_id', '$semantic_version', '$version_uuid']}
+                  when:
+                    type: object
+                    additionalProperties: false
+                    required: [lifecycle_status, semantic_version_required]
+                    properties:
+                      lifecycle_status:
+                        type: array
+                        minItems: 1
+                        uniqueItems: true
+                        items: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+                      semantic_version_required: {type: boolean}
+            core_operations:
+              description: Named Console SDK operations executed with the user's independent Core permissions, never forwarded to the plugin.
+              type: array
+              items:
+                type: object
+                required: [id, method, mutating]
+                properties:
+                  id: {type: string, pattern: '^(core|iam)\.'}
+                  method: {type: string, enum: [GET, POST]}
+                  mutating: {type: boolean}
+        operations:
+          type: array
+          items:
+            type: object
+            required: [id, method, mutating]
+            properties:
+              id: {type: string}
+              method: {type: string}
+              mutating: {type: boolean}
+              required_feature: {type: string, description: "Declared licence feature required by this operation, if any."}
+    PluginModuleOperationRequest:
+      type: object
+      additionalProperties: false
+      required: [action, grant_fence, expected_fence, request_id, reason, targets]
+      properties:
+        action: {type: string, enum: [reserve, release, promote, restore]}
+        grant_fence: {type: integer, format: int64, minimum: 1}
+        expected_fence: {type: integer, format: int64, minimum: 0}
+        request_id: {type: string, minLength: 1, maxLength: 128}
+        reason: {type: string, minLength: 1, maxLength: 4096}
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required: [module_uuid, version_uuid, expected_resource_version]
+            properties:
+              module_uuid: {type: string, format: uuid}
+              version_uuid: {type: string, format: uuid}
+              expected_default_uuid: {type: string, format: uuid, nullable: true}
+              expected_resource_version:
+                type: integer
+                format: int64
+                description: Required CAS revision for promotion. For a grant-bound restore, Core derives the locked captured-baseline revision and the client may send zero; exact Default lineage and grant fences still apply.
+    PluginModuleOperationReceipt:
+      type: object
+      required: [org_id, plugin_id, operation_id, request_id, action, fence, state, module_uuids]
+      properties:
+        org_id: {type: string}
+        plugin_id: {type: string}
+        operation_id: {type: string, format: uuid}
+        request_id: {type: string}
+        action: {type: string}
+        fence: {type: integer, format: int64}
+        state: {type: string, enum: [active, released]}
+        module_uuids: {type: array, items: {type: string, format: uuid}}
+    PluginOperationIntent:
+      type: object
+      additionalProperties: false
+      required: [fingerprint, modules, target_versions, environments, actions]
+      properties:
+        fingerprint: {type: string, pattern: '^[a-f0-9]{64}$'}
+        modules:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        target_versions:
+          description: Exact Module UUID to immutable target Version UUID binding, with exactly one entry for every frozen Module.
+          type: object
+          additionalProperties: {type: string, format: uuid}
+        environments:
+          type: array
+          maxItems: 10000
+          items:
+            type: object
+            additionalProperties: false
+            required: [project_id, environment_id]
+            properties:
+              project_id: {type: string, format: uuid}
+              environment_id: {type: string, format: uuid}
+        actions:
+          type: array
+          minItems: 1
+          maxItems: 64
+          uniqueItems: true
+          items: {type: string, minLength: 1, maxLength: 128}
+    PluginDelegationProof:
+      type: object
+      additionalProperties: false
+      required: [operation_id, idempotency_key, assertion]
+      properties:
+        operation_id: {type: string}
+        idempotency_key: {type: string, minLength: 1, maxLength: 128}
+        assertion: {type: string, maxLength: 16384}
+        body:
+          description: Base64-encoded exact original request bytes. Decoding and re-encoding JSON would invalidate the signature.
+          type: string
+          format: byte
+        path_parameters: {type: object, additionalProperties: {type: string}}
+        query:
+          type: object
+          additionalProperties: {type: array, items: {type: string}}
+    PluginAuthorizationCheckRequest:
+      type: object
+      additionalProperties: false
+      required: [permission, resources]
+      properties:
+        permission: {type: string, minLength: 1, maxLength: 255}
+        resources:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required: [type, id]
+            properties:
+              type: {type: string, enum: [organization, project, environment]}
+              id: {type: string, minLength: 1, maxLength: 255}
+        proof: {$ref: '#/components/schemas/PluginDelegationProof'}
+        operation_id: {type: string, format: uuid}
+        grant_fence: {type: integer, format: int64, minimum: 1}
+        subject_id:
+          description: Optional subject to revalidate inside a persisted grant. Forbidden with fresh proof authority.
+          type: string
+          format: uuid
+    PluginAuthorizationCheckResult:
+      type: object
+      additionalProperties: false
+      required: [allowed]
+      properties:
+        allowed: {type: boolean}
+    PluginOperationAuthorizationRequest:
+      type: object
+      additionalProperties: false
+      required: [action, expected_revision, reason, proof]
+      properties:
+        action: {type: string, enum: [prepare, activate, suspend, release]}
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 4096}
+        proof: {$ref: '#/components/schemas/PluginDelegationProof'}
+        intent: {$ref: '#/components/schemas/PluginOperationIntent'}
+    PluginOperationGrant:
+      type: object
+      additionalProperties: false
+      required: [org_id, plugin_id, operation_id, actor_id, source_operation, intent, baseline_defaults, revision, state]
+      properties:
+        org_id: {type: string}
+        plugin_id: {type: string}
+        operation_id: {type: string, format: uuid}
+        actor_id: {type: string, format: uuid}
+        source_operation: {type: string}
+        availability:
+          description: Current plugin availability, returned by the service-only grant read. Not part of the frozen grant and never an execution credential.
+          allOf:
+            - {$ref: '#/components/schemas/PluginAvailabilityState'}
+        entitlement:
+          description: Current non-secret licence preflight for scheduler safety. Every Core effect independently reauthorizes in its own transaction.
+          allOf:
+            - {$ref: '#/components/schemas/PluginEntitlementStatus'}
+        intent: {$ref: '#/components/schemas/PluginOperationIntent'}
+        baseline_defaults:
+          description: Core-captured Default Version UUIDs at preparation, null when a Module had no Default. Restoration cannot select arbitrary historical versions.
+          type: object
+          additionalProperties: {type: string, format: uuid, nullable: true}
+        revision: {type: integer, format: int64, minimum: 1}
+        state: {type: string, enum: [prepared, active, suspended, released]}
+    PluginDispatchCheck:
+      type: object
+      additionalProperties: false
+      required: [fence, action, dispatch_id, project_uuid, environment_uuid, request_digest]
+      properties:
+        fence: {type: integer, format: int64, minimum: 1}
+        action: {type: string, enum: [external-deployment.admit, external-deployment.rollback]}
+        dispatch_id: {type: string, minLength: 1, maxLength: 128}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        request_digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+    PluginDispatchAuthorization:
+      type: object
+      additionalProperties: false
+      required: [org_id, plugin_id, operation_id, fence, action, dispatch_id, project_uuid, environment_uuid, request_digest, actor_id]
+      properties:
+        org_id: {type: string}
+        plugin_id: {type: string}
+        operation_id: {type: string, format: uuid}
+        fence: {type: integer, format: int64}
+        action: {type: string}
+        dispatch_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        request_digest: {type: string}
+        actor_id: {type: string, format: uuid}
+    PluginInvocation:
+      type: object
+      additionalProperties: false
+      required: [operation_id]
+      properties:
+        operation_id: {type: string}
+        path_parameters: {type: object, additionalProperties: {type: string}}
+        query: {type: object, additionalProperties: {type: array, items: {type: string}}}
+        body:
+          x-go-type: json.RawMessage
+        idempotency_key: {type: string, maxLength: 128}
+    PluginInvocationResult:
+      type: object
+      required: [status, body]
+      properties:
+        status: {type: integer}
+        body:
+          x-go-type: json.RawMessage
     PluginAvailabilityState:
       type: string
       enum: [available, not_installed, not_enabled, not_entitled, incompatible, unavailable]
       x-enum-varnames: [PluginAvailabilityStateAvailable, PluginAvailabilityStateNotInstalled, PluginAvailabilityStateNotEnabled, PluginAvailabilityStateNotEntitled, PluginAvailabilityStateIncompatible, PluginAvailabilityStateUnavailable]
+    PluginEntitlementStatus:
+      type: object
+      description: Non-secret server-derived licence projection. Neither this projection nor a capability grants IAM permissions or authorizes execution.
+      required: [features]
+      properties:
+        features:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PluginFeatureAccess'
+    PluginFeatureAccess:
+      type: object
+      required: [state, trust_class, forward, read, safety]
+      properties:
+        state: {type: string, description: Effective persisted licence state for this declared feature.}
+        trust_class: {type: string, description: Development or production issuer trust. Empty when there is no verified grant.}
+        forward: {type: boolean}
+        read: {type: boolean}
+        safety: {type: boolean}
+        expires_at: {type: string, format: date-time}
+        grace_until: {type: string, format: date-time}
     PluginCapability:
       type: object
       required: [id, display_name, state, capabilities]
@@ -2537,6 +3663,7 @@ components:
           type: array
           items: {type: string}
         admin_action: {type: string, description: Scope-safe remediation guidance for an administrator.}
+        entitlement: {$ref: '#/components/schemas/PluginEntitlementStatus'}
     Error:
       description: A standard error response
       properties:
@@ -2649,7 +3776,7 @@ components:
         id_prefix:
           description: An id prefix for the org. If will be a prefix to the auto-generated id.
           type: string
-          example: workshop-
+          example: workshop
           minLength: 1
           maxLength: 15
           pattern: ^[a-z](?:-?[a-z0-9]+)+$

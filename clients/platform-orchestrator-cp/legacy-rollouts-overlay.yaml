@@ -1,0 +1,3056 @@
+{
+  "actions": [
+    {
+      "description": "Add only immutable legacy Rollouts paths and their missing components",
+      "target": "$",
+      "update": {
+        "components": {
+          "parameters": {
+            "deploymentIdPathParam": {
+              "description": "Deployment UUID belonging to the Rollout.",
+              "in": "path",
+              "name": "deploymentId",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "planRevisionPathParam": {
+              "description": "Immutable numbered plan revision.",
+              "in": "path",
+              "name": "planRevision",
+              "required": true,
+              "schema": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "rolloutIdPathParam": {
+              "description": "Progressive Rollout UUID.",
+              "in": "path",
+              "name": "rolloutId",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "type": "string"
+              }
+            }
+          },
+          "schemas": {
+            "ProgressiveRollout": {
+              "properties": {
+                "archived_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "created_by": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "current_plan_revision": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "execution_started": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "org_id": {
+                  "type": "string"
+                },
+                "resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "spec": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutSpec"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutState"
+                },
+                "status": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutStatus"
+                },
+                "updated_at": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "org_id",
+                "spec",
+                "state",
+                "status",
+                "resource_version",
+                "execution_started",
+                "created_by",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutApproval": {
+              "properties": {
+                "actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "coverages": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutApprovalCoverage"
+                  },
+                  "type": "array"
+                },
+                "granted_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "intent_fingerprint": {
+                  "type": "string"
+                },
+                "plan_revision": {
+                  "type": "integer"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "revoked_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "rollout_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "scope_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "scope_type": {
+                  "enum": [
+                    "environment",
+                    "project"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "rollout_id",
+                "plan_revision",
+                "scope_type",
+                "scope_id",
+                "reason",
+                "intent_fingerprint",
+                "coverages",
+                "actor",
+                "granted_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutApprovalBody": {
+              "properties": {
+                "plan_revision": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "reason": {
+                  "description": "Mandatory human-readable reason retained with the immutable approval grant.",
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "scope_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "scope_type": {
+                  "enum": [
+                    "environment",
+                    "project"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan_revision",
+                "scope_type",
+                "scope_id",
+                "reason"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutApprovalCoverage": {
+              "properties": {
+                "consumed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "environment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "invalidated_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "invalidation_reason": {
+                  "type": "string"
+                },
+                "pin_activation_boundaries": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Target Module ID to exact latest Pin activation event UUID, or an empty value when none existed.",
+                  "type": "object"
+                },
+                "revoked_at": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "environment_id",
+                "pin_activation_boundaries"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutClassification": {
+              "enum": [
+                "Pending",
+                "Pinned",
+                "AlreadyCompliant",
+                "NotApplicable",
+                "Conflict"
+              ],
+              "type": "string"
+            },
+            "ProgressiveRolloutCommandBody": {
+              "properties": {
+                "confirm_defective_versions": {
+                  "default": false,
+                  "description": "Explicit confirmation that an authorised Rollback may restore a Defective starting version.",
+                  "type": "boolean"
+                },
+                "environment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "environment_ids": {
+                  "description": "Optional explicit subset for deferred Pin actions; omission selects every eligible Environment.",
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "expected_resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "reason": {
+                  "description": "Mandatory human reason for audited commands such as bypass-bake.",
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "wave_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expected_resource_version"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutConcurrency": {
+              "properties": {
+                "absolute": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "percentage": {
+                  "exclusiveMinimum": true,
+                  "format": "double",
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "ProgressiveRolloutConflict": {
+              "properties": {
+                "actual": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "environment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "expected": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "module_id": {
+                  "type": "string"
+                },
+                "observed_fingerprint": {
+                  "type": "string"
+                },
+                "plan_revision": {
+                  "type": "integer"
+                },
+                "resolution": {
+                  "type": "string"
+                },
+                "resolved_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "resolved_by": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "rollout_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "open",
+                    "approved",
+                    "resolved",
+                    "aborted"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "rollout_id",
+                "plan_revision",
+                "environment_id",
+                "kind",
+                "expected",
+                "actual",
+                "observed_fingerprint",
+                "status",
+                "created_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutConflictResolutionBody": {
+              "additionalProperties": false,
+              "properties": {
+                "expected_resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "observed_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "plan_revision": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "plan_revision",
+                "observed_fingerprint",
+                "expected_resource_version"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutDetail": {
+              "properties": {
+                "approvals": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutApproval"
+                  },
+                  "type": "array"
+                },
+                "conflicts": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutConflict"
+                  },
+                  "type": "array"
+                },
+                "events": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutEvent"
+                  },
+                  "type": "array"
+                },
+                "executions": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentExecution"
+                  },
+                  "type": "array"
+                },
+                "metrics": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutMetrics"
+                },
+                "plan": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutPlan"
+                },
+                "rollout": {
+                  "$ref": "#/components/schemas/ProgressiveRollout"
+                }
+              },
+              "required": [
+                "rollout",
+                "executions",
+                "approvals",
+                "conflicts",
+                "events",
+                "metrics"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutDraftUpdate": {
+              "properties": {
+                "expected_resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "spec": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutSpec"
+                }
+              },
+              "required": [
+                "spec",
+                "expected_resource_version"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutEnvironmentExecution": {
+              "properties": {
+                "actual_versions": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "admission_base_deployment_id": {
+                  "description": "Latest admitted attempt's actual predecessor. Forward retry planning may use a later base without changing the rollback base.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "attempts": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "changed": {
+                  "type": "boolean"
+                },
+                "completed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "effective_base_deployment_id": {
+                  "description": "Immutable first successful state-changing Deployment captured before this Rollout's first forward admission. This is the rollback base, not a later forward retry's admission base.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "environment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "execution_diff": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "execution_fingerprint": {
+                  "pattern": "^sha256:[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "execution_graph": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "execution_manifest": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "first_forward_deployment_id": {
+                  "description": "Data Plane-owned first forward Deployment identity for this operation and Environment.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "last_error": {
+                  "type": "string"
+                },
+                "pre_deployment_attempts": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "project_id": {
+                  "type": "string"
+                },
+                "removal": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentRemoval"
+                },
+                "resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "retry_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "retry_started_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "rollback_available": {
+                  "description": "Factual current-state eligibility to roll back this Environment to the Rollout's captured base. Authorization and authoritative Data Plane admission are still required.",
+                  "type": "boolean"
+                },
+                "rollback_deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "rollback_retry_available": {
+                  "description": "Factual current-state eligibility for an explicit retry of the latest failed rollback. Authorization and authoritative Data Plane admission are still required.",
+                  "type": "boolean"
+                },
+                "rollback_retry_pending": {
+                  "description": "An explicit rollback retry command is durably recorded but its new Deployment has not been admitted.",
+                  "type": "boolean"
+                },
+                "started_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentState"
+                },
+                "wave_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "environment_id",
+                "project_id",
+                "wave_id",
+                "state",
+                "attempts",
+                "pre_deployment_attempts",
+                "changed",
+                "actual_versions",
+                "resource_version"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutEnvironmentRemoval": {
+              "properties": {
+                "actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "operation_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "actor",
+                "reason",
+                "operation_id",
+                "deleted_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutEnvironmentState": {
+              "enum": [
+                "Pending",
+                "Pinned",
+                "UnpinnedPending",
+                "EnvironmentRemoved",
+                "AlreadyCompliant",
+                "NotApplicable",
+                "Busy",
+                "Unreconciled",
+                "AwaitingApproval",
+                "Blocked",
+                "Conflict",
+                "Running",
+                "Succeeded",
+                "Failed",
+                "RollingBack",
+                "RolledBack"
+              ],
+              "type": "string"
+            },
+            "ProgressiveRolloutEnvironmentTombstone": {
+              "properties": {
+                "deleted_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "deleted_by": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "deletion_operation_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "deletion_reason": {
+                  "type": "string"
+                },
+                "environment_display_name": {
+                  "type": "string"
+                },
+                "environment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "environment_slug": {
+                  "type": "string"
+                },
+                "project_id": {
+                  "type": "string"
+                },
+                "project_uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "wave_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "environment_id",
+                "environment_slug",
+                "project_id",
+                "project_uuid",
+                "wave_id"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutEvent": {
+              "properties": {
+                "actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "payload": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "plan_revision": {
+                  "type": "integer"
+                },
+                "rollout_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "sequence": {
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sequence",
+                "rollout_id",
+                "type",
+                "payload",
+                "created_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutMetrics": {
+              "properties": {
+                "approval_wait_seconds": {
+                  "format": "int64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "bake_bypass_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "bake_duration_seconds": {
+                  "format": "int64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "blocked_environments": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "continue_unpinned_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "duration_seconds": {
+                  "format": "int64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "environment_removed_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "failure_rate": {
+                  "format": "double",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "pin_override_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "pinned_environments": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "rollback_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "success_rate": {
+                  "format": "double",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "superseded_count": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "unpinned_pending_environments": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "waves": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutWaveMetrics"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "duration_seconds",
+                "success_rate",
+                "failure_rate",
+                "blocked_environments",
+                "pinned_environments",
+                "unpinned_pending_environments",
+                "environment_removed_count",
+                "approval_wait_seconds",
+                "bake_duration_seconds",
+                "bake_bypass_count",
+                "pin_override_count",
+                "continue_unpinned_count",
+                "superseded_count",
+                "rollback_count",
+                "waves"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutModuleChange": {
+              "properties": {
+                "from": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "module_id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "target_digest": {
+                  "description": "Exact immutable external artifact digest. Empty for inline source.",
+                  "type": "string"
+                },
+                "target_status": {
+                  "$ref": "#/components/schemas/ModuleVersionSemanticStatus"
+                },
+                "target_version": {
+                  "minLength": 5,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "module_id",
+                "from",
+                "target_version",
+                "target_digest",
+                "target_status"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutModuleSnapshot": {
+              "properties": {
+                "digest": {
+                  "type": "string"
+                },
+                "status": {
+                  "$ref": "#/components/schemas/ModuleVersionSemanticStatus"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "version",
+                "digest"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPage": {
+              "properties": {
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRollout"
+                  },
+                  "type": "array"
+                },
+                "next_page_token": {
+                  "type": "string"
+                },
+                "view_counts": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutViewCounts"
+                }
+              },
+              "required": [
+                "items"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPinNoteSnapshot": {
+              "properties": {
+                "actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "actor_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "actor",
+                "actor_type",
+                "note",
+                "created_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPinSnapshot": {
+              "properties": {
+                "activation_event_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "created_by": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "created_by_type": {
+                  "type": "string"
+                },
+                "creation_reason": {
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "module_id": {
+                  "type": "string"
+                },
+                "notes": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPinNoteSnapshot"
+                  },
+                  "type": "array"
+                },
+                "override_actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "override_deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "override_operation_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "override_reason": {
+                  "type": "string"
+                },
+                "scope_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "scope_type": {
+                  "enum": [
+                    "environment"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "$ref": "#/components/schemas/ModuleVersionPinStatus"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "module_id",
+                "version",
+                "activation_event_id",
+                "created_at"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPlan": {
+              "properties": {
+                "changes": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPlanModuleChange"
+                  },
+                  "type": "array"
+                },
+                "created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "default_promotion": {
+                  "enum": [
+                    "none",
+                    "atStart",
+                    "onSuccess"
+                  ],
+                  "type": "string"
+                },
+                "environments": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPlannedEnvironment"
+                  },
+                  "type": "array"
+                },
+                "fingerprint": {
+                  "type": "string"
+                },
+                "promotions": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPromotion"
+                  },
+                  "type": "array"
+                },
+                "revision": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "waves": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPlannedWave"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "revision",
+                "fingerprint",
+                "created_at",
+                "changes",
+                "waves",
+                "environments",
+                "default_promotion",
+                "promotions"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPlanModuleChange": {
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "module_id": {
+                  "type": "string"
+                },
+                "target_digest": {
+                  "type": "string"
+                },
+                "target_status": {
+                  "$ref": "#/components/schemas/ModuleVersionSemanticStatus"
+                },
+                "target_version": {
+                  "type": "string"
+                },
+                "target_version_uuid": {
+                  "description": "Exact immutable Core Module Version identity frozen by the Plan.",
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "module_id",
+                "from",
+                "target_version",
+                "target_digest",
+                "target_status"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPlannedChange": {
+              "properties": {
+                "classification": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutClassification"
+                },
+                "module_id": {
+                  "type": "string"
+                },
+                "observed_fingerprint": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "starting_digest": {
+                  "type": "string"
+                },
+                "starting_version": {
+                  "type": "string"
+                },
+                "target_digest": {
+                  "type": "string"
+                },
+                "target_version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "module_id",
+                "target_version",
+                "target_digest",
+                "classification"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPlannedEnvironment": {
+              "properties": {
+                "changes": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutPlannedChange"
+                  },
+                  "type": "array"
+                },
+                "desired_diff": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "desired_graph": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "desired_manifest": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "display_name": {
+                  "type": "string"
+                },
+                "effective_base_deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "environment_type": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "is_production": {
+                  "type": "boolean"
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "latest_deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "modules": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutModuleSnapshot"
+                  },
+                  "type": "object"
+                },
+                "pins": {
+                  "additionalProperties": {
+                    "items": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutPinSnapshot"
+                    },
+                    "type": "array"
+                  },
+                  "type": "object"
+                },
+                "planning_base_deployment_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "planning_fingerprint": {
+                  "pattern": "^sha256:[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "project_id": {
+                  "type": "string"
+                },
+                "project_uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "readiness": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentState"
+                },
+                "resolved_concurrency": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentState"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "wave_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "uuid",
+                "project_id",
+                "project_uuid",
+                "environment_type",
+                "is_production",
+                "labels",
+                "modules",
+                "wave_id",
+                "state",
+                "changes",
+                "resolved_concurrency"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPlannedWave": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ProgressiveRolloutWaveSpec"
+                },
+                {
+                  "properties": {
+                    "order": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "resolved_concurrency": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "order",
+                    "resolved_concurrency"
+                  ],
+                  "type": "object"
+                }
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPrepareBody": {
+              "properties": {
+                "accepted_conflict_fingerprints": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-go-type-skip-optional-pointer": true
+                },
+                "candidate_fingerprint": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "expected_resource_version": {
+                  "format": "int64",
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "expected_resource_version",
+                "candidate_fingerprint"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutPromotion": {
+              "properties": {
+                "module_id": {
+                  "type": "string"
+                },
+                "previous_default_digest": {
+                  "type": "string"
+                },
+                "previous_default_status": {
+                  "$ref": "#/components/schemas/ModuleVersionSemanticStatus"
+                },
+                "previous_default_version": {
+                  "type": "string"
+                },
+                "target_digest": {
+                  "type": "string"
+                },
+                "target_version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "module_id",
+                "target_version",
+                "target_digest"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutRetryPolicy": {
+              "properties": {
+                "initial_delay_seconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "max_attempts": {
+                  "maximum": 20,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "maximum_delay_seconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "maximum_duration_seconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "max_attempts",
+                "initial_delay_seconds",
+                "maximum_delay_seconds",
+                "maximum_duration_seconds"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutSelector": {
+              "properties": {
+                "environment_ids": {
+                  "items": {
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-go-type-skip-optional-pointer": true
+                },
+                "environment_types": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-go-type-skip-optional-pointer": true
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "x-go-type-skip-optional-pointer": true
+                },
+                "project_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-go-type-skip-optional-pointer": true
+                }
+              },
+              "type": "object"
+            },
+            "ProgressiveRolloutSpec": {
+              "properties": {
+                "changes": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutModuleChange"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "default_promotion": {
+                  "enum": [
+                    "none",
+                    "atStart",
+                    "onSuccess"
+                  ],
+                  "type": "string"
+                },
+                "name": {
+                  "maxLength": 120,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                "selector": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutSelector"
+                },
+                "waves": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutWaveSpec"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "changes",
+                "selector",
+                "waves",
+                "default_promotion"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutState": {
+              "enum": [
+                "Draft",
+                "Ready",
+                "Running",
+                "Paused",
+                "AwaitingPinnedEnvironments",
+                "Succeeded",
+                "Failed",
+                "Cancelling",
+                "Cancelled",
+                "RollingBack",
+                "RolledBack",
+                "Superseded"
+              ],
+              "type": "string"
+            },
+            "ProgressiveRolloutStatus": {
+              "properties": {
+                "already_compliant": {
+                  "type": "integer"
+                },
+                "authorized_wave_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "bake_bypass_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "bake_bypass_reason": {
+                  "type": "string"
+                },
+                "bake_bypassed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "bake_bypassed_by": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "bake_due_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "bake_started_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "baking_wave_id": {
+                  "type": "string"
+                },
+                "blocked": {
+                  "type": "integer"
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "completed_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "completed_wave_ids": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "confirmed_defective_rollback": {
+                  "type": "boolean"
+                },
+                "conflicts": {
+                  "type": "integer"
+                },
+                "current_wave_id": {
+                  "type": "string"
+                },
+                "defaults_promoted": {
+                  "type": "boolean"
+                },
+                "environment_removed": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "not_applicable": {
+                  "type": "integer"
+                },
+                "pinned": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "rollback_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "rollback_environment_ids": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "running": {
+                  "type": "integer"
+                },
+                "started_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "terminal_result": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutTerminalResult"
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "unpinned_pending": {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "total",
+                "completed",
+                "already_compliant",
+                "not_applicable",
+                "running",
+                "blocked",
+                "failed",
+                "conflicts"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutSupersessionCause": {
+              "properties": {
+                "module_id": {
+                  "type": "string"
+                },
+                "module_status": {
+                  "type": "string"
+                },
+                "source_actor": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "source_created_at": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "source_event": {
+                  "type": "string"
+                },
+                "source_event_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "source_reason": {
+                  "type": "string"
+                },
+                "target_version": {
+                  "type": "string"
+                },
+                "version_status": {
+                  "$ref": "#/components/schemas/ModuleVersionSemanticStatus"
+                }
+              },
+              "required": [
+                "module_id",
+                "target_version",
+                "source_event"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutTargetEnvironment": {
+              "properties": {
+                "display_name": {
+                  "type": "string"
+                },
+                "environment_type_id": {
+                  "type": "string"
+                },
+                "environment_type_uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "is_production": {
+                  "type": "boolean"
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "project_id": {
+                  "type": "string"
+                },
+                "project_uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "uuid",
+                "id",
+                "project_id",
+                "project_uuid",
+                "environment_type_id",
+                "environment_type_uuid",
+                "is_production",
+                "labels",
+                "status"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutTargetEnvironmentPage": {
+              "properties": {
+                "facets": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutTargetFacet"
+                  },
+                  "type": "array"
+                },
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutTargetEnvironment"
+                  },
+                  "type": "array"
+                },
+                "next_page_token": {
+                  "type": "string"
+                },
+                "total": {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "items",
+                "total",
+                "facets"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutTargetFacet": {
+              "properties": {
+                "count": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "project",
+                    "environment_type",
+                    "is_production",
+                    "label"
+                  ],
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "value",
+                "count"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutTerminalOutcomeCounts": {
+              "properties": {
+                "already_compliant": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "environment_removed": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "failed": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "not_applicable": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "pinned": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "unpinned_pending": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "unresolved": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "updated": {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "updated",
+                "already_compliant",
+                "not_applicable",
+                "pinned",
+                "unpinned_pending",
+                "environment_removed",
+                "failed",
+                "unresolved"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutTerminalResult": {
+              "properties": {
+                "environment_removed_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "environment_tombstones": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutEnvironmentTombstone"
+                  },
+                  "type": "array"
+                },
+                "frozen_outcome_counts": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutTerminalOutcomeCounts"
+                },
+                "outcome": {
+                  "enum": [
+                    "Succeeded",
+                    "Failed",
+                    "Cancelled",
+                    "RolledBack",
+                    "Superseded"
+                  ],
+                  "type": "string"
+                },
+                "superseded_causes": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProgressiveRolloutSupersessionCause"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "outcome",
+                "environment_removed_count",
+                "environment_tombstones"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutViewCounts": {
+              "properties": {
+                "history": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "plan": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "running": {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "running",
+                "plan",
+                "history"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutWaveMetrics": {
+              "properties": {
+                "blocked": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "completed": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "duration_seconds": {
+                  "format": "int64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "failed": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "failure_rate": {
+                  "format": "double",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "succeeded": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "success_rate": {
+                  "format": "double",
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "total": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "wave_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "wave_id",
+                "duration_seconds",
+                "total",
+                "completed",
+                "succeeded",
+                "failed",
+                "blocked",
+                "success_rate",
+                "failure_rate"
+              ],
+              "type": "object"
+            },
+            "ProgressiveRolloutWaveSpec": {
+              "properties": {
+                "approval": {
+                  "enum": [
+                    "none",
+                    "environment"
+                  ],
+                  "type": "string"
+                },
+                "bake_time_seconds": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "environment_ids": {
+                  "items": {
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "max_concurrency": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutConcurrency"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "progression": {
+                  "enum": [
+                    "manual",
+                    "automatic"
+                  ],
+                  "type": "string"
+                },
+                "retry": {
+                  "$ref": "#/components/schemas/ProgressiveRolloutRetryPolicy"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "environment_ids",
+                "approval",
+                "progression",
+                "bake_time_seconds",
+                "retry",
+                "max_concurrency"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "paths": {
+          "/orgs/{orgId}/rollouts": {
+            "get": {
+              "operationId": "listProgressiveRollouts",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/perPageQueryParam"
+                },
+                {
+                  "$ref": "#/components/parameters/pageTokenQueryParam"
+                },
+                {
+                  "in": "query",
+                  "name": "state",
+                  "schema": {
+                    "items": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutState"
+                    },
+                    "type": "array"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "project",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "module",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "conflicts",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "description": "Server-owned lifecycle view. State filters must belong to the selected view.",
+                  "in": "query",
+                  "name": "view",
+                  "schema": {
+                    "enum": [
+                      "running",
+                      "plan",
+                      "history"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "description": "Retention subset for the History view. Omitted means recent.",
+                  "in": "query",
+                  "name": "history_visibility",
+                  "schema": {
+                    "enum": [
+                      "recent",
+                      "archived",
+                      "all"
+                    ],
+                    "type": "string",
+                    "x-enum-varnames": [
+                      "ListProgressiveRolloutsParamsHistoryVisibilityRecent",
+                      "ListProgressiveRolloutsParamsHistoryVisibilityArchived",
+                      "ListProgressiveRolloutsParamsHistoryVisibilityAll"
+                    ]
+                  }
+                },
+                {
+                  "description": "Include authorised total counts for the Running, Plan and History lifecycle views.",
+                  "in": "query",
+                  "name": "include_view_counts",
+                  "schema": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutPage"
+                      }
+                    }
+                  },
+                  "description": "Progressive Rollouts in latest-activity order."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            },
+            "post": {
+              "operationId": "createProgressiveRollout",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutSpec"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "201": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRollout"
+                      }
+                    }
+                  },
+                  "description": "Draft created."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/actions/preview": {
+            "post": {
+              "operationId": "previewProgressiveRollout",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutSpec"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutPlan"
+                      }
+                    }
+                  },
+                  "description": "Deterministic candidate plan preview."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/target-environments": {
+            "get": {
+              "operationId": "listProgressiveRolloutTargetEnvironments",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/perPageQueryParam"
+                },
+                {
+                  "$ref": "#/components/parameters/pageTokenQueryParam"
+                },
+                {
+                  "in": "query",
+                  "name": "query",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "project",
+                  "schema": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "environment_type",
+                  "schema": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "environment_id",
+                  "schema": {
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "is_production",
+                  "schema": {
+                    "type": "boolean"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "label_key",
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "label_value",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutTargetEnvironmentPage"
+                      }
+                    }
+                  },
+                  "description": "Authorised matching Environments and counts. Every result is an explicit immutable UUID."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "summary": "List authorised Environment targets and canonical facet counts for Rollout design",
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}": {
+            "get": {
+              "operationId": "getProgressiveRollout",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutDetail"
+                      }
+                    }
+                  },
+                  "description": "Rollout detail."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            },
+            "patch": {
+              "operationId": "updateProgressiveRolloutDraft",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutDraftUpdate"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRollout"
+                      }
+                    }
+                  },
+                  "description": "Draft updated."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/actions/prepare": {
+            "post": {
+              "operationId": "prepareProgressiveRollout",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/idempotencyKeyHeader"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutPrepareBody"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutDetail"
+                      }
+                    }
+                  },
+                  "description": "Immutable plan revision created and Rollout made Ready."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/actions/{rolloutCommand}": {
+            "post": {
+              "operationId": "commandProgressiveRollout",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "path",
+                  "name": "rolloutCommand",
+                  "required": true,
+                  "schema": {
+                    "enum": [
+                      "return-to-draft",
+                      "start",
+                      "start-wave",
+                      "retry-environment",
+                      "rollback-environment",
+                      "bypass-bake",
+                      "override-pins",
+                      "continue-unpinned",
+                      "pause",
+                      "resume",
+                      "fail",
+                      "cancel",
+                      "cancel-and-rollback",
+                      "rollback",
+                      "archive"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "$ref": "#/components/parameters/idempotencyKeyHeader"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutCommandBody"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutDetail"
+                      }
+                    }
+                  },
+                  "description": "Command applied or its idempotent result returned."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/approvals": {
+            "get": {
+              "operationId": "listProgressiveRolloutApprovals",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "query",
+                  "name": "plan_revision",
+                  "required": true,
+                  "schema": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "items": {
+                          "$ref": "#/components/schemas/ProgressiveRolloutApproval"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  },
+                  "description": "Approvals for the immutable plan revision."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            },
+            "post": {
+              "operationId": "approveProgressiveRolloutScope",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/idempotencyKeyHeader"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutApprovalBody"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "201": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutApproval"
+                      }
+                    }
+                  },
+                  "description": "Approval granted."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/approvals/{approvalId}": {
+            "delete": {
+              "operationId": "revokeProgressiveRolloutApproval",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "path",
+                  "name": "approvalId",
+                  "required": true,
+                  "schema": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "query",
+                  "name": "plan_revision",
+                  "required": true,
+                  "schema": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                {
+                  "$ref": "#/components/parameters/idempotencyKeyHeader"
+                }
+              ],
+              "responses": {
+                "204": {
+                  "description": "Approval revoked before deployment start."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/conflicts": {
+            "get": {
+              "operationId": "listProgressiveRolloutConflicts",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "query",
+                  "name": "plan_revision",
+                  "required": true,
+                  "schema": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "items": {
+                          "$ref": "#/components/schemas/ProgressiveRolloutConflict"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  },
+                  "description": "Persisted conflicts for the plan revision."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/conflicts/{conflictId}/actions/{resolution}": {
+            "post": {
+              "operationId": "resolveProgressiveRolloutConflict",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "path",
+                  "name": "conflictId",
+                  "required": true,
+                  "schema": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                {
+                  "in": "path",
+                  "name": "resolution",
+                  "required": true,
+                  "schema": {
+                    "enum": [
+                      "retry",
+                      "approve",
+                      "abort"
+                    ],
+                    "type": "string"
+                  }
+                },
+                {
+                  "$ref": "#/components/parameters/idempotencyKeyHeader"
+                }
+              ],
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/ProgressiveRolloutConflictResolutionBody"
+                    }
+                  }
+                },
+                "required": true
+              },
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutDetail"
+                      }
+                    }
+                  },
+                  "description": "Conflict resolution recorded."
+                },
+                "400": {
+                  "$ref": "#/components/responses/400BadRequest"
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                },
+                "409": {
+                  "$ref": "#/components/responses/409Conflict"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/deployments/{deploymentId}/logs": {
+            "get": {
+              "operationId": "getProgressiveRolloutDeploymentLogs",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/deploymentIdPathParam"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "text/plain": {
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "description": "Authorised, decrypted historical deployment logs."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/deployments/{deploymentId}/outputs": {
+            "get": {
+              "operationId": "getProgressiveRolloutDeploymentOutputs",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/deploymentIdPathParam"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "text/plain": {
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "description": "Authorised, decrypted historical deployment outputs."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/events": {
+            "get": {
+              "operationId": "listProgressiveRolloutEvents",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "in": "query",
+                  "name": "after",
+                  "schema": {
+                    "format": "int64",
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "items": {
+                          "$ref": "#/components/schemas/ProgressiveRolloutEvent"
+                        },
+                        "type": "array"
+                      }
+                    }
+                  },
+                  "description": "Append-only rollout audit history."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          },
+          "/orgs/{orgId}/rollouts/{rolloutId}/plans/{planRevision}": {
+            "get": {
+              "operationId": "getProgressiveRolloutPlan",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/orgIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/rolloutIdPathParam"
+                },
+                {
+                  "$ref": "#/components/parameters/planRevisionPathParam"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/ProgressiveRolloutPlan"
+                      }
+                    }
+                  },
+                  "description": "Immutable rollout plan revision."
+                },
+                "403": {
+                  "$ref": "#/components/responses/403Forbidden"
+                },
+                "404": {
+                  "$ref": "#/components/responses/404NotFound"
+                }
+              },
+              "security": [
+                {
+                  "userIdHeader": []
+                }
+              ],
+              "tags": [
+                "ProgressiveRollout"
+              ],
+              "x-stellwerk-plugin": {
+                "display_name": "Progressive Rollouts",
+                "enablement_required": true,
+                "entitlement_required": true,
+                "id": "dev.stellwerk.progressive-rollouts",
+                "installation_required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "info": {
+    "title": "Legacy Enterprise Rollouts compatibility only, not native Core routes",
+    "version": "3a10169d37b40f66adea76c530da81953a91b7ad"
+  },
+  "overlay": "1.0.0"
+}
