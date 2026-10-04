@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	filippo.io/age v1.2.1
 	github.com/fatih/color v1.18.0
+	github.com/getkin/kin-openapi v0.131.0
 	github.com/google/uuid v1.5.0
 	github.com/gosuri/uitable v0.0.4
 	github.com/justinrixx/retryhttp v1.0.1
@@ -31,7 +32,6 @@ require (
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
-	github.com/getkin/kin-openapi v0.131.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

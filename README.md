@@ -20,6 +20,21 @@ octl config set-url https://api.stellwerk.localhost
 
 The configuration file is stored at `~/.config/octl/config.yaml`.
 
+Progressive Rollouts keeps the integrated Enterprise API as its default
+transport. Select the independently deployed native plugin explicitly with
+`--progressive-rollouts-transport=native`. The CLI never falls back between
+native and legacy transports. A native command also requires its exact operation
+to be advertised by organization-scoped plugin discovery.
+
+Native Rollout logs and outputs use Core's protected material route, never the
+plugin invocation endpoint. Supply the immutable receipt scope with
+`--project-uuid` and `--environment-uuid`, or let the CLI resolve it from the
+Rollout's frozen Plan while the detail operation remains available.
+
+For a private API certificate authority, set `PO_CA_FILE` to a bounded PEM CA
+bundle. The CLI appends it to the operating-system trust roots and still
+requires normal hostname verification and TLS 1.2 or newer.
+
 ## Install
 
 Install directly into your Go bin (your `$PATH` should include `$GOPATH/bin`):
@@ -59,3 +74,10 @@ make build
 make lint
 make test
 ```
+
+`make check-api-specs` verifies the Core contract and the Rollouts compatibility
+overlay against their pinned content SHA-256 values. See
+[the contract sources](clients/platform-orchestrator-cp/SOURCE.md).
+The neutral native-plugin client is checked separately against its recorded
+extracted-spec digest. Set `NATIVE_CORE_SPEC_FILE` to the pinned Core
+`openapi/spec.yaml` when qualifying a repin.
