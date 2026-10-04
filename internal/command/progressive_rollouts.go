@@ -83,7 +83,7 @@ func requireProgressiveRolloutsPlugin(access progressiveRolloutsAccess, operatio
 		}
 		response, err := MustCpClient(cmd.Context()).GetPluginCapabilityWithResponse(cmd.Context(), orgID, progressiveRolloutsPluginID)
 		if err != nil {
-			return errors.Wrap(err, "plugin_unavailable: Progressive Rollouts capability discovery failed")
+			return errors.Wrapf(err, "plugin_unavailable: Progressive Rollouts (%s) capability discovery failed", progressiveRolloutsPluginID)
 		}
 		if response.StatusCode() != http.StatusOK || response.JSON200 == nil {
 			return progressiveRolloutsCapabilityDiscoveryError(response.StatusCode(), response.Body)
@@ -98,7 +98,7 @@ func requireProgressiveRolloutsPlugin(access progressiveRolloutsAccess, operatio
 func progressiveRolloutsCapabilityDiscoveryError(status int, body []byte) error {
 	switch status {
 	case http.StatusNotFound, http.StatusNotImplemented:
-		return errors.Errorf("plugin_not_installed: Progressive Rollouts (%s) is not supported by this server; ask an administrator to install and enable the Enterprise plugin", progressiveRolloutsPluginID)
+		return errors.Errorf("plugin_not_installed: Progressive Rollouts (%s) is not installed on this server; ask an administrator to install and enable the Enterprise plugin and obtain a valid licence", progressiveRolloutsPluginID)
 	case http.StatusServiceUnavailable:
 		return errors.Errorf("plugin_unavailable: Progressive Rollouts (%s) capability discovery is temporarily unavailable", progressiveRolloutsPluginID)
 	default:
@@ -115,7 +115,7 @@ func progressiveRolloutsPluginError(capability cp.PluginCapability, access progr
 		return nil
 	}
 	code := "plugin_" + string(capability.State)
-	action := ref.DerefOr(capability.AdminAction, "Ask an organization administrator to check the plugin installation and entitlement.")
+	action := ref.DerefOr(capability.AdminAction, "Ask an organization administrator to check the plugin installation, activation and licence entitlement.")
 	return errors.Errorf("%s: %s (%s) is %s. %s", code, capability.DisplayName, capability.Id, capability.State, action)
 }
 
