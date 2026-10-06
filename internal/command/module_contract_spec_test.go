@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -13,14 +14,31 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func contractDocument(t *testing.T, filename string) map[string]any {
+const coreContractDir = "../../clients/platform-orchestrator-cp"
+
+func readVendoredFile(t *testing.T, dir, filename string) []byte {
 	t.Helper()
-	root, err := os.OpenRoot("../../clients/platform-orchestrator-cp")
+	root, err := os.OpenRoot(dir)
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, root.Close()) })
 	raw, err := root.ReadFile(filename)
 	require.NoError(t, err)
-	encoded, err := yaml.YAMLToJSON(raw)
+	return raw
+}
+
+// recordedSourceValue returns the single "- <label>: `<value>`" entry of a
+// vendored contract's SOURCE.md.
+func recordedSourceValue(t *testing.T, dir, label string) string {
+	t.Helper()
+	pattern := regexp.MustCompile("(?m)^- " + regexp.QuoteMeta(label) + ": `([^`]+)`$")
+	matches := pattern.FindAllSubmatch(readVendoredFile(t, dir, "SOURCE.md"), -1)
+	require.Len(t, matches, 1, "%s/SOURCE.md must record exactly one %s", dir, label)
+	return string(matches[0][1])
+}
+
+func contractDocument(t *testing.T, dir, filename string) map[string]any {
+	t.Helper()
+	encoded, err := yaml.YAMLToJSON(readVendoredFile(t, dir, filename))
 	require.NoError(t, err)
 	var result map[string]any
 	require.NoError(t, json.Unmarshal(encoded, &result))
@@ -44,7 +62,7 @@ func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
 }
 
 func TestRolloutSchemasLiveInCoreSpecWithoutConflict(t *testing.T) {
-	core := contractDocument(t, "spec.yaml")
+	core := contractDocument(t, coreContractDir, "spec.yaml")
 	schemas, ok := core["components"].(map[string]any)["schemas"].(map[string]any)
 	require.True(t, ok)
 	for _, name := range []string{

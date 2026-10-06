@@ -28,7 +28,7 @@ check-api-specs:
 build:
 	go build -o octl
 
-TEST_PACKAGES = $$(go list ./... | grep -v -E "(mocks|generated|clients/platform-orchestrator-cp|clients/platform-orchestrator-dp|clients/platform-orchestrator-iam)")
+TEST_PACKAGES = $$(go list ./... | grep -v -E "(mocks|generated|clients/platform-orchestrator-cp|clients/platform-orchestrator-dp|clients/platform-orchestrator-iam|clients/progressive-rollouts)")
 
 ## Run tests with coverage
 .PHONY: test

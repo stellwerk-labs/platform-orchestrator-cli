@@ -33,6 +33,17 @@ check_spec() {
   fi
 }
 
+# source_value FILE LABEL prints the value of the single "- LABEL: `value`" line.
+source_value() {
+  local value
+  value="$(sed -n "s/^- $2: \`\([^\`]*\)\`\$/\1/p" "$1")"
+  if [[ -z "$value" || "$value" == *$'\n'* ]]; then
+    echo "$1 must record exactly one $2" >&2
+    return 1
+  fi
+  printf '%s\n' "$value"
+}
+
 check_spec_sha() {
   local vendored_spec="$1"
   local expected_sha="$2"
@@ -46,6 +57,8 @@ check_spec_sha() {
 }
 
 check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "core contract"
+rollouts_spec_sha="$(source_value clients/progressive-rollouts/SOURCE.md 'File SHA-256')"
+check_spec_sha clients/progressive-rollouts/spec.yaml "$rollouts_spec_sha" "Progressive Rollouts contract"
 
 check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
 check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
