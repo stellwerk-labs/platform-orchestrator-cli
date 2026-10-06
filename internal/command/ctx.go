@@ -19,7 +19,6 @@ import (
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	dp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-dp"
 	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
-	pluginapi "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-plugin"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/printer"
 )
@@ -31,12 +30,11 @@ const (
 	AuthTokenEnvVar           = "PO_AUTH_TOKEN" // #nosec G101
 	CAFileEnvVar              = "PO_CA_FILE"
 
-	CpClientContextKey     contextKey = "cp-client"
-	DpClientContextKey     contextKey = "dp-client"
-	IamClientContextKey    contextKey = "iam-client"
-	PluginClientContextKey contextKey = "plugin-client"
-	ConfigContextKey       contextKey = "config"
-	PrinterContextKey      contextKey = "printer"
+	CpClientContextKey  contextKey = "cp-client"
+	DpClientContextKey  contextKey = "dp-client"
+	IamClientContextKey contextKey = "iam-client"
+	ConfigContextKey    contextKey = "config"
+	PrinterContextKey   contextKey = "printer"
 )
 
 func MustCpClient(c context.Context) cp.ClientWithResponsesInterface {
@@ -59,14 +57,6 @@ func MustIamClient(c context.Context) iam.ClientWithResponsesInterface {
 	v, ok := c.Value(IamClientContextKey).(iam.ClientWithResponsesInterface)
 	if !ok {
 		panic("no IAM client in context")
-	}
-	return v
-}
-
-func MustPluginClient(c context.Context) pluginapi.ClientWithResponsesInterface {
-	v, ok := c.Value(PluginClientContextKey).(pluginapi.ClientWithResponsesInterface)
-	if !ok {
-		panic("no plugin client in context")
 	}
 	return v
 }
@@ -201,11 +191,6 @@ func withClients(ctx context.Context, apiPrefix, org, authToken string) (context
 		return nil, errors.Wrap(err, "failed to setup cp client")
 	}
 	ctx = context.WithValue(ctx, CpClientContextKey, cpc)
-	pluginClient, err := pluginapi.NewClientWithResponses(apiPrefix, pluginapi.WithRequestEditorFn(pluginapi.RequestEditorFn(extraHeadersEditor)), pluginapi.WithHTTPClient(client))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to setup native plugin client")
-	}
-	ctx = context.WithValue(ctx, PluginClientContextKey, pluginClient)
 
 	// For testing and development, allow a separate DP api url to be set
 	apiDpPrefix := apiPrefix

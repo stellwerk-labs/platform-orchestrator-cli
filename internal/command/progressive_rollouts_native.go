@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
-	pluginapi "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-plugin"
+	rollouts "github.com/stellwerk-labs/platform-orchestrator-cli/clients/progressive-rollouts"
 )
 
 const (
@@ -107,20 +107,20 @@ func nativeProgressiveRolloutListQuery(page string, states []string, projectID, 
 	return query
 }
 
-func nativeProgressiveRolloutsContribution(ctx context.Context, orgID string) (pluginapi.PluginContribution, error) {
-	response, err := MustPluginClient(ctx).ListPluginContributionsWithResponse(ctx, orgID)
+func nativeProgressiveRolloutsContribution(ctx context.Context, orgID string) (cp.PluginContribution, error) {
+	response, err := MustCpClient(ctx).ListPluginContributionsWithResponse(ctx, orgID)
 	if err != nil {
-		return pluginapi.PluginContribution{}, errors.Wrap(err, "plugin_unavailable: Progressive Rollouts discovery failed")
+		return cp.PluginContribution{}, errors.Wrap(err, "plugin_unavailable: Progressive Rollouts discovery failed")
 	}
 	if response.StatusCode() != http.StatusOK || response.JSON200 == nil {
-		return pluginapi.PluginContribution{}, progressiveRolloutsCapabilityDiscoveryError(response.StatusCode(), response.Body)
+		return cp.PluginContribution{}, progressiveRolloutsCapabilityDiscoveryError(response.StatusCode(), response.Body)
 	}
 	for _, contribution := range response.JSON200.Items {
 		if contribution.Id == progressiveRolloutsPluginID {
 			return contribution, nil
 		}
 	}
-	return pluginapi.PluginContribution{}, errors.Errorf("plugin_not_installed: Progressive Rollouts (%s) is not installed for this organization", progressiveRolloutsPluginID)
+	return cp.PluginContribution{}, errors.Errorf("plugin_not_installed: Progressive Rollouts (%s) is not installed for this organization", progressiveRolloutsPluginID)
 }
 
 func requireNativeProgressiveRolloutsOperation(ctx context.Context, orgID, operationID string, access progressiveRolloutsAccess) error {
@@ -132,14 +132,13 @@ func requireNativeProgressiveRolloutsOperation(ctx context.Context, orgID, opera
 	if err != nil {
 		return err
 	}
-	state := cp.PluginAvailabilityState(contribution.State)
-	capability := cp.PluginCapability{Id: contribution.Id, DisplayName: contribution.DisplayName, State: state}
+	capability := cp.PluginCapability{Id: contribution.Id, DisplayName: contribution.DisplayName, State: contribution.State}
 	if err := progressiveRolloutsPluginError(capability, access); err != nil {
 		return err
 	}
-	if contribution.Mode == pluginapi.Hidden ||
-		(access == progressiveRolloutsMutate && contribution.Mode != pluginapi.Full) ||
-		(access == progressiveRolloutsSafety && contribution.Mode != pluginapi.Full && contribution.Mode != pluginapi.SafetyOnly) {
+	if contribution.Mode == cp.Hidden ||
+		(access == progressiveRolloutsMutate && contribution.Mode != cp.Full) ||
+		(access == progressiveRolloutsSafety && contribution.Mode != cp.Full && contribution.Mode != cp.SafetyOnly) {
 		return errors.Errorf("plugin_operation_unavailable: Progressive Rollouts operation %q is unavailable in %s mode", operationID, contribution.Mode)
 	}
 	for _, operation := range contribution.Operations {
@@ -162,7 +161,7 @@ func invokeNativeProgressiveRollout[T any](ctx context.Context, orgID, operation
 	if err := validateNativeParameters(operationID, operation, pathParameters, query, body, idempotencyKey, expectedStatus); err != nil {
 		return nil, err
 	}
-	invocation := pluginapi.PluginInvocation{OperationId: operationID}
+	invocation := cp.PluginInvocation{OperationId: operationID}
 	if len(pathParameters) != 0 {
 		invocation.PathParameters = &pathParameters
 	}
@@ -180,7 +179,7 @@ func invokeNativeProgressiveRollout[T any](ctx context.Context, orgID, operation
 	if idempotencyKey != "" {
 		invocation.IdempotencyKey = &idempotencyKey
 	}
-	response, err := MustPluginClient(ctx).InvokePluginOperationWithResponse(ctx, orgID, progressiveRolloutsPluginID, invocation)
+	response, err := MustCpClient(ctx).InvokePluginOperationWithResponse(ctx, orgID, progressiveRolloutsPluginID, invocation)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invoke Progressive Rollouts operation %s", operationID)
 	}
@@ -200,7 +199,7 @@ func invokeNativeProgressiveRollout[T any](ctx context.Context, orgID, operation
 	return &result, nil
 }
 
-func nativeProgressiveRolloutMaterial(ctx context.Context, orgID string, detail cp.ProgressiveRolloutDetail, deploymentID uuid.UUID, kind string) ([]byte, int, error) {
+func nativeProgressiveRolloutMaterial(ctx context.Context, orgID string, detail rollouts.ProgressiveRolloutDetail, deploymentID uuid.UUID, kind string) ([]byte, int, error) {
 	if detail.Plan == nil {
 		return nil, 0, errors.New("plugin_material_reference_missing: Rollout has no frozen Plan")
 	}
@@ -224,8 +223,8 @@ func nativeProgressiveRolloutMaterial(ctx context.Context, orgID string, detail 
 	if projectID == uuid.Nil {
 		return nil, 0, errors.Errorf("plugin_material_reference_missing: frozen scope for deployment %s is unavailable", deploymentID)
 	}
-	materialKind := pluginapi.GetPluginDeploymentMaterialParamsMaterialKind(kind)
-	response, err := MustPluginClient(ctx).GetPluginDeploymentMaterialWithResponse(ctx, orgID, progressiveRolloutsPluginID, projectID, environmentID, deploymentID, materialKind)
+	materialKind := cp.GetPluginDeploymentMaterialParamsMaterialKind(kind)
+	response, err := MustCpClient(ctx).GetPluginDeploymentMaterialWithResponse(ctx, orgID, progressiveRolloutsPluginID, projectID, environmentID, deploymentID, materialKind)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "retrieve protected Rollout deployment material")
 	}

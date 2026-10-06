@@ -20,8 +20,10 @@ octl config set-url https://api.stellwerk.localhost
 
 The configuration file is stored at `~/.config/octl/config.yaml`.
 
-Progressive Rollouts uses the native plugin discovery and invocation path.
-Each operation must be advertised by organization-scoped plugin discovery.
+Progressive Rollouts uses Core's plugin discovery and invocation path. Each
+operation must be advertised by organization-scoped plugin discovery. Requests and
+responses use the plugin's own API contract in `clients/progressive-rollouts`; the
+Core contract contains no Progressive Rollouts types.
 
 Rollout logs and outputs use Core's protected material route, never the plugin
 invocation endpoint. Supply the immutable receipt scope with `--project-uuid`
@@ -74,6 +76,5 @@ make test
 
 `make check-api-specs` verifies the Core contract against its pinned content SHA-256
 value. See [the contract sources](clients/platform-orchestrator-cp/SOURCE.md).
-The native-plugin client is checked separately against its recorded extracted-spec
-digest. Set `NATIVE_CORE_SPEC_FILE` to the pinned Core `openapi/spec.yaml` when
-qualifying a repin.
+The Progressive Rollouts plugin contract is checked against the digest recorded in
+[its source record](clients/progressive-rollouts/SOURCE.md).

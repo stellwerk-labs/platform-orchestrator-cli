@@ -62,7 +62,3 @@ check_spec_sha clients/progressive-rollouts/spec.yaml "$rollouts_spec_sha" "Prog
 
 check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
 check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml
-
-./scripts/check-native-plugin-api-spec.sh \
-  clients/platform-orchestrator-plugin/spec.yaml \
-  clients/platform-orchestrator-plugin/SOURCE.md

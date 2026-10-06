@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
+	rollouts "github.com/stellwerk-labs/platform-orchestrator-cli/clients/progressive-rollouts"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 )
@@ -75,7 +75,7 @@ func TestRolloutSchemasLiveInCoreSpecWithoutConflict(t *testing.T) {
 
 func TestRolloutExecutionResponseFieldsRoundTrip(t *testing.T) {
 	const response = `{"executions":[{"environment_id":"11111111-1111-4111-8111-111111111111","project_id":"project","wave_id":"wave","state":"Failed","attempts":1,"pre_deployment_attempts":0,"changed":true,"actual_versions":{},"resource_version":2,"effective_base_deployment_id":"22222222-2222-4222-8222-222222222222","first_forward_deployment_id":"33333333-3333-4333-8333-333333333333","admission_base_deployment_id":"44444444-4444-4444-8444-444444444444","rollback_available":true,"rollback_retry_available":false,"rollback_retry_pending":false}]}`
-	var detail cp.ProgressiveRolloutDetail
+	var detail rollouts.ProgressiveRolloutDetail
 	require.NoError(t, json.Unmarshal([]byte(response), &detail))
 	require.Len(t, detail.Executions, 1)
 	execution := detail.Executions[0]

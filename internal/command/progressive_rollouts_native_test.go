@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
-	pluginapi "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-plugin"
+	rollouts "github.com/stellwerk-labs/platform-orchestrator-cli/clients/progressive-rollouts"
 )
 
 const (
@@ -21,18 +21,18 @@ const (
 	nativeTestFirstQuery = "one"
 )
 
-func pluginClientContext(t *testing.T, server *httptest.Server) context.Context {
+func cpClientContext(t *testing.T, server *httptest.Server) context.Context {
 	t.Helper()
-	client, err := pluginapi.NewClientWithResponses(server.URL)
+	client, err := cp.NewClientWithResponses(server.URL)
 	require.NoError(t, err)
-	return context.WithValue(t.Context(), PluginClientContextKey, client)
+	return context.WithValue(t.Context(), CpClientContextKey, client)
 }
 
 func TestNativeProgressiveRolloutInvocationPreservesClosedEnvelope(t *testing.T) {
 	t.Parallel()
 	type requestRecord struct {
 		path       string
-		invocation pluginapi.PluginInvocation
+		invocation cp.PluginInvocation
 	}
 	records := make(chan requestRecord, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
@@ -40,7 +40,7 @@ func TestNativeProgressiveRolloutInvocationPreservesClosedEnvelope(t *testing.T)
 			http.NotFound(w, request)
 			return
 		}
-		var invocation pluginapi.PluginInvocation
+		var invocation cp.PluginInvocation
 		if err := json.NewDecoder(request.Body).Decode(&invocation); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -52,7 +52,7 @@ func TestNativeProgressiveRolloutInvocationPreservesClosedEnvelope(t *testing.T)
 	t.Cleanup(server.Close)
 
 	body := map[string]string{nativeTestBodyField: "release"}
-	result, err := invokeNativeProgressiveRollout[map[string]string](pluginClientContext(t, server), "demo", "createProgressiveRollout", nil, nil, body, "stable-key", http.StatusCreated)
+	result, err := invokeNativeProgressiveRollout[map[string]string](cpClientContext(t, server), "demo", "createProgressiveRollout", nil, nil, body, "stable-key", http.StatusCreated)
 	require.NoError(t, err)
 	require.Equal(t, "11111111-1111-4111-8111-111111111111", (*result)["id"])
 	record := <-records
@@ -126,7 +126,7 @@ func TestNativeProgressiveRolloutDiscoveryRequiresExactAdvertisedMetadata(t *tes
 		_, _ = fmt.Fprintf(w, `{"items":[{"id":%q,"display_name":"Progressive Rollouts","state":"available","mode":"full","operations":[{"id":"createProgressiveRollout","method":"GET","mutating":true}]}]}`, progressiveRolloutsPluginID)
 	}))
 	t.Cleanup(server.Close)
-	err := requireNativeProgressiveRolloutsOperation(pluginClientContext(t, server), "demo", "createProgressiveRollout", progressiveRolloutsMutate)
+	err := requireNativeProgressiveRolloutsOperation(cpClientContext(t, server), "demo", "createProgressiveRollout", progressiveRolloutsMutate)
 	require.ErrorContains(t, err, "unexpected transport metadata")
 }
 
@@ -142,11 +142,11 @@ func TestNativeProgressiveRolloutMaterialUsesFrozenScopeWithoutInventoryLookup(t
 		_, _ = fmt.Fprint(w, "retained output")
 	}))
 	t.Cleanup(server.Close)
-	detail := cp.ProgressiveRolloutDetail{
-		Executions: []cp.ProgressiveRolloutEnvironmentExecution{{EnvironmentId: environmentID, DeploymentId: &deploymentID}},
-		Plan:       &cp.ProgressiveRolloutPlan{Environments: []cp.ProgressiveRolloutPlannedEnvironment{{Uuid: environmentID, ProjectUuid: projectID}}},
+	detail := rollouts.ProgressiveRolloutDetail{
+		Executions: []rollouts.ProgressiveRolloutEnvironmentExecution{{EnvironmentId: environmentID, DeploymentId: &deploymentID}},
+		Plan:       &rollouts.ProgressiveRolloutPlan{Environments: []rollouts.ProgressiveRolloutPlannedEnvironment{{Uuid: environmentID, ProjectUuid: projectID}}},
 	}
-	body, status, err := nativeProgressiveRolloutMaterial(pluginClientContext(t, server), "demo", detail, deploymentID, "outputs")
+	body, status, err := nativeProgressiveRolloutMaterial(cpClientContext(t, server), "demo", detail, deploymentID, "outputs")
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, "retained output", string(body))
@@ -155,7 +155,7 @@ func TestNativeProgressiveRolloutMaterialUsesFrozenScopeWithoutInventoryLookup(t
 
 func TestNativeProgressiveRolloutMaterialRejectsUnboundDeployment(t *testing.T) {
 	t.Parallel()
-	detail := cp.ProgressiveRolloutDetail{Plan: &cp.ProgressiveRolloutPlan{}}
+	detail := rollouts.ProgressiveRolloutDetail{Plan: &rollouts.ProgressiveRolloutPlan{}}
 	_, _, err := nativeProgressiveRolloutMaterial(t.Context(), "demo", detail, uuid.New(), "logs")
 	require.ErrorContains(t, err, "plugin_material_reference_missing")
 }
