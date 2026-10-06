@@ -4,8 +4,7 @@ set -euo pipefail
 # CP spec SHA-256 is pinned locally; it will be re-sourced against a public CP
 # release commit once the plugin-foundation export is qualified and published.
 # See clients/platform-orchestrator-cp/SOURCE.md for the full provenance record.
-readonly cp_spec_sha=a8e547bdaaa17c544330c1b68f034b65673f095f935e8e8a94d1aa7a17cf7777
-readonly legacy_cp_spec_sha=41a1f9a231d9dc0c5850e381a44caa938330099b7ff730b0b834f8d950e2f1e1
+readonly cp_spec_sha=af2e0ee1dcdb8196cc25469287da3e331d225a14e72c5cb927d668742100c4d9
 readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
 temp_dir="$(mktemp -d)"
@@ -47,7 +46,6 @@ check_spec_sha() {
 }
 
 check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "core contract"
-check_spec_sha clients/platform-orchestrator-cp/legacy-enterprise-spec.yaml "$legacy_cp_spec_sha" "rollouts compatibility source"
 
 check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
 check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml

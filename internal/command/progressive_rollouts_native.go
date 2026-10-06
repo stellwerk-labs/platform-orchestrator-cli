@@ -9,18 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	pluginapi "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-plugin"
 )
 
 const (
-	progressiveRolloutsTransportFlag   = "progressive-rollouts-transport"
-	progressiveRolloutsTransportLegacy = "legacy"
-	progressiveRolloutsTransportNative = "native"
-	rolloutIDPathParameter             = "rolloutId"
-	planRevisionQueryParameter         = "plan_revision"
+	rolloutIDPathParameter     = "rolloutId"
+	planRevisionQueryParameter = "plan_revision"
 )
 
 type nativeRolloutOperation struct {
@@ -92,24 +88,6 @@ func validateNativeParameters(operationID string, operation nativeRolloutOperati
 	return nil
 }
 
-func progressiveRolloutsTransport(cmd *cobra.Command) (string, error) {
-	mode, err := cmd.Flags().GetString(progressiveRolloutsTransportFlag)
-	if err != nil {
-		return "", err
-	}
-	switch mode {
-	case progressiveRolloutsTransportLegacy, progressiveRolloutsTransportNative:
-		return mode, nil
-	default:
-		return "", errors.Errorf("invalid %s %q, expected legacy or native", progressiveRolloutsTransportFlag, mode)
-	}
-}
-
-func useNativeProgressiveRollouts(cmd *cobra.Command) (bool, error) {
-	mode, err := progressiveRolloutsTransport(cmd)
-	return mode == progressiveRolloutsTransportNative, err
-}
-
 func nativeProgressiveRolloutListQuery(page string, states []string, projectID, moduleID, view, historyVisibility string, conflicts *bool) map[string][]string {
 	query := make(map[string][]string)
 	if page != "" {
@@ -127,13 +105,6 @@ func nativeProgressiveRolloutListQuery(page string, states []string, projectID, 
 		query["conflicts"] = []string{fmt.Sprint(*conflicts)}
 	}
 	return query
-}
-
-func nativeProgressiveRolloutPageResponse(page *cp.ProgressiveRolloutPage) *cp.ListProgressiveRolloutsResponse {
-	return &cp.ListProgressiveRolloutsResponse{
-		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-		JSON200:      page,
-	}
 }
 
 func nativeProgressiveRolloutsContribution(ctx context.Context, orgID string) (pluginapi.PluginContribution, error) {

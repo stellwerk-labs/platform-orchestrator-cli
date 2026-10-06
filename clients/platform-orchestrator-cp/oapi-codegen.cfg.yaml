@@ -6,5 +6,4 @@ generate:
   echo-server: false
 output: client.gen.go
 output-options:
-  overlay:
-    path: legacy-rollouts-overlay.yaml
+  skip-prune: true

@@ -71,7 +71,6 @@ func TestNativeProgressiveRolloutListQueryOmitsEmptyRepeatedValues(t *testing.T)
 	query = nativeProgressiveRolloutListQuery("next", []string{"Running", "Paused"}, "project", "module", "history", "all", nil)
 	require.Equal(t, []string{"Running", "Paused"}, query["state"])
 	require.NotNil(t, query["state"])
-	require.Equal(t, http.StatusOK, nativeProgressiveRolloutPageResponse(&cp.ProgressiveRolloutPage{}).StatusCode())
 }
 
 func TestNativeProgressiveRolloutInvocationRejectsUnknownOperationAndMissingMutationKey(t *testing.T) {

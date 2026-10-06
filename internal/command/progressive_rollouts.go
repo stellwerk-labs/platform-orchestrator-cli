@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/stellwerk-labs/platform-orchestrator-cli/clients"
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	pluginapi "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-plugin"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/printer"
@@ -68,27 +67,10 @@ func requireProgressiveRolloutsPlugin(access progressiveRolloutsAccess, operatio
 		if err != nil {
 			return err
 		}
-		native, err := useNativeProgressiveRollouts(cmd)
-		if err != nil {
-			return err
-		}
-		if native {
-			if operationID == "" {
-				return run(cmd, args)
-			}
-			if err := requireNativeProgressiveRolloutsOperation(cmd.Context(), orgID, operationID, access); err != nil {
-				return err
-			}
+		if operationID == "" {
 			return run(cmd, args)
 		}
-		response, err := MustCpClient(cmd.Context()).GetPluginCapabilityWithResponse(cmd.Context(), orgID, progressiveRolloutsPluginID)
-		if err != nil {
-			return errors.Wrapf(err, "plugin_unavailable: Progressive Rollouts (%s) capability discovery failed", progressiveRolloutsPluginID)
-		}
-		if response.StatusCode() != http.StatusOK || response.JSON200 == nil {
-			return progressiveRolloutsCapabilityDiscoveryError(response.StatusCode(), response.Body)
-		}
-		if err := progressiveRolloutsPluginError(*response.JSON200, access); err != nil {
+		if err := requireNativeProgressiveRolloutsOperation(cmd.Context(), orgID, operationID, access); err != nil {
 			return err
 		}
 		return run(cmd, args)
@@ -133,23 +115,11 @@ var CreateProgressiveRollout = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRollout](cmd.Context(), orgID, "createProgressiveRollout", nil, nil, *body, rolloutIdempotencyKey(cmd), http.StatusCreated)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).CreateProgressiveRolloutWithResponse(cmd.Context(), orgID, *body)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRollout](cmd.Context(), orgID, "createProgressiveRollout", nil, nil, *body, rolloutIdempotencyKey(cmd), http.StatusCreated)
 		if err != nil {
-			return errors.Wrap(err, "failed to create Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusCreated {
-			return rolloutResponseError("create rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON201)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -167,23 +137,11 @@ var GetProgressiveRollout = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "getProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String()}, nil, nil, "", http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).GetProgressiveRolloutWithResponse(cmd.Context(), orgID, id)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "getProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String()}, nil, nil, "", http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to get Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("get rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -198,10 +156,6 @@ var ListProgressiveRollouts = &cobra.Command{
 			return err
 		}
 		states, _ := cmd.Flags().GetStringSlice("state")
-		stateValues := make([]cp.ProgressiveRolloutState, len(states))
-		for index := range states {
-			stateValues[index] = cp.ProgressiveRolloutState(states[index])
-		}
 		projectID, _ := cmd.Flags().GetString("project")
 		moduleID, _ := cmd.Flags().GetString("module")
 		view, _ := cmd.Flags().GetString("view")
@@ -211,55 +165,20 @@ var ListProgressiveRollouts = &cobra.Command{
 			value, _ := cmd.Flags().GetBool("conflicts")
 			conflicts = &value
 		}
-		native, err := useNativeProgressiveRollouts(cmd)
-		if err != nil {
-			return err
+		var allItems []cp.ProgressiveRollout
+		for pageToken := ""; ; {
+			query := nativeProgressiveRolloutListQuery(pageToken, states, projectID, moduleID, view, historyVisibility, conflicts)
+			page, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPage](cmd.Context(), orgID, "listProgressiveRollouts", nil, query, nil, "", http.StatusOK)
+			if err != nil {
+				return err
+			}
+			allItems = append(allItems, page.Items...)
+			if page.NextPageToken == nil || *page.NextPageToken == "" {
+				break
+			}
+			pageToken = *page.NextPageToken
 		}
-		items, err := clients.CollectAll(
-			func(page string) (*cp.ListProgressiveRolloutsResponse, error) {
-				if native {
-					query := nativeProgressiveRolloutListQuery(page, states, projectID, moduleID, view, historyVisibility, conflicts)
-					result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPage](cmd.Context(), orgID, "listProgressiveRollouts", nil, query, nil, "", http.StatusOK)
-					if err != nil {
-						return nil, err
-					}
-					return nativeProgressiveRolloutPageResponse(result), nil
-				}
-				return MustCpClient(cmd.Context()).ListProgressiveRolloutsWithResponse(cmd.Context(), orgID, &cp.ListProgressiveRolloutsParams{
-					Page: ref.RefStringEmptyNil(page), State: func() *[]cp.ProgressiveRolloutState {
-						if len(stateValues) == 0 {
-							return nil
-						}
-						return &stateValues
-					}(),
-					Project: ref.RefStringEmptyNil(projectID), Module: ref.RefStringEmptyNil(moduleID), Conflicts: conflicts,
-					View: func() *cp.ListProgressiveRolloutsParamsView {
-						if view == "" {
-							return nil
-						}
-						value := cp.ListProgressiveRolloutsParamsView(view)
-						return &value
-					}(),
-					HistoryVisibility: func() *cp.ListProgressiveRolloutsParamsHistoryVisibility {
-						if historyVisibility == "" {
-							return nil
-						}
-						value := cp.ListProgressiveRolloutsParamsHistoryVisibility(historyVisibility)
-						return &value
-					}(),
-				})
-			},
-			func(response *cp.ListProgressiveRolloutsResponse) ([]cp.ProgressiveRollout, *string) {
-				if response.JSON200 == nil {
-					return nil, nil
-				}
-				return response.JSON200.Items, response.JSON200.NextPageToken
-			},
-		)
-		if err != nil {
-			return err
-		}
-		return writeRolloutValue(cmd, items)
+		return writeRolloutValue(cmd, allItems)
 	},
 }
 
@@ -281,23 +200,11 @@ var UpdateProgressiveRollout = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRollout](cmd.Context(), orgID, "updateProgressiveRolloutDraft", map[string]string{rolloutIDPathParameter: id.String()}, nil, *body, rolloutIdempotencyKey(cmd), http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).UpdateProgressiveRolloutDraftWithResponse(cmd.Context(), orgID, id, *body)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRollout](cmd.Context(), orgID, "updateProgressiveRolloutDraft", map[string]string{rolloutIDPathParameter: id.String()}, nil, *body, rolloutIdempotencyKey(cmd), http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to update Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("update rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -329,23 +236,11 @@ var PreviewProgressiveRollout = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPlan](cmd.Context(), orgID, "previewProgressiveRollout", nil, nil, *body, "", http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).PreviewProgressiveRolloutWithResponse(cmd.Context(), orgID, *body)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPlan](cmd.Context(), orgID, "previewProgressiveRollout", nil, nil, *body, "", http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to preview Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("preview rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -366,25 +261,11 @@ var PrepareProgressiveRollout = &cobra.Command{
 		fingerprint, _ := cmd.Flags().GetString("candidate-fingerprint")
 		accepted, _ := cmd.Flags().GetStringSlice("accept-conflict")
 		prepareBody := cp.ProgressiveRolloutPrepareBody{ExpectedResourceVersion: expected, CandidateFingerprint: fingerprint, AcceptedConflictFingerprints: accepted}
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "prepareProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String()}, nil, prepareBody, rolloutIdempotencyKey(cmd), http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).PrepareProgressiveRolloutWithResponse(cmd.Context(), orgID, id,
-			&cp.PrepareProgressiveRolloutParams{IdempotencyKey: rolloutIdempotencyKey(cmd)},
-			prepareBody)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "prepareProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String()}, nil, prepareBody, rolloutIdempotencyKey(cmd), http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to prepare Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("prepare rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -450,24 +331,11 @@ func newProgressiveRolloutControlCommand(command string) *cobra.Command {
 					return &confirmDefective
 				}()}
 			key := rolloutIdempotencyKey(cmd)
-			if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-				return err
-			} else if native {
-				result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "commandProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String(), "rolloutCommand": command}, nil, body, key, http.StatusOK)
-				if err != nil {
-					return err
-				}
-				return writeRolloutValue(cmd, *result)
-			}
-			response, err := MustCpClient(cmd.Context()).CommandProgressiveRolloutWithResponse(cmd.Context(), orgID, id,
-				cp.CommandProgressiveRolloutParamsRolloutCommand(command), &cp.CommandProgressiveRolloutParams{IdempotencyKey: key}, body)
+			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "commandProgressiveRollout", map[string]string{rolloutIDPathParameter: id.String(), "rolloutCommand": command}, nil, body, key, http.StatusOK)
 			if err != nil {
-				return errors.Wrap(err, "failed to execute Progressive Rollout command")
+				return err
 			}
-			if response.StatusCode() != http.StatusOK {
-				return rolloutResponseError(command+" rollout", response.StatusCode(), response.Body)
-			}
-			return writeRolloutValue(cmd, *response.JSON200)
+			return writeRolloutValue(cmd, *result)
 		},
 	}
 	result.Flags().Int64(rolloutExpectedVersionFlag, 0, "Expected Rollout resource version")
@@ -514,24 +382,11 @@ var ApproveProgressiveRollout = &cobra.Command{
 		reason, _ := cmd.Flags().GetString("reason")
 		body := cp.ProgressiveRolloutApprovalBody{PlanRevision: revision, ScopeId: scopeID, ScopeType: cp.ProgressiveRolloutApprovalBodyScopeType(scopeType), Reason: reason}
 		key := rolloutIdempotencyKey(cmd)
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutApproval](cmd.Context(), orgID, "approveProgressiveRolloutScope", map[string]string{rolloutIDPathParameter: id.String()}, nil, body, key, http.StatusCreated)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).ApproveProgressiveRolloutScopeWithResponse(cmd.Context(), orgID, id,
-			&cp.ApproveProgressiveRolloutScopeParams{IdempotencyKey: key}, body)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutApproval](cmd.Context(), orgID, "approveProgressiveRolloutScope", map[string]string{rolloutIDPathParameter: id.String()}, nil, body, key, http.StatusCreated)
 		if err != nil {
-			return errors.Wrap(err, "failed to approve Progressive Rollout")
+			return err
 		}
-		if response.StatusCode() != http.StatusCreated {
-			return rolloutResponseError("approve rollout", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON201)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -557,24 +412,11 @@ var ResolveProgressiveRolloutConflict = &cobra.Command{
 		fingerprint, _ := cmd.Flags().GetString("observed-fingerprint")
 		body := cp.ProgressiveRolloutConflictResolutionBody{PlanRevision: revision, ExpectedResourceVersion: expected, ObservedFingerprint: fingerprint}
 		key := rolloutIdempotencyKey(cmd)
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "resolveProgressiveRolloutConflict", map[string]string{rolloutIDPathParameter: id.String(), "conflictId": conflictID.String(), "resolution": args[2]}, nil, body, key, http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).ResolveProgressiveRolloutConflictWithResponse(cmd.Context(), orgID, id, conflictID,
-			cp.ResolveProgressiveRolloutConflictParamsResolution(args[2]), &cp.ResolveProgressiveRolloutConflictParams{IdempotencyKey: key}, body)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "resolveProgressiveRolloutConflict", map[string]string{rolloutIDPathParameter: id.String(), "conflictId": conflictID.String(), "resolution": args[2]}, nil, body, key, http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to resolve Progressive Rollout conflict")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("resolve rollout conflict", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -597,21 +439,8 @@ var RevokeProgressiveRolloutApproval = &cobra.Command{
 		}
 		revision, _ := cmd.Flags().GetInt(rolloutRevisionFlag)
 		key := rolloutIdempotencyKey(cmd)
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			_, err := invokeNativeProgressiveRollout[struct{}](cmd.Context(), orgID, "revokeProgressiveRolloutApproval", map[string]string{rolloutIDPathParameter: id.String(), "approvalId": approvalID.String()}, map[string][]string{planRevisionQueryParameter: {fmt.Sprint(revision)}}, nil, key, http.StatusNoContent)
-			return err
-		}
-		response, err := MustCpClient(cmd.Context()).RevokeProgressiveRolloutApprovalWithResponse(cmd.Context(), orgID, id, approvalID,
-			&cp.RevokeProgressiveRolloutApprovalParams{PlanRevision: revision, IdempotencyKey: key})
-		if err != nil {
-			return errors.Wrap(err, "failed to revoke Progressive Rollout approval")
-		}
-		if response.StatusCode() != http.StatusNoContent {
-			return rolloutResponseError("revoke rollout approval", response.StatusCode(), response.Body)
-		}
-		return nil
+		_, err = invokeNativeProgressiveRollout[struct{}](cmd.Context(), orgID, "revokeProgressiveRolloutApproval", map[string]string{rolloutIDPathParameter: id.String(), "approvalId": approvalID.String()}, map[string][]string{planRevisionQueryParameter: {fmt.Sprint(revision)}}, nil, key, http.StatusNoContent)
+		return err
 	},
 }
 
@@ -630,41 +459,19 @@ func newProgressiveRolloutRevisionListCommand(kind string) *cobra.Command {
 				return err
 			}
 			revision, _ := cmd.Flags().GetInt(rolloutRevisionFlag)
-			if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-				return err
-			} else if native {
-				query := map[string][]string{planRevisionQueryParameter: {fmt.Sprint(revision)}}
-				if kind == "approvals" {
-					result, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutApproval](cmd.Context(), orgID, "listProgressiveRolloutApprovals", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
-					if err != nil {
-						return err
-					}
-					return writeRolloutValue(cmd, *result)
-				}
-				result, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutConflict](cmd.Context(), orgID, "listProgressiveRolloutConflicts", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
+			query := map[string][]string{planRevisionQueryParameter: {fmt.Sprint(revision)}}
+			if kind == "approvals" {
+				result, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutApproval](cmd.Context(), orgID, "listProgressiveRolloutApprovals", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
 				if err != nil {
 					return err
 				}
 				return writeRolloutValue(cmd, *result)
 			}
-			if kind == "approvals" {
-				response, err := MustCpClient(cmd.Context()).ListProgressiveRolloutApprovalsWithResponse(cmd.Context(), orgID, id, &cp.ListProgressiveRolloutApprovalsParams{PlanRevision: revision})
-				if err != nil {
-					return errors.Wrap(err, "failed to list Rollout approvals")
-				}
-				if response.StatusCode() != http.StatusOK {
-					return rolloutResponseError("list rollout approvals", response.StatusCode(), response.Body)
-				}
-				return writeRolloutValue(cmd, *response.JSON200)
-			}
-			response, err := MustCpClient(cmd.Context()).ListProgressiveRolloutConflictsWithResponse(cmd.Context(), orgID, id, &cp.ListProgressiveRolloutConflictsParams{PlanRevision: revision})
+			result, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutConflict](cmd.Context(), orgID, "listProgressiveRolloutConflicts", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
 			if err != nil {
-				return errors.Wrap(err, "failed to list Rollout conflicts")
+				return err
 			}
-			if response.StatusCode() != http.StatusOK {
-				return rolloutResponseError("list rollout conflicts", response.StatusCode(), response.Body)
-			}
-			return writeRolloutValue(cmd, *response.JSON200)
+			return writeRolloutValue(cmd, *result)
 		},
 	}
 }
@@ -683,23 +490,11 @@ var ProgressiveRolloutPlan = &cobra.Command{
 			return err
 		}
 		revision, _ := cmd.Flags().GetInt(rolloutRevisionFlag)
-		if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-			return err
-		} else if native {
-			result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPlan](cmd.Context(), orgID, "getProgressiveRolloutPlan", map[string]string{rolloutIDPathParameter: id.String(), "planRevision": fmt.Sprint(revision)}, nil, nil, "", http.StatusOK)
-			if err != nil {
-				return err
-			}
-			return writeRolloutValue(cmd, *result)
-		}
-		response, err := MustCpClient(cmd.Context()).GetProgressiveRolloutPlanWithResponse(cmd.Context(), orgID, id, revision)
+		result, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutPlan](cmd.Context(), orgID, "getProgressiveRolloutPlan", map[string]string{rolloutIDPathParameter: id.String(), "planRevision": fmt.Sprint(revision)}, nil, nil, "", http.StatusOK)
 		if err != nil {
-			return errors.Wrap(err, "failed to get Rollout plan")
+			return err
 		}
-		if response.StatusCode() != http.StatusOK {
-			return rolloutResponseError("get rollout plan", response.StatusCode(), response.Body)
-		}
-		return writeRolloutValue(cmd, *response.JSON200)
+		return writeRolloutValue(cmd, *result)
 	},
 }
 
@@ -715,46 +510,21 @@ var ProgressiveRolloutEvents = &cobra.Command{
 			return err
 		}
 		after, _ := cmd.Flags().GetInt64("after")
-		native, err := useNativeProgressiveRollouts(cmd)
-		if err != nil {
-			return err
-		}
 		events := make([]cp.ProgressiveRolloutEvent, 0, 500)
 		for {
-			if native {
-				query := make(map[string][]string)
-				if after != 0 {
-					query["after"] = []string{fmt.Sprint(after)}
-				}
-				page, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutEvent](cmd.Context(), orgID, "listProgressiveRolloutEvents", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
-				if err != nil {
-					return err
-				}
-				events = append(events, (*page)...)
-				if len(*page) < 500 {
-					break
-				}
-				after = (*page)[len(*page)-1].Sequence
-				continue
+			query := make(map[string][]string)
+			if after != 0 {
+				query["after"] = []string{fmt.Sprint(after)}
 			}
-			response, err := MustCpClient(cmd.Context()).ListProgressiveRolloutEventsWithResponse(cmd.Context(), orgID, id, &cp.ListProgressiveRolloutEventsParams{After: func() *int64 {
-				if after == 0 {
-					return nil
-				}
-				return &after
-			}()})
+			page, err := invokeNativeProgressiveRollout[[]cp.ProgressiveRolloutEvent](cmd.Context(), orgID, "listProgressiveRolloutEvents", map[string]string{rolloutIDPathParameter: id.String()}, query, nil, "", http.StatusOK)
 			if err != nil {
-				return errors.Wrap(err, "failed to list Rollout events")
+				return err
 			}
-			if response.StatusCode() != http.StatusOK {
-				return rolloutResponseError("list rollout events", response.StatusCode(), response.Body)
-			}
-			page := *response.JSON200
-			events = append(events, page...)
-			if len(page) < 500 {
+			events = append(events, (*page)...)
+			if len(*page) < 500 {
 				break
 			}
-			after = page[len(page)-1].Sequence
+			after = (*page)[len(*page)-1].Sequence
 		}
 		return writeRolloutValue(cmd, events)
 	},
@@ -778,53 +548,26 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if native, err := useNativeProgressiveRollouts(cmd); err != nil {
-				return err
-			} else if native {
-				projectValue, _ := cmd.Flags().GetString("project-uuid")
-				environmentValue, _ := cmd.Flags().GetString("environment-uuid")
-				if (projectValue == "") != (environmentValue == "") {
-					return errors.New("native material reference requires both --project-uuid and --environment-uuid")
+			projectValue, _ := cmd.Flags().GetString("project-uuid")
+			environmentValue, _ := cmd.Flags().GetString("environment-uuid")
+			if (projectValue == "") != (environmentValue == "") {
+				return errors.New("material reference requires both --project-uuid and --environment-uuid")
+			}
+			if projectValue == "" {
+				if err := requireNativeProgressiveRolloutsOperation(cmd.Context(), orgID, "getProgressiveRollout", progressiveRolloutsRead); err != nil {
+					return errors.Wrap(err, "material reference was not supplied and Rollout detail is unavailable")
 				}
-				if projectValue == "" {
-					if err := requireNativeProgressiveRolloutsOperation(cmd.Context(), orgID, "getProgressiveRollout", progressiveRolloutsRead); err != nil {
-						return errors.Wrap(err, "native material reference was not supplied and Rollout detail is unavailable")
-					}
-					detail, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "getProgressiveRollout", map[string]string{rolloutIDPathParameter: rollout.String()}, nil, nil, "", http.StatusOK)
-					if err != nil {
-						return err
-					}
-					body, status, err := nativeProgressiveRolloutMaterial(cmd.Context(), orgID, *detail, deployment, kind)
-					if err != nil {
-						return err
-					}
-					if status != http.StatusOK {
-						return rolloutResponseError("get protected rollout deployment "+kind, status, body)
-					}
-					if _, err := cmd.OutOrStdout().Write(body); err != nil {
-						return err
-					}
-					if len(body) == 0 || body[len(body)-1] != '\n' {
-						_, err = fmt.Fprintln(cmd.OutOrStdout())
-					}
+				detail, err := invokeNativeProgressiveRollout[cp.ProgressiveRolloutDetail](cmd.Context(), orgID, "getProgressiveRollout", map[string]string{rolloutIDPathParameter: rollout.String()}, nil, nil, "", http.StatusOK)
+				if err != nil {
 					return err
 				}
-				projectID, err := uuid.Parse(projectValue)
+				body, status, err := nativeProgressiveRolloutMaterial(cmd.Context(), orgID, *detail, deployment, kind)
 				if err != nil {
-					return errors.Wrap(err, "native material reference requires a valid --project-uuid")
+					return err
 				}
-				environmentID, err := uuid.Parse(environmentValue)
-				if err != nil {
-					return errors.Wrap(err, "native material reference requires a valid --environment-uuid")
+				if status != http.StatusOK {
+					return rolloutResponseError("get protected rollout deployment "+kind, status, body)
 				}
-				response, err := MustPluginClient(cmd.Context()).GetPluginDeploymentMaterialWithResponse(cmd.Context(), orgID, progressiveRolloutsPluginID, projectID, environmentID, deployment, pluginapi.GetPluginDeploymentMaterialParamsMaterialKind(kind))
-				if err != nil {
-					return errors.Wrap(err, "failed to retrieve protected Rollout deployment "+kind)
-				}
-				if response.StatusCode() != http.StatusOK {
-					return rolloutResponseError("get protected rollout deployment "+kind, response.StatusCode(), response.Body)
-				}
-				body := response.Body
 				if _, err := cmd.OutOrStdout().Write(body); err != nil {
 					return err
 				}
@@ -833,24 +576,22 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 				}
 				return err
 			}
-			var status int
-			var body []byte
-			if kind == "logs" {
-				response, err := MustCpClient(cmd.Context()).GetProgressiveRolloutDeploymentLogsWithResponse(cmd.Context(), orgID, rollout, deployment)
-				if err != nil {
-					return errors.Wrap(err, "failed to retrieve Rollout deployment logs")
-				}
-				status, body = response.StatusCode(), response.Body
-			} else {
-				response, err := MustCpClient(cmd.Context()).GetProgressiveRolloutDeploymentOutputsWithResponse(cmd.Context(), orgID, rollout, deployment)
-				if err != nil {
-					return errors.Wrap(err, "failed to retrieve Rollout deployment outputs")
-				}
-				status, body = response.StatusCode(), response.Body
+			projectID, err := uuid.Parse(projectValue)
+			if err != nil {
+				return errors.Wrap(err, "material reference requires a valid --project-uuid")
 			}
-			if status != http.StatusOK {
-				return rolloutResponseError("get rollout deployment "+kind, status, body)
+			environmentID, err := uuid.Parse(environmentValue)
+			if err != nil {
+				return errors.Wrap(err, "material reference requires a valid --environment-uuid")
 			}
+			response, err := MustPluginClient(cmd.Context()).GetPluginDeploymentMaterialWithResponse(cmd.Context(), orgID, progressiveRolloutsPluginID, projectID, environmentID, deployment, pluginapi.GetPluginDeploymentMaterialParamsMaterialKind(kind))
+			if err != nil {
+				return errors.Wrap(err, "failed to retrieve protected Rollout deployment "+kind)
+			}
+			if response.StatusCode() != http.StatusOK {
+				return rolloutResponseError("get protected rollout deployment "+kind, response.StatusCode(), response.Body)
+			}
+			body := response.Body
 			if _, err := cmd.OutOrStdout().Write(body); err != nil {
 				return err
 			}
@@ -876,8 +617,8 @@ func init() {
 	ListProgressiveRollouts.Flags().Bool("conflicts", false, "Filter by presence of conflicts")
 	ListProgressiveRollouts.Flags().String("view", "", "Server-owned lifecycle view: running, plan, or history")
 	ListProgressiveRollouts.Flags().String("history-visibility", "", "History retention subset: recent, archived, or all")
-	CreateProgressiveRollout.Flags().String(rolloutIdempotencyFlag, "", "Stable idempotency key for native transport (a random UUID is used when omitted)")
-	UpdateProgressiveRollout.Flags().String(rolloutIdempotencyFlag, "", "Stable idempotency key for native transport (a random UUID is used when omitted)")
+	CreateProgressiveRollout.Flags().String(rolloutIdempotencyFlag, "", "Stable idempotency key (a random UUID is used when omitted)")
+	UpdateProgressiveRollout.Flags().String(rolloutIdempotencyFlag, "", "Stable idempotency key (a random UUID is used when omitted)")
 
 	printer.SetupSingleOutputFormatFlag(ProgressiveRolloutCmd.PersistentFlags())
 	PreviewProgressiveRollout.Flags().String(createUpdateCmdSetJsonFlag, "", "Read the Rollout spec from JSON or @file")
@@ -922,8 +663,8 @@ func init() {
 	logs := newProgressiveRolloutEvidenceCommand("logs")
 	outputs := newProgressiveRolloutEvidenceCommand("outputs")
 	for _, command := range []*cobra.Command{logs, outputs} {
-		command.Flags().String("project-uuid", "", "Immutable Project UUID from the deployment receipt (required for native transport)")
-		command.Flags().String("environment-uuid", "", "Immutable Environment UUID from the deployment receipt (required for native transport)")
+		command.Flags().String("project-uuid", "", "Immutable Project UUID from the deployment receipt")
+		command.Flags().String("environment-uuid", "", "Immutable Environment UUID from the deployment receipt")
 	}
 	ProgressiveRolloutCmd.AddCommand(PreviewProgressiveRollout, PrepareProgressiveRollout, ApproveProgressiveRollout,
 		RevokeProgressiveRolloutApproval, ResolveProgressiveRolloutConflict, approvals, conflicts,

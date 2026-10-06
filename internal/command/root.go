@@ -100,7 +100,6 @@ func init() {
 	RootCmd.Version = fmt.Sprintf("%s %s", internal.ModulePath, internal.ModuleVersion)
 	RootCmd.PersistentFlags().BoolP("debug", "d", false, "Increase log verbosity to debug level")
 	RootCmd.PersistentFlags().String("org", "", "Organization ID to use for all commands (overrides PO_ORG_ID environment variable)")
-	RootCmd.PersistentFlags().String("progressive-rollouts-transport", "legacy", "Progressive Rollouts API transport: legacy or native")
 	RootCmd.AddGroup(CrudGroup)
 	RootCmd.AddCommand(CreateCmd, GetCmd, UpdateCmd, DeleteCmd)
 	RootCmd.AddCommand(ConfigCmd)
