@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# CP spec SHA-256 is pinned locally; it will be re-sourced against a public CP
-# release commit once the plugin-foundation export is qualified and published.
-# See clients/platform-orchestrator-cp/SOURCE.md for the full provenance record.
-readonly cp_spec_sha=af2e0ee1dcdb8196cc25469287da3e331d225a14e72c5cb927d668742100c4d9
 readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
 temp_dir="$(mktemp -d)"
@@ -51,14 +47,18 @@ check_spec_sha() {
   local actual_sha
   actual_sha="$(shasum -a 256 "$vendored_spec" | awk '{print $1}')"
   if [[ "$actual_sha" != "$expected_sha" ]]; then
-    echo "$label: $vendored_spec SHA-256 $actual_sha does not match pinned $expected_sha" >&2
+    echo "$label: $vendored_spec SHA-256 $actual_sha does not match recorded $expected_sha" >&2
     return 1
   fi
 }
 
-check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "core contract"
+# Each vendored contract records its source and digest in SOURCE.md.
+cp_revision="$(source_value clients/platform-orchestrator-cp/SOURCE.md Commit)"
+cp_spec_sha="$(source_value clients/platform-orchestrator-cp/SOURCE.md 'File SHA-256')"
+check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "Core contract"
 rollouts_spec_sha="$(source_value clients/progressive-rollouts/SOURCE.md 'File SHA-256')"
 check_spec_sha clients/progressive-rollouts/spec.yaml "$rollouts_spec_sha" "Progressive Rollouts contract"
 
+check_spec stellwerk-labs/platform-orchestrator-cp "$cp_revision" clients/platform-orchestrator-cp/spec.yaml
 check_spec stellwerk-labs/platform-orchestrator-dp "$dp_revision" clients/platform-orchestrator-dp/spec.yaml
 check_spec stellwerk-labs/platform-orchestrator-iam "$iam_revision" clients/platform-orchestrator-iam/spec.yaml

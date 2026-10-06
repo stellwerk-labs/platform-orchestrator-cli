@@ -284,131 +284,6 @@ const (
 	PluginPinRestore   PluginPinOperationRequestAction = "restore"
 )
 
-// Defines values for ProgressiveRolloutApprovalScopeType.
-const (
-	ProgressiveRolloutApprovalScopeTypeEnvironment ProgressiveRolloutApprovalScopeType = "environment"
-	ProgressiveRolloutApprovalScopeTypeProject     ProgressiveRolloutApprovalScopeType = "project"
-)
-
-// Defines values for ProgressiveRolloutApprovalBodyScopeType.
-const (
-	ProgressiveRolloutApprovalBodyScopeTypeEnvironment ProgressiveRolloutApprovalBodyScopeType = "environment"
-	ProgressiveRolloutApprovalBodyScopeTypeProject     ProgressiveRolloutApprovalBodyScopeType = "project"
-)
-
-// Defines values for ProgressiveRolloutClassification.
-const (
-	ProgressiveRolloutClassificationAlreadyCompliant ProgressiveRolloutClassification = "AlreadyCompliant"
-	ProgressiveRolloutClassificationConflict         ProgressiveRolloutClassification = "Conflict"
-	ProgressiveRolloutClassificationNotApplicable    ProgressiveRolloutClassification = "NotApplicable"
-	ProgressiveRolloutClassificationPending          ProgressiveRolloutClassification = "Pending"
-	ProgressiveRolloutClassificationPinned           ProgressiveRolloutClassification = "Pinned"
-)
-
-// Defines values for ProgressiveRolloutConflictStatus.
-const (
-	Aborted  ProgressiveRolloutConflictStatus = "aborted"
-	Approved ProgressiveRolloutConflictStatus = "approved"
-	Open     ProgressiveRolloutConflictStatus = "open"
-	Resolved ProgressiveRolloutConflictStatus = "resolved"
-)
-
-// Defines values for ProgressiveRolloutEnvironmentState.
-const (
-	ProgressiveRolloutEnvironmentStateAlreadyCompliant   ProgressiveRolloutEnvironmentState = "AlreadyCompliant"
-	ProgressiveRolloutEnvironmentStateAwaitingApproval   ProgressiveRolloutEnvironmentState = "AwaitingApproval"
-	ProgressiveRolloutEnvironmentStateBlocked            ProgressiveRolloutEnvironmentState = "Blocked"
-	ProgressiveRolloutEnvironmentStateBusy               ProgressiveRolloutEnvironmentState = "Busy"
-	ProgressiveRolloutEnvironmentStateConflict           ProgressiveRolloutEnvironmentState = "Conflict"
-	ProgressiveRolloutEnvironmentStateEnvironmentRemoved ProgressiveRolloutEnvironmentState = "EnvironmentRemoved"
-	ProgressiveRolloutEnvironmentStateFailed             ProgressiveRolloutEnvironmentState = "Failed"
-	ProgressiveRolloutEnvironmentStateNotApplicable      ProgressiveRolloutEnvironmentState = "NotApplicable"
-	ProgressiveRolloutEnvironmentStatePending            ProgressiveRolloutEnvironmentState = "Pending"
-	ProgressiveRolloutEnvironmentStatePinned             ProgressiveRolloutEnvironmentState = "Pinned"
-	ProgressiveRolloutEnvironmentStateRolledBack         ProgressiveRolloutEnvironmentState = "RolledBack"
-	ProgressiveRolloutEnvironmentStateRollingBack        ProgressiveRolloutEnvironmentState = "RollingBack"
-	ProgressiveRolloutEnvironmentStateRunning            ProgressiveRolloutEnvironmentState = "Running"
-	ProgressiveRolloutEnvironmentStateSucceeded          ProgressiveRolloutEnvironmentState = "Succeeded"
-	ProgressiveRolloutEnvironmentStateUnpinnedPending    ProgressiveRolloutEnvironmentState = "UnpinnedPending"
-	ProgressiveRolloutEnvironmentStateUnreconciled       ProgressiveRolloutEnvironmentState = "Unreconciled"
-)
-
-// Defines values for ProgressiveRolloutPinSnapshotScopeType.
-const (
-	ProgressiveRolloutPinSnapshotScopeTypeEnvironment ProgressiveRolloutPinSnapshotScopeType = "environment"
-)
-
-// Defines values for ProgressiveRolloutPlanDefaultPromotion.
-const (
-	ProgressiveRolloutPlanDefaultPromotionAtStart   ProgressiveRolloutPlanDefaultPromotion = "atStart"
-	ProgressiveRolloutPlanDefaultPromotionNone      ProgressiveRolloutPlanDefaultPromotion = "none"
-	ProgressiveRolloutPlanDefaultPromotionOnSuccess ProgressiveRolloutPlanDefaultPromotion = "onSuccess"
-)
-
-// Defines values for ProgressiveRolloutPlannedWaveApproval.
-const (
-	ProgressiveRolloutPlannedWaveApprovalEnvironment ProgressiveRolloutPlannedWaveApproval = "environment"
-	ProgressiveRolloutPlannedWaveApprovalNone        ProgressiveRolloutPlannedWaveApproval = "none"
-)
-
-// Defines values for ProgressiveRolloutPlannedWaveProgression.
-const (
-	ProgressiveRolloutPlannedWaveProgressionAutomatic ProgressiveRolloutPlannedWaveProgression = "automatic"
-	ProgressiveRolloutPlannedWaveProgressionManual    ProgressiveRolloutPlannedWaveProgression = "manual"
-)
-
-// Defines values for ProgressiveRolloutSpecDefaultPromotion.
-const (
-	ProgressiveRolloutSpecDefaultPromotionAtStart   ProgressiveRolloutSpecDefaultPromotion = "atStart"
-	ProgressiveRolloutSpecDefaultPromotionNone      ProgressiveRolloutSpecDefaultPromotion = "none"
-	ProgressiveRolloutSpecDefaultPromotionOnSuccess ProgressiveRolloutSpecDefaultPromotion = "onSuccess"
-)
-
-// Defines values for ProgressiveRolloutState.
-const (
-	ProgressiveRolloutStateAwaitingPinnedEnvironments ProgressiveRolloutState = "AwaitingPinnedEnvironments"
-	ProgressiveRolloutStateCancelled                  ProgressiveRolloutState = "Cancelled"
-	ProgressiveRolloutStateCancelling                 ProgressiveRolloutState = "Cancelling"
-	ProgressiveRolloutStateDraft                      ProgressiveRolloutState = "Draft"
-	ProgressiveRolloutStateFailed                     ProgressiveRolloutState = "Failed"
-	ProgressiveRolloutStatePaused                     ProgressiveRolloutState = "Paused"
-	ProgressiveRolloutStateReady                      ProgressiveRolloutState = "Ready"
-	ProgressiveRolloutStateRolledBack                 ProgressiveRolloutState = "RolledBack"
-	ProgressiveRolloutStateRollingBack                ProgressiveRolloutState = "RollingBack"
-	ProgressiveRolloutStateRunning                    ProgressiveRolloutState = "Running"
-	ProgressiveRolloutStateSucceeded                  ProgressiveRolloutState = "Succeeded"
-	ProgressiveRolloutStateSuperseded                 ProgressiveRolloutState = "Superseded"
-)
-
-// Defines values for ProgressiveRolloutTargetFacetKind.
-const (
-	ProgressiveRolloutTargetFacetKindEnvironmentType ProgressiveRolloutTargetFacetKind = "environment_type"
-	ProgressiveRolloutTargetFacetKindIsProduction    ProgressiveRolloutTargetFacetKind = "is_production"
-	ProgressiveRolloutTargetFacetKindLabel           ProgressiveRolloutTargetFacetKind = "label"
-	ProgressiveRolloutTargetFacetKindProject         ProgressiveRolloutTargetFacetKind = "project"
-)
-
-// Defines values for ProgressiveRolloutTerminalResultOutcome.
-const (
-	ProgressiveRolloutTerminalResultOutcomeCancelled  ProgressiveRolloutTerminalResultOutcome = "Cancelled"
-	ProgressiveRolloutTerminalResultOutcomeFailed     ProgressiveRolloutTerminalResultOutcome = "Failed"
-	ProgressiveRolloutTerminalResultOutcomeRolledBack ProgressiveRolloutTerminalResultOutcome = "RolledBack"
-	ProgressiveRolloutTerminalResultOutcomeSucceeded  ProgressiveRolloutTerminalResultOutcome = "Succeeded"
-	ProgressiveRolloutTerminalResultOutcomeSuperseded ProgressiveRolloutTerminalResultOutcome = "Superseded"
-)
-
-// Defines values for ProgressiveRolloutWaveSpecApproval.
-const (
-	ProgressiveRolloutWaveSpecApprovalEnvironment ProgressiveRolloutWaveSpecApproval = "environment"
-	ProgressiveRolloutWaveSpecApprovalNone        ProgressiveRolloutWaveSpecApproval = "none"
-)
-
-// Defines values for ProgressiveRolloutWaveSpecProgression.
-const (
-	ProgressiveRolloutWaveSpecProgressionAutomatic ProgressiveRolloutWaveSpecProgression = "automatic"
-	ProgressiveRolloutWaveSpecProgressionManual    ProgressiveRolloutWaveSpecProgression = "manual"
-)
-
 // Defines values for ProjectStatus.
 const (
 	ProjectStatusActive   ProjectStatus = "active"
@@ -679,6 +554,26 @@ type DeploymentAdmissionRequest struct {
 
 // DeploymentAdmissionRequestMode defines model for DeploymentAdmissionRequest.Mode.
 type DeploymentAdmissionRequestMode string
+
+// DeploymentOutcomeAcknowledgement defines model for DeploymentOutcomeAcknowledgement.
+type DeploymentOutcomeAcknowledgement struct {
+	AcknowledgedAt time.Time          `json:"acknowledged_at"`
+	ActorId        openapi_types.UUID `json:"actor_id"`
+	DeploymentId   openapi_types.UUID `json:"deployment_id"`
+	EnvironmentId  openapi_types.UUID `json:"environment_id"`
+	OperationRef   string             `json:"operation_ref"`
+	PluginId       string             `json:"plugin_id"`
+	Reason         string             `json:"reason"`
+
+	// Replayed True when this identical acknowledgement had already been recorded.
+	Replayed bool `json:"replayed"`
+}
+
+// DeploymentOutcomeAcknowledgementBody defines model for DeploymentOutcomeAcknowledgementBody.
+type DeploymentOutcomeAcknowledgementBody struct {
+	// Reason Why the operator is certain the Runner attempt can no longer change the Environment, for example the confirmed removal of its job.
+	Reason string `json:"reason"`
+}
 
 // Environment An environment.
 type Environment struct {
@@ -1875,15 +1770,6 @@ type ModuleVersionLifecycleTransactionResult struct {
 	Versions      []CoreModuleVersion `json:"versions"`
 }
 
-// ModuleVersionPage A page of the list modules versions response.
-type ModuleVersionPage struct {
-	// Items The items in this page
-	Items []ModuleVersionSummary `json:"items"`
-
-	// NextPageToken The page token to use to request the next page of items
-	NextPageToken *string `json:"next_page_token,omitempty"`
-}
-
 // ModuleVersionPinBulkAction defines model for ModuleVersionPinBulkAction.
 type ModuleVersionPinBulkAction string
 
@@ -2526,563 +2412,6 @@ type PluginResourceEvent struct {
 	Type              string              `json:"type"`
 	VersionUuid       *openapi_types.UUID `json:"version_uuid,omitempty"`
 }
-
-// ProgressiveRollout defines model for ProgressiveRollout.
-type ProgressiveRollout struct {
-	ArchivedAt          *time.Time               `json:"archived_at,omitempty"`
-	CreatedAt           time.Time                `json:"created_at"`
-	CreatedBy           openapi_types.UUID       `json:"created_by"`
-	CurrentPlanRevision *int                     `json:"current_plan_revision,omitempty"`
-	ExecutionStarted    bool                     `json:"execution_started"`
-	Id                  openapi_types.UUID       `json:"id"`
-	OrgId               string                   `json:"org_id"`
-	ResourceVersion     int64                    `json:"resource_version"`
-	Spec                ProgressiveRolloutSpec   `json:"spec"`
-	State               ProgressiveRolloutState  `json:"state"`
-	Status              ProgressiveRolloutStatus `json:"status"`
-	UpdatedAt           time.Time                `json:"updated_at"`
-}
-
-// ProgressiveRolloutApproval defines model for ProgressiveRolloutApproval.
-type ProgressiveRolloutApproval struct {
-	Actor             openapi_types.UUID                   `json:"actor"`
-	Coverages         []ProgressiveRolloutApprovalCoverage `json:"coverages"`
-	GrantedAt         time.Time                            `json:"granted_at"`
-	Id                openapi_types.UUID                   `json:"id"`
-	IntentFingerprint string                               `json:"intent_fingerprint"`
-	PlanRevision      int                                  `json:"plan_revision"`
-	Reason            string                               `json:"reason"`
-	RevokedAt         *time.Time                           `json:"revoked_at,omitempty"`
-	RolloutId         openapi_types.UUID                   `json:"rollout_id"`
-	ScopeId           openapi_types.UUID                   `json:"scope_id"`
-	ScopeType         ProgressiveRolloutApprovalScopeType  `json:"scope_type"`
-}
-
-// ProgressiveRolloutApprovalScopeType defines model for ProgressiveRolloutApproval.ScopeType.
-type ProgressiveRolloutApprovalScopeType string
-
-// ProgressiveRolloutApprovalBody defines model for ProgressiveRolloutApprovalBody.
-type ProgressiveRolloutApprovalBody struct {
-	PlanRevision int `json:"plan_revision"`
-
-	// Reason Mandatory human-readable reason retained with the immutable approval grant.
-	Reason    string                                  `json:"reason"`
-	ScopeId   openapi_types.UUID                      `json:"scope_id"`
-	ScopeType ProgressiveRolloutApprovalBodyScopeType `json:"scope_type"`
-}
-
-// ProgressiveRolloutApprovalBodyScopeType defines model for ProgressiveRolloutApprovalBody.ScopeType.
-type ProgressiveRolloutApprovalBodyScopeType string
-
-// ProgressiveRolloutApprovalCoverage defines model for ProgressiveRolloutApprovalCoverage.
-type ProgressiveRolloutApprovalCoverage struct {
-	ConsumedAt         *time.Time         `json:"consumed_at,omitempty"`
-	EnvironmentId      openapi_types.UUID `json:"environment_id"`
-	InvalidatedAt      *time.Time         `json:"invalidated_at,omitempty"`
-	InvalidationReason *string            `json:"invalidation_reason,omitempty"`
-
-	// PinActivationBoundaries Target Module ID to exact latest Pin activation event UUID, or an empty value when none existed.
-	PinActivationBoundaries map[string]string `json:"pin_activation_boundaries"`
-	RevokedAt               *time.Time        `json:"revoked_at,omitempty"`
-}
-
-// ProgressiveRolloutClassification defines model for ProgressiveRolloutClassification.
-type ProgressiveRolloutClassification string
-
-// ProgressiveRolloutCommandBody defines model for ProgressiveRolloutCommandBody.
-type ProgressiveRolloutCommandBody struct {
-	// ConfirmDefectiveVersions Explicit confirmation that an authorised Rollback may restore a Defective starting version.
-	ConfirmDefectiveVersions *bool               `json:"confirm_defective_versions,omitempty"`
-	EnvironmentId            *openapi_types.UUID `json:"environment_id,omitempty"`
-
-	// EnvironmentIds Optional explicit subset for deferred Pin actions; omission selects every eligible Environment.
-	EnvironmentIds          *[]openapi_types.UUID `json:"environment_ids,omitempty"`
-	ExpectedResourceVersion int64                 `json:"expected_resource_version"`
-
-	// Reason Mandatory human reason for audited commands such as bypass-bake.
-	Reason *string `json:"reason,omitempty"`
-	WaveId *string `json:"wave_id,omitempty"`
-}
-
-// ProgressiveRolloutConcurrency defines model for ProgressiveRolloutConcurrency.
-type ProgressiveRolloutConcurrency struct {
-	Absolute   *int     `json:"absolute,omitempty"`
-	Percentage *float64 `json:"percentage,omitempty"`
-}
-
-// ProgressiveRolloutConflict defines model for ProgressiveRolloutConflict.
-type ProgressiveRolloutConflict struct {
-	Actual              map[string]interface{}           `json:"actual"`
-	CreatedAt           time.Time                        `json:"created_at"`
-	EnvironmentId       openapi_types.UUID               `json:"environment_id"`
-	Expected            map[string]interface{}           `json:"expected"`
-	Id                  openapi_types.UUID               `json:"id"`
-	Kind                string                           `json:"kind"`
-	ModuleId            *string                          `json:"module_id,omitempty"`
-	ObservedFingerprint string                           `json:"observed_fingerprint"`
-	PlanRevision        int                              `json:"plan_revision"`
-	Resolution          *string                          `json:"resolution,omitempty"`
-	ResolvedAt          *time.Time                       `json:"resolved_at,omitempty"`
-	ResolvedBy          *openapi_types.UUID              `json:"resolved_by,omitempty"`
-	RolloutId           openapi_types.UUID               `json:"rollout_id"`
-	Status              ProgressiveRolloutConflictStatus `json:"status"`
-}
-
-// ProgressiveRolloutConflictStatus defines model for ProgressiveRolloutConflict.Status.
-type ProgressiveRolloutConflictStatus string
-
-// ProgressiveRolloutConflictResolutionBody defines model for ProgressiveRolloutConflictResolutionBody.
-type ProgressiveRolloutConflictResolutionBody struct {
-	ExpectedResourceVersion int64  `json:"expected_resource_version"`
-	ObservedFingerprint     string `json:"observed_fingerprint"`
-	PlanRevision            int    `json:"plan_revision"`
-}
-
-// ProgressiveRolloutDetail defines model for ProgressiveRolloutDetail.
-type ProgressiveRolloutDetail struct {
-	Approvals  []ProgressiveRolloutApproval             `json:"approvals"`
-	Conflicts  []ProgressiveRolloutConflict             `json:"conflicts"`
-	Events     []ProgressiveRolloutEvent                `json:"events"`
-	Executions []ProgressiveRolloutEnvironmentExecution `json:"executions"`
-	Metrics    ProgressiveRolloutMetrics                `json:"metrics"`
-	Plan       *ProgressiveRolloutPlan                  `json:"plan,omitempty"`
-	Rollout    ProgressiveRollout                       `json:"rollout"`
-}
-
-// ProgressiveRolloutDraftUpdate defines model for ProgressiveRolloutDraftUpdate.
-type ProgressiveRolloutDraftUpdate struct {
-	ExpectedResourceVersion int64                  `json:"expected_resource_version"`
-	Spec                    ProgressiveRolloutSpec `json:"spec"`
-}
-
-// ProgressiveRolloutEnvironmentExecution defines model for ProgressiveRolloutEnvironmentExecution.
-type ProgressiveRolloutEnvironmentExecution struct {
-	ActualVersions map[string]string `json:"actual_versions"`
-
-	// AdmissionBaseDeploymentId Latest admitted attempt's actual predecessor. Forward retry planning may use a later base without changing the rollback base.
-	AdmissionBaseDeploymentId *openapi_types.UUID `json:"admission_base_deployment_id,omitempty"`
-	Attempts                  int                 `json:"attempts"`
-	Changed                   bool                `json:"changed"`
-	CompletedAt               *time.Time          `json:"completed_at,omitempty"`
-	DeploymentId              *openapi_types.UUID `json:"deployment_id,omitempty"`
-
-	// EffectiveBaseDeploymentId Immutable first successful state-changing Deployment captured before this Rollout's first forward admission. This is the rollback base, not a later forward retry's admission base.
-	EffectiveBaseDeploymentId *openapi_types.UUID     `json:"effective_base_deployment_id,omitempty"`
-	EnvironmentId             openapi_types.UUID      `json:"environment_id"`
-	ExecutionDiff             *map[string]interface{} `json:"execution_diff,omitempty"`
-	ExecutionFingerprint      *string                 `json:"execution_fingerprint,omitempty"`
-	ExecutionGraph            *map[string]interface{} `json:"execution_graph,omitempty"`
-	ExecutionManifest         *map[string]interface{} `json:"execution_manifest,omitempty"`
-
-	// FirstForwardDeploymentId Data Plane-owned first forward Deployment identity for this operation and Environment.
-	FirstForwardDeploymentId *openapi_types.UUID                   `json:"first_forward_deployment_id,omitempty"`
-	LastError                *string                               `json:"last_error,omitempty"`
-	PreDeploymentAttempts    int                                   `json:"pre_deployment_attempts"`
-	ProjectId                string                                `json:"project_id"`
-	Removal                  *ProgressiveRolloutEnvironmentRemoval `json:"removal,omitempty"`
-	ResourceVersion          int64                                 `json:"resource_version"`
-	RetryAt                  *time.Time                            `json:"retry_at,omitempty"`
-	RetryStartedAt           *time.Time                            `json:"retry_started_at,omitempty"`
-
-	// RollbackAvailable Factual current-state eligibility to roll back this Environment to the Rollout's captured base. Authorization and authoritative Data Plane admission are still required.
-	RollbackAvailable    *bool               `json:"rollback_available,omitempty"`
-	RollbackDeploymentId *openapi_types.UUID `json:"rollback_deployment_id,omitempty"`
-
-	// RollbackRetryAvailable Factual current-state eligibility for an explicit retry of the latest failed rollback. Authorization and authoritative Data Plane admission are still required.
-	RollbackRetryAvailable *bool `json:"rollback_retry_available,omitempty"`
-
-	// RollbackRetryPending An explicit rollback retry command is durably recorded but its new Deployment has not been admitted.
-	RollbackRetryPending *bool                              `json:"rollback_retry_pending,omitempty"`
-	StartedAt            *time.Time                         `json:"started_at,omitempty"`
-	State                ProgressiveRolloutEnvironmentState `json:"state"`
-	WaveId               string                             `json:"wave_id"`
-}
-
-// ProgressiveRolloutEnvironmentRemoval defines model for ProgressiveRolloutEnvironmentRemoval.
-type ProgressiveRolloutEnvironmentRemoval struct {
-	Actor       openapi_types.UUID `json:"actor"`
-	DeletedAt   time.Time          `json:"deleted_at"`
-	OperationId openapi_types.UUID `json:"operation_id"`
-	Reason      string             `json:"reason"`
-}
-
-// ProgressiveRolloutEnvironmentState defines model for ProgressiveRolloutEnvironmentState.
-type ProgressiveRolloutEnvironmentState string
-
-// ProgressiveRolloutEnvironmentTombstone defines model for ProgressiveRolloutEnvironmentTombstone.
-type ProgressiveRolloutEnvironmentTombstone struct {
-	DeletedAt              *time.Time          `json:"deleted_at,omitempty"`
-	DeletedBy              *openapi_types.UUID `json:"deleted_by,omitempty"`
-	DeletionOperationId    *openapi_types.UUID `json:"deletion_operation_id,omitempty"`
-	DeletionReason         *string             `json:"deletion_reason,omitempty"`
-	EnvironmentDisplayName *string             `json:"environment_display_name,omitempty"`
-	EnvironmentId          openapi_types.UUID  `json:"environment_id"`
-	EnvironmentSlug        string              `json:"environment_slug"`
-	ProjectId              string              `json:"project_id"`
-	ProjectUuid            openapi_types.UUID  `json:"project_uuid"`
-	WaveId                 string              `json:"wave_id"`
-}
-
-// ProgressiveRolloutEvent defines model for ProgressiveRolloutEvent.
-type ProgressiveRolloutEvent struct {
-	Actor        *openapi_types.UUID    `json:"actor,omitempty"`
-	CreatedAt    time.Time              `json:"created_at"`
-	Payload      map[string]interface{} `json:"payload"`
-	PlanRevision *int                   `json:"plan_revision,omitempty"`
-	RolloutId    openapi_types.UUID     `json:"rollout_id"`
-	Sequence     int64                  `json:"sequence"`
-	Type         string                 `json:"type"`
-}
-
-// ProgressiveRolloutMetrics defines model for ProgressiveRolloutMetrics.
-type ProgressiveRolloutMetrics struct {
-	ApprovalWaitSeconds         int64                           `json:"approval_wait_seconds"`
-	BakeBypassCount             int                             `json:"bake_bypass_count"`
-	BakeDurationSeconds         int64                           `json:"bake_duration_seconds"`
-	BlockedEnvironments         int                             `json:"blocked_environments"`
-	ContinueUnpinnedCount       int                             `json:"continue_unpinned_count"`
-	DurationSeconds             int64                           `json:"duration_seconds"`
-	EnvironmentRemovedCount     int                             `json:"environment_removed_count"`
-	FailureRate                 float64                         `json:"failure_rate"`
-	PinOverrideCount            int                             `json:"pin_override_count"`
-	PinnedEnvironments          int                             `json:"pinned_environments"`
-	RollbackCount               int                             `json:"rollback_count"`
-	SuccessRate                 float64                         `json:"success_rate"`
-	SupersededCount             int                             `json:"superseded_count"`
-	UnpinnedPendingEnvironments int                             `json:"unpinned_pending_environments"`
-	Waves                       []ProgressiveRolloutWaveMetrics `json:"waves"`
-}
-
-// ProgressiveRolloutModuleChange defines model for ProgressiveRolloutModuleChange.
-type ProgressiveRolloutModuleChange struct {
-	From     string `json:"from"`
-	ModuleId string `json:"module_id"`
-
-	// TargetDigest Exact immutable external artifact digest. Empty for inline source.
-	TargetDigest  string                      `json:"target_digest"`
-	TargetStatus  ModuleVersionSemanticStatus `json:"target_status"`
-	TargetVersion string                      `json:"target_version"`
-}
-
-// ProgressiveRolloutModuleSnapshot defines model for ProgressiveRolloutModuleSnapshot.
-type ProgressiveRolloutModuleSnapshot struct {
-	Digest  string                       `json:"digest"`
-	Status  *ModuleVersionSemanticStatus `json:"status,omitempty"`
-	Version string                       `json:"version"`
-}
-
-// ProgressiveRolloutPage defines model for ProgressiveRolloutPage.
-type ProgressiveRolloutPage struct {
-	Items         []ProgressiveRollout          `json:"items"`
-	NextPageToken *string                       `json:"next_page_token,omitempty"`
-	ViewCounts    *ProgressiveRolloutViewCounts `json:"view_counts,omitempty"`
-}
-
-// ProgressiveRolloutPinNoteSnapshot defines model for ProgressiveRolloutPinNoteSnapshot.
-type ProgressiveRolloutPinNoteSnapshot struct {
-	Actor     openapi_types.UUID `json:"actor"`
-	ActorType string             `json:"actor_type"`
-	CreatedAt time.Time          `json:"created_at"`
-	Id        openapi_types.UUID `json:"id"`
-	Note      string             `json:"note"`
-}
-
-// ProgressiveRolloutPinSnapshot defines model for ProgressiveRolloutPinSnapshot.
-type ProgressiveRolloutPinSnapshot struct {
-	ActivationEventId    openapi_types.UUID                      `json:"activation_event_id"`
-	CreatedAt            time.Time                               `json:"created_at"`
-	CreatedBy            *openapi_types.UUID                     `json:"created_by,omitempty"`
-	CreatedByType        *string                                 `json:"created_by_type,omitempty"`
-	CreationReason       *string                                 `json:"creation_reason,omitempty"`
-	Id                   openapi_types.UUID                      `json:"id"`
-	ModuleId             string                                  `json:"module_id"`
-	Notes                *[]ProgressiveRolloutPinNoteSnapshot    `json:"notes,omitempty"`
-	OverrideActor        *openapi_types.UUID                     `json:"override_actor,omitempty"`
-	OverrideDeploymentId *openapi_types.UUID                     `json:"override_deployment_id,omitempty"`
-	OverrideOperationId  *openapi_types.UUID                     `json:"override_operation_id,omitempty"`
-	OverrideReason       *string                                 `json:"override_reason,omitempty"`
-	ScopeId              *openapi_types.UUID                     `json:"scope_id,omitempty"`
-	ScopeType            *ProgressiveRolloutPinSnapshotScopeType `json:"scope_type,omitempty"`
-	Status               *ModuleVersionPinStatus                 `json:"status,omitempty"`
-	Version              string                                  `json:"version"`
-}
-
-// ProgressiveRolloutPinSnapshotScopeType defines model for ProgressiveRolloutPinSnapshot.ScopeType.
-type ProgressiveRolloutPinSnapshotScopeType string
-
-// ProgressiveRolloutPlan defines model for ProgressiveRolloutPlan.
-type ProgressiveRolloutPlan struct {
-	Changes          []ProgressiveRolloutPlanModuleChange   `json:"changes"`
-	CreatedAt        time.Time                              `json:"created_at"`
-	DefaultPromotion ProgressiveRolloutPlanDefaultPromotion `json:"default_promotion"`
-	Environments     []ProgressiveRolloutPlannedEnvironment `json:"environments"`
-	Fingerprint      string                                 `json:"fingerprint"`
-	Promotions       []ProgressiveRolloutPromotion          `json:"promotions"`
-	Revision         int                                    `json:"revision"`
-	Waves            []ProgressiveRolloutPlannedWave        `json:"waves"`
-}
-
-// ProgressiveRolloutPlanDefaultPromotion defines model for ProgressiveRolloutPlan.DefaultPromotion.
-type ProgressiveRolloutPlanDefaultPromotion string
-
-// ProgressiveRolloutPlanModuleChange defines model for ProgressiveRolloutPlanModuleChange.
-type ProgressiveRolloutPlanModuleChange struct {
-	From          string                      `json:"from"`
-	ModuleId      string                      `json:"module_id"`
-	TargetDigest  string                      `json:"target_digest"`
-	TargetStatus  ModuleVersionSemanticStatus `json:"target_status"`
-	TargetVersion string                      `json:"target_version"`
-
-	// TargetVersionUuid Exact immutable Core Module Version identity frozen by the Plan.
-	TargetVersionUuid *openapi_types.UUID `json:"target_version_uuid,omitempty"`
-}
-
-// ProgressiveRolloutPlannedChange defines model for ProgressiveRolloutPlannedChange.
-type ProgressiveRolloutPlannedChange struct {
-	Classification      ProgressiveRolloutClassification `json:"classification"`
-	ModuleId            string                           `json:"module_id"`
-	ObservedFingerprint *string                          `json:"observed_fingerprint,omitempty"`
-	Reason              *string                          `json:"reason,omitempty"`
-	StartingDigest      *string                          `json:"starting_digest,omitempty"`
-	StartingVersion     *string                          `json:"starting_version,omitempty"`
-	TargetDigest        string                           `json:"target_digest"`
-	TargetVersion       string                           `json:"target_version"`
-}
-
-// ProgressiveRolloutPlannedEnvironment defines model for ProgressiveRolloutPlannedEnvironment.
-type ProgressiveRolloutPlannedEnvironment struct {
-	Changes                   []ProgressiveRolloutPlannedChange           `json:"changes"`
-	DesiredDiff               *map[string]interface{}                     `json:"desired_diff,omitempty"`
-	DesiredGraph              *map[string]interface{}                     `json:"desired_graph,omitempty"`
-	DesiredManifest           *map[string]interface{}                     `json:"desired_manifest,omitempty"`
-	DisplayName               *string                                     `json:"display_name,omitempty"`
-	EffectiveBaseDeploymentId *openapi_types.UUID                         `json:"effective_base_deployment_id,omitempty"`
-	EnvironmentType           string                                      `json:"environment_type"`
-	Id                        string                                      `json:"id"`
-	IsProduction              bool                                        `json:"is_production"`
-	Labels                    map[string]string                           `json:"labels"`
-	LatestDeploymentId        *openapi_types.UUID                         `json:"latest_deployment_id,omitempty"`
-	Modules                   map[string]ProgressiveRolloutModuleSnapshot `json:"modules"`
-	Pins                      *map[string][]ProgressiveRolloutPinSnapshot `json:"pins,omitempty"`
-	PlanningBaseDeploymentId  *openapi_types.UUID                         `json:"planning_base_deployment_id,omitempty"`
-	PlanningFingerprint       *string                                     `json:"planning_fingerprint,omitempty"`
-	ProjectId                 string                                      `json:"project_id"`
-	ProjectUuid               openapi_types.UUID                          `json:"project_uuid"`
-	Readiness                 *ProgressiveRolloutEnvironmentState         `json:"readiness,omitempty"`
-	ResolvedConcurrency       int                                         `json:"resolved_concurrency"`
-	State                     ProgressiveRolloutEnvironmentState          `json:"state"`
-	Uuid                      openapi_types.UUID                          `json:"uuid"`
-	WaveId                    string                                      `json:"wave_id"`
-}
-
-// ProgressiveRolloutPlannedWave defines model for ProgressiveRolloutPlannedWave.
-type ProgressiveRolloutPlannedWave struct {
-	Approval            ProgressiveRolloutPlannedWaveApproval    `json:"approval"`
-	BakeTimeSeconds     int                                      `json:"bake_time_seconds"`
-	EnvironmentIds      []string                                 `json:"environment_ids"`
-	Id                  string                                   `json:"id"`
-	MaxConcurrency      ProgressiveRolloutConcurrency            `json:"max_concurrency"`
-	Name                string                                   `json:"name"`
-	Order               int                                      `json:"order"`
-	Progression         ProgressiveRolloutPlannedWaveProgression `json:"progression"`
-	ResolvedConcurrency int                                      `json:"resolved_concurrency"`
-	Retry               ProgressiveRolloutRetryPolicy            `json:"retry"`
-}
-
-// ProgressiveRolloutPlannedWaveApproval defines model for ProgressiveRolloutPlannedWave.Approval.
-type ProgressiveRolloutPlannedWaveApproval string
-
-// ProgressiveRolloutPlannedWaveProgression defines model for ProgressiveRolloutPlannedWave.Progression.
-type ProgressiveRolloutPlannedWaveProgression string
-
-// ProgressiveRolloutPrepareBody defines model for ProgressiveRolloutPrepareBody.
-type ProgressiveRolloutPrepareBody struct {
-	AcceptedConflictFingerprints []string `json:"accepted_conflict_fingerprints,omitempty"`
-	CandidateFingerprint         string   `json:"candidate_fingerprint"`
-	ExpectedResourceVersion      int64    `json:"expected_resource_version"`
-}
-
-// ProgressiveRolloutPromotion defines model for ProgressiveRolloutPromotion.
-type ProgressiveRolloutPromotion struct {
-	ModuleId               string                       `json:"module_id"`
-	PreviousDefaultDigest  *string                      `json:"previous_default_digest,omitempty"`
-	PreviousDefaultStatus  *ModuleVersionSemanticStatus `json:"previous_default_status,omitempty"`
-	PreviousDefaultVersion *string                      `json:"previous_default_version,omitempty"`
-	TargetDigest           string                       `json:"target_digest"`
-	TargetVersion          string                       `json:"target_version"`
-}
-
-// ProgressiveRolloutRetryPolicy defines model for ProgressiveRolloutRetryPolicy.
-type ProgressiveRolloutRetryPolicy struct {
-	InitialDelaySeconds    int `json:"initial_delay_seconds"`
-	MaxAttempts            int `json:"max_attempts"`
-	MaximumDelaySeconds    int `json:"maximum_delay_seconds"`
-	MaximumDurationSeconds int `json:"maximum_duration_seconds"`
-}
-
-// ProgressiveRolloutSelector defines model for ProgressiveRolloutSelector.
-type ProgressiveRolloutSelector struct {
-	EnvironmentIds   []string          `json:"environment_ids,omitempty"`
-	EnvironmentTypes []string          `json:"environment_types,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
-	ProjectIds       []string          `json:"project_ids,omitempty"`
-}
-
-// ProgressiveRolloutSpec defines model for ProgressiveRolloutSpec.
-type ProgressiveRolloutSpec struct {
-	Changes          []ProgressiveRolloutModuleChange       `json:"changes"`
-	DefaultPromotion ProgressiveRolloutSpecDefaultPromotion `json:"default_promotion"`
-	Name             string                                 `json:"name"`
-	Selector         ProgressiveRolloutSelector             `json:"selector"`
-	Waves            []ProgressiveRolloutWaveSpec           `json:"waves"`
-}
-
-// ProgressiveRolloutSpecDefaultPromotion defines model for ProgressiveRolloutSpec.DefaultPromotion.
-type ProgressiveRolloutSpecDefaultPromotion string
-
-// ProgressiveRolloutState defines model for ProgressiveRolloutState.
-type ProgressiveRolloutState string
-
-// ProgressiveRolloutStatus defines model for ProgressiveRolloutStatus.
-type ProgressiveRolloutStatus struct {
-	AlreadyCompliant           int                               `json:"already_compliant"`
-	AuthorizedWaveIds          *[]string                         `json:"authorized_wave_ids,omitempty"`
-	BakeBypassCount            *int                              `json:"bake_bypass_count,omitempty"`
-	BakeBypassReason           *string                           `json:"bake_bypass_reason,omitempty"`
-	BakeBypassedAt             *time.Time                        `json:"bake_bypassed_at,omitempty"`
-	BakeBypassedBy             *openapi_types.UUID               `json:"bake_bypassed_by,omitempty"`
-	BakeDueAt                  *time.Time                        `json:"bake_due_at,omitempty"`
-	BakeStartedAt              *time.Time                        `json:"bake_started_at,omitempty"`
-	BakingWaveId               *string                           `json:"baking_wave_id,omitempty"`
-	Blocked                    int                               `json:"blocked"`
-	Completed                  int                               `json:"completed"`
-	CompletedAt                *time.Time                        `json:"completed_at,omitempty"`
-	CompletedWaveIds           *[]string                         `json:"completed_wave_ids,omitempty"`
-	ConfirmedDefectiveRollback *bool                             `json:"confirmed_defective_rollback,omitempty"`
-	Conflicts                  int                               `json:"conflicts"`
-	CurrentWaveId              *string                           `json:"current_wave_id,omitempty"`
-	DefaultsPromoted           *bool                             `json:"defaults_promoted,omitempty"`
-	EnvironmentRemoved         *int                              `json:"environment_removed,omitempty"`
-	Failed                     int                               `json:"failed"`
-	Message                    *string                           `json:"message,omitempty"`
-	NotApplicable              int                               `json:"not_applicable"`
-	Pinned                     *int                              `json:"pinned,omitempty"`
-	RollbackCount              *int                              `json:"rollback_count,omitempty"`
-	RollbackEnvironmentIds     *[]openapi_types.UUID             `json:"rollback_environment_ids,omitempty"`
-	Running                    int                               `json:"running"`
-	StartedAt                  *time.Time                        `json:"started_at,omitempty"`
-	TerminalResult             *ProgressiveRolloutTerminalResult `json:"terminal_result,omitempty"`
-	Total                      int                               `json:"total"`
-	UnpinnedPending            *int                              `json:"unpinned_pending,omitempty"`
-}
-
-// ProgressiveRolloutSupersessionCause defines model for ProgressiveRolloutSupersessionCause.
-type ProgressiveRolloutSupersessionCause struct {
-	ModuleId        string                       `json:"module_id"`
-	ModuleStatus    *string                      `json:"module_status,omitempty"`
-	SourceActor     *openapi_types.UUID          `json:"source_actor,omitempty"`
-	SourceCreatedAt *time.Time                   `json:"source_created_at,omitempty"`
-	SourceEvent     string                       `json:"source_event"`
-	SourceEventId   *openapi_types.UUID          `json:"source_event_id,omitempty"`
-	SourceReason    *string                      `json:"source_reason,omitempty"`
-	TargetVersion   string                       `json:"target_version"`
-	VersionStatus   *ModuleVersionSemanticStatus `json:"version_status,omitempty"`
-}
-
-// ProgressiveRolloutTargetEnvironment defines model for ProgressiveRolloutTargetEnvironment.
-type ProgressiveRolloutTargetEnvironment struct {
-	DisplayName         *string            `json:"display_name,omitempty"`
-	EnvironmentTypeId   string             `json:"environment_type_id"`
-	EnvironmentTypeUuid openapi_types.UUID `json:"environment_type_uuid"`
-	Id                  string             `json:"id"`
-	IsProduction        bool               `json:"is_production"`
-	Labels              map[string]string  `json:"labels"`
-	ProjectId           string             `json:"project_id"`
-	ProjectUuid         openapi_types.UUID `json:"project_uuid"`
-	Status              string             `json:"status"`
-	Uuid                openapi_types.UUID `json:"uuid"`
-}
-
-// ProgressiveRolloutTargetEnvironmentPage defines model for ProgressiveRolloutTargetEnvironmentPage.
-type ProgressiveRolloutTargetEnvironmentPage struct {
-	Facets        []ProgressiveRolloutTargetFacet       `json:"facets"`
-	Items         []ProgressiveRolloutTargetEnvironment `json:"items"`
-	NextPageToken *string                               `json:"next_page_token,omitempty"`
-	Total         int                                   `json:"total"`
-}
-
-// ProgressiveRolloutTargetFacet defines model for ProgressiveRolloutTargetFacet.
-type ProgressiveRolloutTargetFacet struct {
-	Count int                               `json:"count"`
-	Key   *string                           `json:"key,omitempty"`
-	Kind  ProgressiveRolloutTargetFacetKind `json:"kind"`
-	Value string                            `json:"value"`
-}
-
-// ProgressiveRolloutTargetFacetKind defines model for ProgressiveRolloutTargetFacet.Kind.
-type ProgressiveRolloutTargetFacetKind string
-
-// ProgressiveRolloutTerminalOutcomeCounts defines model for ProgressiveRolloutTerminalOutcomeCounts.
-type ProgressiveRolloutTerminalOutcomeCounts struct {
-	AlreadyCompliant   int `json:"already_compliant"`
-	EnvironmentRemoved int `json:"environment_removed"`
-	Failed             int `json:"failed"`
-	NotApplicable      int `json:"not_applicable"`
-	Pinned             int `json:"pinned"`
-	UnpinnedPending    int `json:"unpinned_pending"`
-	Unresolved         int `json:"unresolved"`
-	Updated            int `json:"updated"`
-}
-
-// ProgressiveRolloutTerminalResult defines model for ProgressiveRolloutTerminalResult.
-type ProgressiveRolloutTerminalResult struct {
-	EnvironmentRemovedCount int                                      `json:"environment_removed_count"`
-	EnvironmentTombstones   []ProgressiveRolloutEnvironmentTombstone `json:"environment_tombstones"`
-	FrozenOutcomeCounts     *ProgressiveRolloutTerminalOutcomeCounts `json:"frozen_outcome_counts,omitempty"`
-	Outcome                 ProgressiveRolloutTerminalResultOutcome  `json:"outcome"`
-	SupersededCauses        *[]ProgressiveRolloutSupersessionCause   `json:"superseded_causes,omitempty"`
-}
-
-// ProgressiveRolloutTerminalResultOutcome defines model for ProgressiveRolloutTerminalResult.Outcome.
-type ProgressiveRolloutTerminalResultOutcome string
-
-// ProgressiveRolloutViewCounts defines model for ProgressiveRolloutViewCounts.
-type ProgressiveRolloutViewCounts struct {
-	History int `json:"history"`
-	Plan    int `json:"plan"`
-	Running int `json:"running"`
-}
-
-// ProgressiveRolloutWaveMetrics defines model for ProgressiveRolloutWaveMetrics.
-type ProgressiveRolloutWaveMetrics struct {
-	Blocked         int     `json:"blocked"`
-	Completed       int     `json:"completed"`
-	DurationSeconds int64   `json:"duration_seconds"`
-	Failed          int     `json:"failed"`
-	FailureRate     float64 `json:"failure_rate"`
-	Succeeded       int     `json:"succeeded"`
-	SuccessRate     float64 `json:"success_rate"`
-	Total           int     `json:"total"`
-	WaveId          string  `json:"wave_id"`
-}
-
-// ProgressiveRolloutWaveSpec defines model for ProgressiveRolloutWaveSpec.
-type ProgressiveRolloutWaveSpec struct {
-	Approval        ProgressiveRolloutWaveSpecApproval    `json:"approval"`
-	BakeTimeSeconds int                                   `json:"bake_time_seconds"`
-	EnvironmentIds  []string                              `json:"environment_ids"`
-	Id              string                                `json:"id"`
-	MaxConcurrency  ProgressiveRolloutConcurrency         `json:"max_concurrency"`
-	Name            string                                `json:"name"`
-	Progression     ProgressiveRolloutWaveSpecProgression `json:"progression"`
-	Retry           ProgressiveRolloutRetryPolicy         `json:"retry"`
-}
-
-// ProgressiveRolloutWaveSpecApproval defines model for ProgressiveRolloutWaveSpec.Approval.
-type ProgressiveRolloutWaveSpecApproval string
-
-// ProgressiveRolloutWaveSpecProgression defines model for ProgressiveRolloutWaveSpec.Progression.
-type ProgressiveRolloutWaveSpecProgression string
 
 // Project A project.
 type Project struct {
@@ -4188,6 +3517,9 @@ type CreateEnvironmentJSONRequestBody = EnvironmentCreateBody
 // UpdateEnvironmentJSONRequestBody defines body for UpdateEnvironment for application/json ContentType.
 type UpdateEnvironmentJSONRequestBody = EnvironmentUpdateBody
 
+// AcknowledgeDeploymentOutcomeJSONRequestBody defines body for AcknowledgeDeploymentOutcome for application/json ContentType.
+type AcknowledgeDeploymentOutcomeJSONRequestBody = DeploymentOutcomeAcknowledgementBody
+
 // CreateResourceTypeJSONRequestBody defines body for CreateResourceType for application/json ContentType.
 type CreateResourceTypeJSONRequestBody = ResourceTypeCreateBody
 
@@ -5189,6 +4521,11 @@ type ClientInterface interface {
 
 	// GetEnvironmentDeletionImpact request
 	GetEnvironmentDeletionImpact(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AcknowledgeDeploymentOutcomeWithBody request with any body
+	AcknowledgeDeploymentOutcomeWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AcknowledgeDeploymentOutcome(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListResourceTypes request
 	ListResourceTypes(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7050,6 +6387,30 @@ func (c *Client) ListAvailableResourceTypes(ctx context.Context, orgId OrgIdPath
 
 func (c *Client) GetEnvironmentDeletionImpact(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetEnvironmentDeletionImpactRequest(c.Server, orgId, projectId, envId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AcknowledgeDeploymentOutcomeWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAcknowledgeDeploymentOutcomeRequestWithBody(c.Server, orgId, projectId, envId, deploymentId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AcknowledgeDeploymentOutcome(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAcknowledgeDeploymentOutcomeRequest(c.Server, orgId, projectId, envId, deploymentId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -13384,6 +12745,74 @@ func NewGetEnvironmentDeletionImpactRequest(server string, orgId OrgIdPathParam,
 	return req, nil
 }
 
+// NewAcknowledgeDeploymentOutcomeRequest calls the generic AcknowledgeDeploymentOutcome builder with application/json body
+func NewAcknowledgeDeploymentOutcomeRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAcknowledgeDeploymentOutcomeRequestWithBody(server, orgId, projectId, envId, deploymentId, "application/json", bodyReader)
+}
+
+// NewAcknowledgeDeploymentOutcomeRequestWithBody generates requests for AcknowledgeDeploymentOutcome with any type of body
+func NewAcknowledgeDeploymentOutcomeRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "envId", runtime.ParamLocationPath, envId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/deployments/%s/actions/acknowledge-outcome", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListResourceTypesRequest generates requests for ListResourceTypes
 func NewListResourceTypesRequest(server string, orgId OrgIdPathParam, params *ListResourceTypesParams) (*http.Request, error) {
 	var err error
@@ -14679,6 +14108,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetEnvironmentDeletionImpactWithResponse request
 	GetEnvironmentDeletionImpactWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentDeletionImpactResponse, error)
+
+	// AcknowledgeDeploymentOutcomeWithBodyWithResponse request with any body
+	AcknowledgeDeploymentOutcomeWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AcknowledgeDeploymentOutcomeResponse, error)
+
+	AcknowledgeDeploymentOutcomeWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*AcknowledgeDeploymentOutcomeResponse, error)
 
 	// ListResourceTypesWithResponse request
 	ListResourceTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListResourceTypesParams, reqEditors ...RequestEditorFn) (*ListResourceTypesResponse, error)
@@ -17238,6 +16672,33 @@ func (r GetEnvironmentDeletionImpactResponse) StatusCode() int {
 	return 0
 }
 
+type AcknowledgeDeploymentOutcomeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *DeploymentOutcomeAcknowledgement
+	JSON201      *DeploymentOutcomeAcknowledgement
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r AcknowledgeDeploymentOutcomeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AcknowledgeDeploymentOutcomeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListResourceTypesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18901,6 +18362,23 @@ func (c *ClientWithResponses) GetEnvironmentDeletionImpactWithResponse(ctx conte
 		return nil, err
 	}
 	return ParseGetEnvironmentDeletionImpactResponse(rsp)
+}
+
+// AcknowledgeDeploymentOutcomeWithBodyWithResponse request with arbitrary body returning *AcknowledgeDeploymentOutcomeResponse
+func (c *ClientWithResponses) AcknowledgeDeploymentOutcomeWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AcknowledgeDeploymentOutcomeResponse, error) {
+	rsp, err := c.AcknowledgeDeploymentOutcomeWithBody(ctx, orgId, projectId, envId, deploymentId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAcknowledgeDeploymentOutcomeResponse(rsp)
+}
+
+func (c *ClientWithResponses) AcknowledgeDeploymentOutcomeWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*AcknowledgeDeploymentOutcomeResponse, error) {
+	rsp, err := c.AcknowledgeDeploymentOutcome(ctx, orgId, projectId, envId, deploymentId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAcknowledgeDeploymentOutcomeResponse(rsp)
 }
 
 // ListResourceTypesWithResponse request returning *ListResourceTypesResponse
@@ -23500,6 +22978,67 @@ func ParseGetEnvironmentDeletionImpactResponse(rsp *http.Response) (*GetEnvironm
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAcknowledgeDeploymentOutcomeResponse parses an HTTP response from a AcknowledgeDeploymentOutcomeWithResponse call
+func ParseAcknowledgeDeploymentOutcomeResponse(rsp *http.Response) (*AcknowledgeDeploymentOutcomeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AcknowledgeDeploymentOutcomeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentOutcomeAcknowledgement
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest DeploymentOutcomeAcknowledgement
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

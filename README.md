@@ -74,7 +74,8 @@ make lint
 make test
 ```
 
-`make check-api-specs` verifies the Core contract against its pinned content SHA-256
-value. See [the contract sources](clients/platform-orchestrator-cp/SOURCE.md).
-The Progressive Rollouts plugin contract is checked against the digest recorded in
-[its source record](clients/progressive-rollouts/SOURCE.md).
+`make check-api-specs` checks every vendored contract against the SHA-256 recorded
+in its `SOURCE.md` ([Core](clients/platform-orchestrator-cp/SOURCE.md),
+[Progressive Rollouts](clients/progressive-rollouts/SOURCE.md)) and then compares the
+Core, Data Plane and IAM documents with their recorded upstream revisions, which
+needs network access.

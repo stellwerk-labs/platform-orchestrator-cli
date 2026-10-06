@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -45,14 +46,13 @@ func contractDocument(t *testing.T, dir, filename string) map[string]any {
 	return result
 }
 
-func TestQualifiedCoreContractSpecMatchesPinnedSHA(t *testing.T) {
-	root, err := os.OpenRoot("../../clients/platform-orchestrator-cp")
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, root.Close()) })
-	raw, err := root.ReadFile("spec.yaml")
-	require.NoError(t, err)
-	require.Equal(t, "af2e0ee1dcdb8196cc25469287da3e331d225a14e72c5cb927d668742100c4d9", fmt.Sprintf("%x", sha256.Sum256(raw)),
-		"spec.yaml SHA has changed; update the pin in check-api-specs.sh and this test")
+func TestCoreContractMatchesRecordedSource(t *testing.T) {
+	raw := readVendoredFile(t, coreContractDir, "spec.yaml")
+	require.Equal(t, recordedSourceValue(t, coreContractDir, "File SHA-256"), fmt.Sprintf("%x", sha256.Sum256(raw)),
+		"spec.yaml must be the byte-identical Core document recorded in SOURCE.md")
+	require.Regexp(t, "^[0-9a-f]{40}$", recordedSourceValue(t, coreContractDir, "Commit"))
+	require.Equal(t, "stellwerk-labs/platform-orchestrator-cp", recordedSourceValue(t, coreContractDir, "Repository"))
+	require.Equal(t, "openapi/spec.yaml", recordedSourceValue(t, coreContractDir, "File"))
 }
 
 func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
@@ -61,15 +61,29 @@ func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
 	require.NoError(t, document.Validate(t.Context(), openapi3.EnableExamplesValidation()))
 }
 
-func TestRolloutSchemasLiveInCoreSpecWithoutConflict(t *testing.T) {
+func TestCoreContractOwnsNoProgressiveRolloutsModel(t *testing.T) {
 	core := contractDocument(t, coreContractDir, "spec.yaml")
-	schemas, ok := core["components"].(map[string]any)["schemas"].(map[string]any)
-	require.True(t, ok)
-	for _, name := range []string{
-		"ProgressiveRollout", "ProgressiveRolloutDetail", "ProgressiveRolloutSpec",
-		"ProgressiveRolloutPage", "ProgressiveRolloutEvent", "ProgressiveRolloutPlan",
-	} {
-		require.Contains(t, schemas, name, "rollout type %s must be in spec.yaml components/schemas", name)
+	coreSchemas := core["components"].(map[string]any)["schemas"].(map[string]any)
+	for name := range coreSchemas {
+		require.NotContains(t, strings.ToLower(name), "progressiverollout", "Core must not define the plugin model %s", name)
+	}
+	operationIDs := map[string]bool{}
+	for path, item := range core["paths"].(map[string]any) {
+		require.NotContains(t, path, "/rollouts", "Core must not route plugin path %s", path)
+		for _, operation := range item.(map[string]any) {
+			if id, ok := operation.(map[string]any)["operationId"].(string); ok {
+				operationIDs[id] = true
+			}
+		}
+	}
+	for _, id := range []string{"listPluginContributions", "getPluginCapability", "invokePluginOperation", "getPluginDeploymentMaterial"} {
+		require.True(t, operationIDs[id], "Core must define %s", id)
+	}
+	rolloutSchemas := contractDocument(t, progressiveRolloutsContractDir, "spec.yaml")["components"].(map[string]any)["schemas"].(map[string]any)
+	for name, schema := range rolloutSchemas {
+		if _, mirrored := schema.(map[string]any)["x-stellwerk-core-schema"]; !mirrored {
+			require.NotContains(t, coreSchemas, name, "plugin schema %s must not shadow a Core schema", name)
+		}
 	}
 }
 
