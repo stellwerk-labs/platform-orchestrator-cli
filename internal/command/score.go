@@ -140,7 +140,12 @@ but never removed. Use other commands to remove workloads from the deployment ma
 			return err
 		}
 
-		_, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId)
+		queue, err := deployQueueFromFlags(cmd)
+		if err != nil {
+			return err
+		}
+
+		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue.enabled)
 		if err != nil {
 			return err
 		}
@@ -237,6 +242,11 @@ but never removed. Use other commands to remove workloads from the deployment ma
 		if v, _ := cmd.Flags().GetBool(deployCmdDryRunFlag); v {
 			body.IsDryRun = v
 		}
+		// Score workloads are merged into base.
+		if base != nil {
+			body.ExpectedBaseDeploymentId = ref.Ref(base.Id)
+		}
+		queue.apply(&body)
 
 		var logsAgeKey *age.X25519Identity
 		if !body.IsDryRun {
@@ -261,7 +271,7 @@ but never removed. Use other commands to remove workloads from the deployment ma
 			return err
 		}
 
-		_, err = commonDeployCmdInner(cmd, orgId, body, lastDeploymentManifest, logsAgeKey)
+		_, err = commonDeployCmdInner(cmd, orgId, body, base, logsAgeKey)
 		if err != nil {
 			return err
 		}
@@ -331,6 +341,7 @@ func init() {
 	ScoreDeployCmd.Flags().Bool(deployCmdNoPromptFlag, false, "Do not prompt for confirmation")
 	ScoreDeployCmd.Flags().Bool(deployCmdPlanOnlyFlag, false, "Set deployment mode to plan only")
 	ScoreDeployCmd.Flags().Bool(deployCmdDryRunFlag, false, "Dry run - validate the request but do not execute the deployment")
+	addDeployQueueFlags(ScoreDeployCmd)
 	ScoreDeployCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
 	ScoreDeployCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	ScoreDeployCmd.Flags().String(scorePrintManifestFlag, "", "Write the deployment manifest produced by score manifest conversion to the file at the given path and exit. Use '-' to write to stdout.")

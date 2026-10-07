@@ -27,6 +27,7 @@ const (
 	tableTypeCurrentUser            = "CurrentUser"
 	tableTypeDeployment             = "Deployment"
 	tableTypeDeploymentManifest     = "DeploymentManifest"
+	tableTypeDeploymentQueueItem    = "DeploymentQueueItem"
 	tableTypeDeploymentSummary      = "DeploymentSummary"
 	tableTypeEnvironment            = "Environment"
 	tableTypeEnvironmentTypeSummary = "EnvironmentTypeSummary"
@@ -54,10 +55,12 @@ const (
 	tableFieldCreatedAt               = "CreatedAt"
 	tableFieldCurrentTokenExpiresAt   = "CurrentTokenExpiresAt"
 	tableFieldDependencies            = "Dependencies"
+	tableFieldDeploymentId            = "DeploymentId"
 	tableFieldDescription             = "Description"
 	tableFieldDisplayName             = "DisplayName"
 	tableFieldEnvId                   = "EnvId"
 	tableFieldEnvTypeId               = "EnvTypeId"
+	tableFieldExpiresAt               = "ExpiresAt"
 	tableFieldId                      = "Id"
 	tableFieldIsSystem                = "IsSystem"
 	tableFieldIsDeveloperAccessible   = "IsDeveloperAccessible"
@@ -73,9 +76,11 @@ const (
 	tableFieldOrganizationMemberships = "OrganizationMemberships"
 	tableFieldOrgId                   = "OrgId"
 	tableFieldPlanOnly                = "PlanOnly"
+	tableFieldPosition                = "Position"
 	tableFieldProjectId               = "ProjectId"
 	tableFieldProviderMapping         = "ProviderMapping"
 	tableFieldProviderType            = "ProviderType"
+	tableFieldReasonCode              = "ReasonCode"
 	tableFieldResourceClass           = "ResourceClass"
 	tableFieldResourceType            = "ResourceType"
 	tableFieldRoleId                  = "RoleId"
@@ -85,6 +90,7 @@ const (
 	tableFieldSource                  = "Source"
 	tableFieldScopes                  = "Scopes"
 	tableFieldSchema                  = "Schema"
+	tableFieldState                   = "State"
 	tableFieldStatus                  = "Status"
 	tableFieldPermissions             = "Permissions"
 	tableFieldGroupDisplayName        = "GroupDisplayName"
@@ -121,6 +127,7 @@ var tableColumns = map[string][]string{
 	tableTypeActiveResourceNode:     {tableFieldId, tableFieldResourceType, tableFieldModuleId, tableFieldModuleVersion},
 	tableTypeDeployment:             {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt, tableFieldManifest, tableFieldRunnerId},
 	tableTypeDeploymentManifest:     {tableFieldWorkloads},
+	tableTypeDeploymentQueueItem:    {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldMode, tableFieldState, tableFieldPosition, tableFieldCreatedAt, tableFieldExpiresAt, tableFieldDeploymentId, tableFieldReasonCode},
 	tableTypeDeploymentSummary:      {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt},
 	tableTypeEnvironmentTypeSummary: {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt},
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},

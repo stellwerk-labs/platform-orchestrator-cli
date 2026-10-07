@@ -86,6 +86,8 @@ func TestScoreDeploy(t *testing.T) {
 			EnvId:     testEnvId,
 			Mode:      dp.DeploymentCreateBodyModePlanOnly,
 			IsDryRun:  true,
+			// Score workloads are merged into the current deployment.
+			ExpectedBaseDeploymentId: ref.Ref(lastDepId),
 			Manifest: &dp.DeploymentManifest{Workloads: map[string]dp.DeploymentManifestWorkload{
 				scoreTestWorkloadName: {
 					Resources: map[string]dp.DeploymentManifestResource{
@@ -227,10 +229,11 @@ func TestScoreDeploy_custom_class(t *testing.T) {
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
-			ProjectId:      testProjectId,
-			EnvId:          testEnvId,
-			Mode:           dp.DeploymentCreateBodyModePlanOnly,
-			RunnerLogLevel: ref.Ref(dp.DeploymentCreateBodyRunnerLogLevel("info")),
+			ProjectId:                testProjectId,
+			EnvId:                    testEnvId,
+			Mode:                     dp.DeploymentCreateBodyModePlanOnly,
+			RunnerLogLevel:           ref.Ref(dp.DeploymentCreateBodyRunnerLogLevel("info")),
+			ExpectedBaseDeploymentId: ref.Ref(lastDepId),
 			Manifest: &dp.DeploymentManifest{Workloads: map[string]dp.DeploymentManifestWorkload{
 				scoreTestWorkloadName: {
 					Resources: map[string]dp.DeploymentManifestResource{

@@ -28,7 +28,8 @@ may affect a normal deploy to this environment.
 
 Rollback does not revert changes to the runner or provider configurations.
 
-Like 'deploy', this command supports --plan-only, --dry-run, and flags for controlling deployment output and logs.
+Like 'deploy', this command supports --plan-only, --dry-run, the deployment queue flags --no-queue and --queue-ttl, and
+flags for controlling deployment output and logs.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
@@ -60,7 +61,12 @@ Like 'deploy', this command supports --plan-only, --dry-run, and flags for contr
 			return fmt.Errorf("deployment '%s' not found in project '%s' environment '%s'", targetDeploymentId, projectId, envId)
 		}
 
-		_, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId)
+		queue, err := deployQueueFromFlags(cmd)
+		if err != nil {
+			return err
+		}
+
+		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue.enabled)
 		if err != nil {
 			return err
 		}
@@ -71,6 +77,7 @@ Like 'deploy', this command supports --plan-only, --dry-run, and flags for contr
 			Mode:                   dp.DeploymentCreateBodyModeRollback,
 			RollbackToDeploymentId: ref.Ref(targetDeploymentId),
 		}
+		queue.apply(&body)
 
 		if v, _ := cmd.Flags().GetBool(deployCmdPlanOnlyFlag); v {
 			body.PlanOnly = ref.Ref(true)
@@ -108,7 +115,7 @@ Like 'deploy', this command supports --plan-only, --dry-run, and flags for contr
 			return err
 		}
 
-		deployment, err := commonDeployCmdInner(cmd, orgId, body, lastDeploymentManifest, logsAgeKey)
+		deployment, err := commonDeployCmdInner(cmd, orgId, body, base, logsAgeKey)
 		if err != nil {
 			return err
 		}
@@ -134,6 +141,7 @@ func init() {
 	RollbackCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
 	RollbackCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	RollbackCmd.Flags().Bool(deployCmdShowLogsFlag, false, "Show runner logs in the output of this command")
+	addDeployQueueFlags(RollbackCmd)
 
 	RootCmd.AddCommand(RollbackCmd)
 }

@@ -101,6 +101,8 @@ shared:
 
 By default, the command will prompt for confirmation of the diff before proceeding. This can be disabled with the --no-prompt flag and may be needed for non-interactive use.
 
+Deployments of one environment run one at a time. If another deployment is running or requests are already waiting, the request waits in the environment's deployment queue and starts in order once the environment is free; the command shows its position until then. Use --queue-ttl to bound the wait, or --no-queue to fail with environment_busy instead. Plan-only requests and dry runs are never queued. A queued request is resolved against the environment as it is when it starts, so a confirmed diff and manifests derived with --merge, --drop-workload or --drop-shared name their base deployment: if another deployment changed the environment in the meantime, the request fails with deployment_base_changed instead of reverting that change.
+
 Once a deployment is created, the CLI shows a URL which can be used to download the runner logs when the deployment completes. The level of the log produced by the runner might be defined with the --runner-logs-level flag, while the CLI will not produce any URL and logs will not be downloadable if the flag --skip-logs is set.
 `,
 	Args: cobra.ExactArgs(3),
@@ -151,23 +153,33 @@ Once a deployment is created, the CLI shows a URL which can be used to download 
 			return err
 		}
 
-		_, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId)
+		queue, err := deployQueueFromFlags(cmd)
 		if err != nil {
 			return err
 		}
 
+		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue.enabled)
+		if err != nil {
+			return err
+		}
+
+		// A merged or trimmed manifest is derived from base.
+		derivedFromBase := false
 		if v, _ := cmd.Flags().GetBool(deployCmdMergeFlag); v {
+			derivedFromBase = true
 			manifest = dp.DeploymentManifest{
 				Workloads: maps.Collect(internal.ConcatSeq2(maps.All(lastDeploymentManifest.Workloads), maps.All(manifest.Workloads))),
 				Shared:    maps.Collect(internal.ConcatSeq2(maps.All(lastDeploymentManifest.Shared), maps.All(manifest.Shared))),
 			}
 		}
 		if v, _ := cmd.Flags().GetStringArray(deployCmdDropWorkload); len(v) > 0 {
+			derivedFromBase = true
 			for _, workloadName := range v {
 				delete(manifest.Workloads, workloadName)
 			}
 		}
 		if v, _ := cmd.Flags().GetStringArray(deployCmdDropShared); len(v) > 0 {
+			derivedFromBase = true
 			for _, sharedName := range v {
 				delete(manifest.Shared, sharedName)
 			}
@@ -184,6 +196,10 @@ Once a deployment is created, the CLI shows a URL which can be used to download 
 			Mode:      dp.DeploymentCreateBodyModeDeploy,
 			Manifest:  &manifest,
 		}
+		if derivedFromBase && base != nil {
+			body.ExpectedBaseDeploymentId = ref.Ref(base.Id)
+		}
+		queue.apply(&body)
 
 		if v, _ := cmd.Flags().GetBool(deployCmdPlanOnlyFlag); v {
 			body.PlanOnly = ref.Ref(true)
@@ -223,7 +239,7 @@ Once a deployment is created, the CLI shows a URL which can be used to download 
 			return err
 		}
 
-		deployment, err := commonDeployCmdInner(cmd, orgId, body, lastDeploymentManifest, logsAgeKey)
+		deployment, err := commonDeployCmdInner(cmd, orgId, body, base, logsAgeKey)
 		if err != nil {
 			return err
 		}
@@ -254,6 +270,7 @@ func init() {
 	DeployCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
 	DeployCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	DeployCmd.Flags().Bool(deployCmdShowLogsFlag, false, "Show runner logs in the output of this command")
+	addDeployQueueFlags(DeployCmd)
 
 	// Deprecated flags
 	DeployCmd.Flags().String(deprecatedDeployCmdOutputFlag, "", "Write the results to the file at the given path. Use '-' to write to stdout. By default, results will not be shown.")
@@ -289,7 +306,11 @@ func checkEnvironmentExistsForDeployment(ctx context.Context, orgId, projectId, 
 	return nil
 }
 
-func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, projectId, envId string) (*dp.DeploymentSummary, dp.DeploymentManifest, error) {
+// getLastDeploymentManifestForEnvironment returns the Environment's current
+// stateful Deployment, the base a new manifest is compared against, and its
+// manifest. A request that may queue waits behind an executing base; any other
+// request fails fast.
+func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, projectId, envId string, queueing bool) (*dp.DeploymentSummary, dp.DeploymentManifest, error) {
 	dpClient := MustDpClient(ctx)
 	var lastDeployment *dp.DeploymentSummary
 	var lastDeploymentManifest dp.DeploymentManifest
@@ -306,7 +327,10 @@ func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, project
 		lastDeployment = &r.JSON200.Items[0]
 		successMessageF("Found previous stateful deployment %s.", lastDeployment.Id)
 		if lastDeployment.Status == "executing" {
-			return nil, lastDeploymentManifest, errors.Errorf("last deployment %s is still executing for %s", lastDeployment.Id, time.Since(lastDeployment.CreatedAt))
+			if !queueing {
+				return nil, lastDeploymentManifest, errors.Errorf("last deployment %s is still executing for %s", lastDeployment.Id, time.Since(lastDeployment.CreatedAt))
+			}
+			changedMessageF("Deployment %s is still executing; this request will wait in the environment's deployment queue.", lastDeployment.Id)
 		}
 
 		if r, err := dpClient.GetDeploymentWithResponse(ctx, orgId, lastDeployment.Id); err != nil {
@@ -351,10 +375,18 @@ func commonDeployCmdDiff(newManifest dp.DeploymentManifest, lastDeploymentManife
 	return nil
 }
 
-func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCreateBody, lastDeploymentManifest dp.DeploymentManifest, logsAgeKey *age.X25519Identity) (*dp.Deployment, error) {
+// commonDeployCmdInner confirms the diff against base, creates the Deployment,
+// follows it through the Environment's deployment queue when it has to wait,
+// and waits for it to complete. base is nil for an Environment without a
+// stateful Deployment.
+func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCreateBody, base *dp.DeploymentSummary, logsAgeKey *age.X25519Identity) (*dp.Deployment, error) {
 	if b, _ := cmd.Flags().GetBool(deployCmdNoPromptFlag); !b {
-		if err := PromptTextAndEnterToContinue(cmd.Context(), os.Stdin, ""); err != nil {
+		if err := PromptTextAndEnterToContinue(cmd.Context(), cmd.InOrStdin(), ""); err != nil {
 			return nil, err
+		}
+		// The confirmed diff is against base: never let it land on another state.
+		if base != nil {
+			body.ExpectedBaseDeploymentId = ref.Ref(base.Id)
 		}
 	}
 
@@ -370,7 +402,7 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 	}, body); err != nil {
 		return nil, errors.Wrap(err, "failed to create deployment")
 	} else if r.StatusCode() == http.StatusConflict {
-		return nil, errors.Errorf("conflict: %s", r.JSON409.Message)
+		return nil, deploymentConflictError(r.JSON409, r.Body, body)
 	} else if r.StatusCode() == http.StatusBadRequest {
 		return nil, errors.Errorf("request is invalid: %s", r.JSON400.Message)
 	} else if body.IsDryRun {
@@ -379,14 +411,18 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 		}
 		successMessageF("Dry-run deployment is valid.")
 		return nil, nil
+	} else if r.StatusCode() == http.StatusAccepted && r.JSON202 != nil {
+		if deployment, err = waitForQueuedDeployment(cmd.Context(), orgId, *r.JSON202); err != nil {
+			return nil, err
+		}
 	} else if r.StatusCode() != http.StatusCreated {
 		return nil, errors.Errorf("unexpected status code %d when creating deployment: %s", r.StatusCode(), string(r.Body))
 	} else {
 		deployment = *r.JSON201
-		successMessageF("Deployment %s created.", deployment.Id)
-		if logsAgeKey != nil {
-			infoMessageF("Once deployment is complete, logs will be available. To access logs use this secret key: %s, e.g. 'octl logs %s --key=%s'", logsAgeKey.String(), deployment.Id, logsAgeKey.String())
-		}
+	}
+	successMessageF("Deployment %s created.", deployment.Id)
+	if logsAgeKey != nil {
+		infoMessageF("Once deployment is complete, logs will be available. To access logs use this secret key: %s, e.g. 'octl logs %s --key=%s'", logsAgeKey.String(), deployment.Id, logsAgeKey.String())
 	}
 
 	for {
