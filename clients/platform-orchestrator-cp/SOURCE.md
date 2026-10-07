@@ -4,10 +4,10 @@
 the only input of the generated `cp` client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-cp`
-- Commit: `b66da2b15bddde4a0a60a6402c172bd82eb26598`
+- Commit: `035f40519233a30cd84c2b3a573cb88e112f5d14`
 - File: `openapi/spec.yaml`
-- Git blob: `63560bc0aa982d567d99082501210bb526419cf2`
-- File SHA-256: `4a3cdbce0c470603244a869ded37c65fcf10182db6f14ae0e7f9a9a1ed24d259`
+- Git blob: `e045438468651594548cd55974062c4af3d85f20`
+- File SHA-256: `74f902245f4df240b6b078acb0c98176e67cb577394614dd0d38313c9994bc4e`
 
 The commit is the Control Plane plugin foundation export and is not published
 yet. Repin to the published commit at release: copy `openapi/spec.yaml` from

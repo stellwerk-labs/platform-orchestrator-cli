@@ -72,10 +72,19 @@ func TestDataPlaneContractMatchesRecordedSource(t *testing.T) {
 	requireRecordedSource(t, dataPlaneContractDir, "stellwerk-labs/platform-orchestrator-dp")
 }
 
-func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
-	document, err := openapi3.NewLoader().LoadFromFile(coreContractDir + "/spec.yaml")
+func requireSpecValidatesWithExamples(t *testing.T, dir string) {
+	t.Helper()
+	document, err := openapi3.NewLoader().LoadFromFile(dir + "/spec.yaml")
 	require.NoError(t, err)
 	require.NoError(t, document.Validate(t.Context(), openapi3.EnableExamplesValidation()))
+}
+
+func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
+	requireSpecValidatesWithExamples(t, coreContractDir)
+}
+
+func TestDataPlaneOpenAPISpecValidatesWithExamples(t *testing.T) {
+	requireSpecValidatesWithExamples(t, dataPlaneContractDir)
 }
 
 func TestCoreContractOwnsNoProgressiveRolloutsModel(t *testing.T) {

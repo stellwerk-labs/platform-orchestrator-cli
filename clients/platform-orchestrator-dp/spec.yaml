@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: ""
-  version: ""
+  title: Stellwerk Data Plane API
+  version: unreleased
 paths:
   /orgs/{orgId}/plugins/{pluginId}/external-deployments:
     post:
@@ -1630,6 +1630,55 @@ components:
           example: Deployment in flight
         metrics:
           $ref: "#/components/schemas/DeploymentMetrics"
+        environment_fence:
+          $ref: "#/components/schemas/EnvironmentFence"
+
+    EnvironmentFence:
+      description: |
+        Reported on `listLastDeployments` items only, and only while the item's Environment is fenced: its current
+        Deployment is a failed plugin-dispatched Deployment whose Runner may still be active, because no Runner result
+        proves the attempt stopped. Until the fence ends, every new Deployment of the Environment, queued or not, is
+        refused with the conflict code `code`. It ends when a late authenticated Runner result arrives or when an operator
+        acknowledges the outcome of `deployment_id` with `acknowledge-outcome`. Acknowledging starts nothing: requests
+        that waited in the deployment queue are rejected and must be submitted again.
+      type: object
+      required:
+        - code
+        - deployment_id
+        - since
+        - remedy
+      properties:
+        code:
+          description: The conflict code new Deployments of this Environment are refused with.
+          type: string
+          enum:
+            - outcome_unreconciled
+          example: outcome_unreconciled
+        deployment_id:
+          description: The failed plugin-dispatched Deployment that fences the Environment.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        since:
+          description: When the fencing Deployment failed.
+          type: string
+          format: date-time
+          example: "2025-01-02T03:04:05Z"
+        remedy:
+          description: |
+            The operator action that lifts the fence:
+            `POST /internal/orgs/{orgId}/deployments/{deployment_id}/actions/acknowledge-outcome`.
+          type: string
+          enum:
+            - acknowledge-outcome
+          example: acknowledge-outcome
+        remedy_available_at:
+          description: |
+            The end of the Runner dispatch window. `acknowledge-outcome` is refused with 409 before this time. Absent when
+            no window was recorded, then it is accepted at once.
+          type: string
+          format: date-time
+          example: "2025-01-02T04:04:05Z"
 
     DeploymentQueueItemState:
       type: string
@@ -2099,7 +2148,7 @@ components:
         format:
           description: The format of the metadata key.
           type: string
-          example: true
+          example: date-time
         pattern:
           description: A regular expression pattern for the metadata key.
           type: string
@@ -2153,7 +2202,7 @@ components:
           description: The format of the metadata key.
           type: string
           nullable: true
-          example: true
+          example: date-time
         pattern:
           description: A regular expression pattern for the metadata key.
           type: string

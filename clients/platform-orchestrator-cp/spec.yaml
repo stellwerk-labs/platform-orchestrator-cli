@@ -3,6 +3,304 @@ info:
   title: Stellwerk Control Plane API
   version: unreleased
 paths:
+  /plugin-packages:
+    get:
+      operationId: listPluginPackages
+      summary: List the plugin packages known to the Plugin Manager.
+      description: Platform-scoped. Requires the platform permission plugin_manager_read, held only by configured platform operators; organization roles and plugin workloads never qualify. Returns 404 plugin_host_disabled while the plugin host is off.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      responses:
+        '200':
+          description: Every package at one Plugin Manager revision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginPackagePage'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    post:
+      operationId: pushPluginPackage
+      summary: Register an immutable plugin package.
+      description: Requires plugin_manager_write. Core validates the registration manifest; the digest names the package manifest that the plugin runtime verifies. Pushing the same digest with the same manifest again changes nothing. Every write is idempotent by key, requires the expected Plugin Manager revision and a reason, and writes one audit event in the same transaction.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginPackagePush'}
+      responses:
+        '201':
+          description: The package as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginPackage'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations:
+    get:
+      operationId: listPluginInstallations
+      summary: List the plugin installations and their organization enablements.
+      description: Requires plugin_manager_read. Returns 404 plugin_host_disabled while the plugin host is off.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      responses:
+        '200':
+          description: Every installation at one Plugin Manager revision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallationPage'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    post:
+      operationId: createPluginInstallation
+      summary: Install a registered package.
+      description: Requires plugin_manager_write. Core assigns the immutable installation UUID that entitlement grants bind to; replaying the command returns the same UUID. A plugin has at most one installation.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginInstallationCreate'}
+      responses:
+        '201':
+          description: The installation, in state installed, as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}:
+    get:
+      operationId: getPluginInstallation
+      summary: Read one plugin installation and its organization enablements.
+      description: Requires plugin_manager_read. Returns 404 plugin_host_disabled while the plugin host is off.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+      responses:
+        '200':
+          description: The installation at the current Plugin Manager revision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    delete:
+      operationId: purgePluginInstallation
+      summary: Purge an uninstalled installation.
+      description: Requires plugin_manager_write. Retires the installation UUID for good; licence grants bound to it never match again, and the plugin can then be installed under a new UUID. Refused with 409 plugin_installation_state unless the installation is uninstalled. Purging a purged installation changes nothing. Core does not own plugin data; delete it through the plugin runtime before or after the purge.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginManagerCommand'}
+      responses:
+        '200':
+          description: The purged installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}/upgrade:
+    post:
+      operationId: upgradePluginInstallation
+      summary: Request the package an installation serves next.
+      description: Requires plugin_manager_write. The package must be a later version of the same plugin that does not lower the migration generation and that Core can serve with the installation's origins, identities and approval policies (400 plugin_upgrade_invalid otherwise). Core keeps serving the current package, its registrations and every effect bound to it while the plugin runtime rolls; the next activate that reads the target digest and migration generation from the running plugin switches package and registrations atomically. The installation UUID and its licence binding never change. Requesting the served package withdraws a pending upgrade; requesting the pending target again changes nothing.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginInstallationUpgrade'}
+      responses:
+        '200':
+          description: The installation, with the pending upgrade, as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}/identity:
+    put:
+      operationId: setPluginInstallationIdentity
+      summary: Record the plugin service user and admission checker of an installation.
+      description: Requires plugin_manager_write. Identities are recorded before activation and exist exactly when the package declares service grants. Recording the same identities again changes nothing.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginInstallationIdentity'}
+      responses:
+        '200':
+          description: The installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}/actions/{installationAction}:
+    post:
+      operationId: transitionPluginInstallation
+      summary: Activate, disable, enable, uninstall or reinstall an installation.
+      description: 'Requires plugin_manager_write. activate reads the running plugin''s status at /.well-known/stellwerk/plugin-status on the backend origin and serves the package registrations of an installed installation, or switches to the package of a pending upgrade, only when the plugin reports exactly the installation UUID, package digest and migration generation Core recorded; otherwise it changes nothing and answers 409 with the diagnostic plugin_status_unreachable, plugin_status_invalid, plugin_installation_mismatch, plugin_package_digest_mismatch or plugin_migration_generation_mismatch, which the installation also shows until a later read succeeds. disable keeps an active installation safety-only for every organization; enable returns it to active. uninstall removes the registrations and organization enablements and keeps the UUID, its licence binding and the plugin data; it is refused with 409 plugin_work_unsettled while Core holds operation grants, dispatches or Module reservations of the plugin, and has no force option. reinstall returns an uninstalled installation, with its UUID, to installed. A step whose target state already holds changes nothing. Every Control Plane replica serves the change within its refresh interval, without a restart.'
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - name: installationAction
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [activate, disable, enable, uninstall, reinstall]
+            x-enum-varnames: [PluginInstallationActionActivate, PluginInstallationActionDisable, PluginInstallationActionEnable, PluginInstallationActionUninstall, PluginInstallationActionReinstall]
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginManagerCommand'}
+      responses:
+        '200':
+          description: The installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}/organizations/{orgId}:
+    put:
+      operationId: putPluginEnablement
+      summary: Enable or disable an active installation for an organization.
+      description: Requires plugin_manager_write. In v1alpha an installation is enabled for exactly one organization. A disabled enablement keeps the plugin safety-only. Enabling a resource event subscriber starts the organization's resource event journal in the same transaction. Every Core effect re-verifies the enablement in its own transaction.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginEnablementPut'}
+      responses:
+        '200':
+          description: The installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+    delete:
+      operationId: removePluginEnablement
+      summary: Remove an installation's enablement for an organization.
+      description: Requires plugin_manager_write. The organization's resource event journal pauses in the same transaction when no subscriber remains; cursors issued before a later resume expire with plugin_resource_cursor_expired. Removing an absent enablement changes nothing.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginManagerCommand'}
+      responses:
+        '200':
+          description: The installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-entitlement-bundles:
+    post:
+      operationId: importPluginEntitlementBundle
+      summary: Import signed entitlement grants and revocations.
+      description: Requires plugin_manager_write. Each document must verify against the configured issuer trust; a grant must match exactly the installation UUID, plugin and organization of an enabled installation. A rejected document is reported and never blocks the others. Imports take effect without a restart.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginEntitlementBundleImportRequest'}
+      responses:
+        '200':
+          description: What the bundle import changed and why documents were skipped.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginEntitlementBundleImport'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-audit-events:
+    get:
+      operationId: listPluginAuditEvents
+      summary: Read the append-only Plugin Manager audit trail.
+      description: Requires plugin_manager_read. One event per committed change, in commit order, with actor, reason, and the state before and after.
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - name: after
+          in: query
+          description: Return events after this event ID.
+          schema: {type: integer, format: int64, minimum: 0, default: 0}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 200, default: 100}
+      responses:
+        '200':
+          description: One page of audit events.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginAuditEventPage'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
   /orgs/{orgId}/plugins/{pluginId}/entitlement:
     get:
       operationId: getPluginEntitlement
@@ -3002,6 +3300,12 @@ components:
       required: true
       schema:
         type: string
+    installationIdPathParam:
+      name: installationId
+      in: path
+      description: The Core-assigned plugin installation UUID
+      required: true
+      schema: {type: string, format: uuid}
     idempotencyKeyHeader:
       name: Idempotency-Key
       in: header
@@ -3196,6 +3500,225 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    PluginManagerCommand:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason]
+      properties:
+        expected_revision:
+          type: integer
+          format: int64
+          minimum: 0
+          description: The Plugin Manager revision the operator decided on. A write against another revision fails with 409 plugin_manager_revision_conflict; read the current state and retry.
+        reason: {type: string, minLength: 1, maxLength: 1000, description: Why the change is made. Recorded in the audit event.}
+    PluginPackagePush:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, manifest_sha256, manifest]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        manifest_sha256: {type: string, pattern: '^[0-9a-f]{64}$', description: SHA-256 of the package manifest the plugin runtime verifies.}
+        manifest:
+          type: object
+          description: The registration manifest of the package (identity, migration generation, operations, UI contribution, service grants, authorization policies, entitlement declaration). Unknown fields are rejected. migration_generation is the plugin-owned schema generation the package runs on, 0 or absent while the plugin owns no schema.
+          x-go-type: json.RawMessage
+    PluginPackage:
+      type: object
+      required: [manifest_sha256, plugin_id, version, manifest, created_at, created_by]
+      properties:
+        revision: {type: integer, format: int64, description: The Plugin Manager revision this response reflects.}
+        manifest_sha256: {type: string}
+        plugin_id: {type: string}
+        version: {type: string}
+        manifest:
+          type: object
+          x-go-type: json.RawMessage
+        created_at: {type: string, format: date-time}
+        created_by: {type: string, format: uuid}
+    PluginPackagePage:
+      type: object
+      required: [revision, items]
+      properties:
+        revision: {type: integer, format: int64}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PluginPackage'}
+    PluginInstallationCreate:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, package_sha256, backend_url]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        package_sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+        backend_url: {type: string, description: Origin of the plugin backend. HTTPS outside explicit development mode.}
+        ui_origin: {type: string, description: 'Origin of the plugin UI. Required exactly when the package contributes a UI.'}
+    PluginInstallationUpgrade:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, package_sha256]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        package_sha256: {type: string, pattern: '^[0-9a-f]{64}$', description: A registered package of the same plugin.}
+    PluginInstallationIdentity:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, service_user_id, admission_checker_id]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        service_user_id: {type: string, format: uuid}
+        admission_checker_id: {type: string, format: uuid}
+    PluginEnablementPut:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, state]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        state:
+          type: string
+          enum: [enabled, disabled]
+          x-enum-varnames: [PluginEnablementPutStateEnabled, PluginEnablementPutStateDisabled]
+        timezone: {type: string, description: IANA timezone of the organization for calendar policies. Omitted means UTC.}
+        approval_policies:
+          type: object
+          description: Deployment approval scope (environment or project) to an authorization policy the package owns.
+          additionalProperties: {type: string}
+    PluginInstallation:
+      type: object
+      required: [installation_id, plugin_id, package_sha256, state, availability, backend_url, organizations, created_at, created_by, updated_at, updated_by]
+      properties:
+        revision: {type: integer, format: int64, description: The Plugin Manager revision this response reflects.}
+        installation_id: {type: string, format: uuid}
+        plugin_id: {type: string}
+        package_sha256: {type: string, description: The package Core serves.}
+        target_package_sha256: {type: string, description: The package of a pending upgrade. Core serves package_sha256 until an activate reads this digest from the running plugin.}
+        state:
+          type: string
+          enum: [installed, active, disabled, uninstalled, purged]
+          x-enum-varnames: [PluginInstallationStateInstalled, PluginInstallationStateActive, PluginInstallationStateDisabled, PluginInstallationStateUninstalled, PluginInstallationStatePurged]
+        availability:
+          description: Derived from the state, never set. available while active, not_enabled (safety-only) while disabled, unavailable while installed and not yet proven by the running plugin, not_installed once uninstalled or purged.
+          $ref: '#/components/schemas/PluginAvailabilityState'
+        diagnostic: {$ref: '#/components/schemas/PluginInstallationDiagnostic'}
+        observation: {$ref: '#/components/schemas/PluginStatusObservation'}
+        backend_url: {type: string}
+        ui_origin: {type: string}
+        service_user_id: {type: string, format: uuid}
+        admission_checker_id: {type: string, format: uuid}
+        organizations:
+          type: array
+          items: {$ref: '#/components/schemas/PluginEnablement'}
+        created_at: {type: string, format: date-time}
+        created_by: {type: string, format: uuid}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    PluginInstallationDiagnostic:
+      type: object
+      description: Why the last status read from the running plugin does not prove the package Core is to serve (the pending upgrade's, if any). Absent while it does or before Core read it.
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [plugin_status_unreachable, plugin_status_invalid, plugin_installation_mismatch, plugin_package_digest_mismatch, plugin_migration_generation_mismatch]
+          x-enum-varnames: [PluginDiagnosticStatusUnreachable, PluginDiagnosticStatusInvalid, PluginDiagnosticInstallationMismatch, PluginDiagnosticPackageDigestMismatch, PluginDiagnosticMigrationGenerationMismatch]
+        message: {type: string}
+    PluginStatusObservation:
+      type: object
+      description: What Core last read from the running plugin's status endpoint, on activation. Either the report or a failure with its detail.
+      required: [observed_at]
+      properties:
+        observed_at: {type: string, format: date-time}
+        failure:
+          type: string
+          enum: [plugin_status_unreachable, plugin_status_invalid]
+          x-enum-varnames: [PluginStatusFailureUnreachable, PluginStatusFailureInvalid]
+        detail: {type: string, description: The cause of a failure.}
+        installation_id: {type: string, format: uuid, description: The installation UUID the plugin reported.}
+        package_sha256: {type: string, description: The package digest the plugin reported.}
+        migration_generation: {type: integer, format: int64, minimum: 0, description: The migration generation applied in the plugin database.}
+    PluginEnablement:
+      type: object
+      required: [org_id, state, timezone, approval_policies, created_at, created_by, updated_at, updated_by]
+      properties:
+        org_id: {type: string}
+        state:
+          type: string
+          enum: [enabled, disabled]
+          x-enum-varnames: [PluginEnablementStateEnabled, PluginEnablementStateDisabled]
+        timezone: {type: string}
+        approval_policies:
+          type: object
+          additionalProperties: {type: string}
+        created_at: {type: string, format: date-time}
+        created_by: {type: string, format: uuid}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    PluginInstallationPage:
+      type: object
+      required: [revision, items]
+      properties:
+        revision: {type: integer, format: int64}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PluginInstallation'}
+    PluginEntitlementBundleImportRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, bundle]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        bundle: {type: string, format: byte, description: 'The exact bytes of the signed entitlement bundle file, base64-encoded.'}
+    PluginEntitlementBundleImport:
+      type: object
+      required: [revision, imported_grants, imported_revocations, diagnostics]
+      properties:
+        revision: {type: integer, format: int64}
+        imported_grants: {type: integer}
+        imported_revocations: {type: integer}
+        diagnostics:
+          type: array
+          items:
+            type: object
+            required: [code, detail]
+            properties:
+              code: {type: string}
+              detail: {type: string}
+    PluginAuditEvent:
+      type: object
+      required: [id, revision, occurred_at, actor, action, reason, idempotency_key_sha256]
+      properties:
+        id: {type: integer, format: int64}
+        revision: {type: integer, format: int64}
+        occurred_at: {type: string, format: date-time}
+        actor: {type: string, format: uuid}
+        action: {type: string}
+        installation_id: {type: string, format: uuid}
+        org_id: {type: string}
+        reason: {type: string}
+        request_id: {type: string}
+        idempotency_key_sha256: {type: string}
+        before:
+          type: object
+          description: The changed resource before the change. Absent for a creation.
+          x-go-type: json.RawMessage
+          x-go-type-skip-optional-pointer: true
+        after:
+          type: object
+          description: The changed resource after the change.
+          x-go-type: json.RawMessage
+          x-go-type-skip-optional-pointer: true
+    PluginAuditEventPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PluginAuditEvent'}
     PluginDeploymentSubmitRequest:
       type: object
       additionalProperties: false
