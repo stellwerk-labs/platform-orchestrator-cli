@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	rollouts "github.com/stellwerk-labs/platform-orchestrator-cli/clients/progressive-rollouts"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 )
 
 const (
@@ -158,4 +161,74 @@ func TestNativeProgressiveRolloutMaterialRejectsUnboundDeployment(t *testing.T) 
 	detail := rollouts.ProgressiveRolloutDetail{Plan: &rollouts.ProgressiveRolloutPlan{}}
 	_, _, err := nativeProgressiveRolloutMaterial(t.Context(), "demo", detail, uuid.New(), "logs")
 	require.ErrorContains(t, err, "plugin_material_reference_missing")
+}
+
+const graceTestWarning = `{"code":"plugin_entitlement_grace","message":"The signed plugin licence is in its grace period.","grace_until":"2026-11-01T00:00:00Z","features":["progressive-rollouts"]}`
+
+// graceWarningServer advertises listProgressiveRollouts and answers it; both
+// discovery and the invocation carry the grace warning when asked to.
+func graceWarningServer(t *testing.T, discoveryWarns, invokeWarns bool) *httptest.Server {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		warning := func(enabled bool, field string) string {
+			if !enabled {
+				return ""
+			}
+			return fmt.Sprintf(`,%q:%s`, field, graceTestWarning)
+		}
+		switch request.URL.Path {
+		case "/orgs/demo/plugins":
+			_, _ = fmt.Fprintf(w, `{"contract_level":"v1alpha","items":[{"id":%q,"display_name":"Progressive Rollouts","state":"available","mode":"full","operations":[{"id":"listProgressiveRollouts","method":"GET","mutating":false}],"entitlement":{"features":{}%s}}]}`,
+				progressiveRolloutsPluginID, warning(discoveryWarns, "warning"))
+		case "/orgs/demo/plugins/" + progressiveRolloutsPluginID + "/invoke":
+			_, _ = fmt.Fprintf(w, `{"status":200,"body":{"items":[]}%s}`, warning(invokeWarns, "entitlement_warning"))
+		default:
+			http.NotFound(w, request)
+		}
+	}))
+	t.Cleanup(server.Close)
+	return server
+}
+
+func TestPluginGraceWarningIsShownOnceAndNeverFails(t *testing.T) {
+	t.Parallel()
+	for name, warns := range map[string][2]bool{
+		"discovery and invoke": {true, true},
+		"discovery only":       {true, false},
+		"invoke only":          {false, true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			var stderr strings.Builder
+			ctx := withPluginWarnings(cpClientContext(t, graceWarningServer(t, warns[0], warns[1])), &stderr)
+			require.NoError(t, requireNativeProgressiveRolloutsOperation(ctx, "demo", "listProgressiveRollouts", progressiveRolloutsRead))
+			page, err := invokeNativeProgressiveRollout[rollouts.ProgressiveRolloutPage](ctx, "demo", "listProgressiveRollouts", nil, nil, nil, "", http.StatusOK)
+			require.NoError(t, err)
+			require.Empty(t, page.Items)
+			require.Equal(t, "Warning: The signed plugin licence is in its grace period. (plugin_entitlement_grace, grace until 2026-11-01T00:00:00Z)\n", stderr.String())
+		})
+	}
+	t.Run("no warning", func(t *testing.T) {
+		t.Parallel()
+		var stderr strings.Builder
+		ctx := withPluginWarnings(cpClientContext(t, graceWarningServer(t, false, false)), &stderr)
+		require.NoError(t, requireNativeProgressiveRolloutsOperation(ctx, "demo", "listProgressiveRollouts", progressiveRolloutsRead))
+		_, err := invokeNativeProgressiveRollout[rollouts.ProgressiveRolloutPage](ctx, "demo", "listProgressiveRollouts", nil, nil, nil, "", http.StatusOK)
+		require.NoError(t, err)
+		require.Empty(t, stderr.String())
+	})
+}
+
+func TestRolloutCommandPrintsTheGraceWarningOnceToStderr(t *testing.T) {
+	server := graceWarningServer(t, true, true)
+	ctx := context.WithValue(cpClientContext(t, server), ConfigContextKey, config.Config{DefaultOrg: "demo"})
+	t.Setenv("PO_API_URL", server.URL)
+	cobra.EnableTraverseRunHooks = true
+
+	stdout, stderr, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, "demo", testGetCmd, "rollouts", outFlag, jsonOutput})
+	require.NoError(t, err)
+	require.JSONEq(t, `[]`, stdout)
+	require.Equal(t, 1, strings.Count(stderr, "Warning: The signed plugin licence is in its grace period."))
+	require.Contains(t, stderr, "grace until 2026-11-01T00:00:00Z")
 }

@@ -117,6 +117,9 @@ func nativeProgressiveRolloutsContribution(ctx context.Context, orgID string) (c
 	}
 	for _, contribution := range response.JSON200.Items {
 		if contribution.Id == progressiveRolloutsPluginID {
+			if contribution.Entitlement != nil {
+				warnPluginEntitlementGrace(ctx, contribution.Entitlement.Warning)
+			}
 			return contribution, nil
 		}
 	}
@@ -186,6 +189,7 @@ func invokeNativeProgressiveRollout[T any](ctx context.Context, orgID, operation
 	if response.StatusCode() != http.StatusOK || response.JSON200 == nil {
 		return nil, rolloutResponseError("invoke "+operationID, response.StatusCode(), response.Body)
 	}
+	warnPluginEntitlementGrace(ctx, response.JSON200.EntitlementWarning)
 	if response.JSON200.Status != expectedStatus {
 		return nil, rolloutResponseError(operationID, response.JSON200.Status, response.JSON200.Body)
 	}

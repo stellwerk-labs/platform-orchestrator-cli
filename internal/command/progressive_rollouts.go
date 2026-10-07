@@ -67,6 +67,7 @@ func requireProgressiveRolloutsPlugin(access progressiveRolloutsAccess, operatio
 		if err != nil {
 			return err
 		}
+		cmd.SetContext(withPluginWarnings(cmd.Context(), cmd.ErrOrStderr()))
 		if operationID == "" {
 			return run(cmd, args)
 		}
@@ -165,7 +166,7 @@ var ListProgressiveRollouts = &cobra.Command{
 			value, _ := cmd.Flags().GetBool("conflicts")
 			conflicts = &value
 		}
-		var allItems []rollouts.ProgressiveRollout
+		allItems := []rollouts.ProgressiveRollout{}
 		for pageToken := ""; ; {
 			query := nativeProgressiveRolloutListQuery(pageToken, states, projectID, moduleID, view, historyVisibility, conflicts)
 			page, err := invokeNativeProgressiveRollout[rollouts.ProgressiveRolloutPage](cmd.Context(), orgID, "listProgressiveRollouts", nil, query, nil, "", http.StatusOK)
