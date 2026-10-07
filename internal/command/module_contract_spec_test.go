@@ -58,7 +58,7 @@ func requireRecordedSource(t *testing.T, dir, repository string) {
 	require.Equal(t, recordedSourceValue(t, dir, "File SHA-256"), fmt.Sprintf("%x", sha256.Sum256(raw)),
 		"spec.yaml must be the byte-identical document recorded in %s/SOURCE.md", dir)
 	require.Regexp(t, "^[0-9a-f]{40}$", recordedSourceValue(t, dir, "Commit"))
-	blob := sha1.Sum(append([]byte(fmt.Sprintf("blob %d\x00", len(raw))), raw...))
+	blob := sha1.Sum(append([]byte(fmt.Sprintf("blob %d\x00", len(raw))), raw...)) //nolint:gosec // Git object IDs are SHA-1 by definition.
 	require.Equal(t, recordedSourceValue(t, dir, "Git blob"), fmt.Sprintf("%x", blob), "Git blob in %s/SOURCE.md", dir)
 	require.Equal(t, repository, recordedSourceValue(t, dir, "Repository"))
 	require.Equal(t, "openapi/spec.yaml", recordedSourceValue(t, dir, "File"))
