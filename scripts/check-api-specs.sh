@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly dp_revision=0ae0aa5d9763e454e9a92e58b63b06afa0cb4170
 readonly iam_revision=b32bbebbbbfc1781e1cdc7308e9af35d91ae0118
 temp_dir="$(mktemp -d)"
 readonly temp_dir
@@ -56,6 +55,9 @@ check_spec_sha() {
 cp_revision="$(source_value clients/platform-orchestrator-cp/SOURCE.md Commit)"
 cp_spec_sha="$(source_value clients/platform-orchestrator-cp/SOURCE.md 'File SHA-256')"
 check_spec_sha clients/platform-orchestrator-cp/spec.yaml "$cp_spec_sha" "Core contract"
+dp_revision="$(source_value clients/platform-orchestrator-dp/SOURCE.md Commit)"
+dp_spec_sha="$(source_value clients/platform-orchestrator-dp/SOURCE.md 'File SHA-256')"
+check_spec_sha clients/platform-orchestrator-dp/spec.yaml "$dp_spec_sha" "Data Plane contract"
 rollouts_spec_sha="$(source_value clients/progressive-rollouts/SOURCE.md 'File SHA-256')"
 check_spec_sha clients/progressive-rollouts/spec.yaml "$rollouts_spec_sha" "Progressive Rollouts contract"
 

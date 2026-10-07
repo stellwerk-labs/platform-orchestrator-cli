@@ -76,6 +76,7 @@ make test
 
 `make check-api-specs` checks every vendored contract against the SHA-256 recorded
 in its `SOURCE.md` ([Core](clients/platform-orchestrator-cp/SOURCE.md),
+[Data Plane](clients/platform-orchestrator-dp/SOURCE.md),
 [Progressive Rollouts](clients/progressive-rollouts/SOURCE.md)) and then compares the
 Core, Data Plane and IAM documents with their recorded upstream revisions, which
 needs network access.

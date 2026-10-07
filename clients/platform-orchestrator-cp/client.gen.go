@@ -181,6 +181,11 @@ const (
 	PluginAvailabilityStateUnavailable  PluginAvailabilityState = "unavailable"
 )
 
+// Defines values for PluginContractLevel.
+const (
+	PluginContractLevelV1alpha PluginContractLevel = "v1alpha"
+)
+
 // Defines values for PluginContributionMode.
 const (
 	Full       PluginContributionMode = "full"
@@ -236,6 +241,11 @@ const (
 const (
 	ExternalDeploymentAdmit    PluginDispatchCheckAction = "external-deployment.admit"
 	ExternalDeploymentRollback PluginDispatchCheckAction = "external-deployment.rollback"
+)
+
+// Defines values for PluginEntitlementWarningCode.
+const (
+	PluginEntitlementWarningCodeGrace PluginEntitlementWarningCode = "plugin_entitlement_grace"
 )
 
 // Defines values for PluginModuleOperationReceiptState.
@@ -2032,7 +2042,10 @@ type PluginCapability struct {
 	// AdminAction Scope-safe remediation guidance for an administrator.
 	AdminAction  *string  `json:"admin_action,omitempty"`
 	Capabilities []string `json:"capabilities"`
-	DisplayName  string   `json:"display_name"`
+
+	// ContractLevel Level of the plugin contracts this Control Plane implements. v1alpha supports first-party Stellwerk plugins only and is not a stable partner contract.
+	ContractLevel PluginContractLevel `json:"contract_level"`
+	DisplayName   string              `json:"display_name"`
 
 	// Entitlement Non-secret server-derived licence projection. Neither this projection nor a capability grants IAM permissions or authorizes execution.
 	Entitlement *PluginEntitlementStatus `json:"entitlement,omitempty"`
@@ -2044,6 +2057,9 @@ type PluginCapability struct {
 	// Version Immutable installed plugin artifact version when installed.
 	Version *string `json:"version,omitempty"`
 }
+
+// PluginContractLevel Level of the plugin contracts this Control Plane implements. v1alpha supports first-party Stellwerk plugins only and is not a stable partner contract.
+type PluginContractLevel string
 
 // PluginContribution defines model for PluginContribution.
 type PluginContribution struct {
@@ -2112,7 +2128,9 @@ type PluginContributionUiSdkVersion string
 
 // PluginContributionPage defines model for PluginContributionPage.
 type PluginContributionPage struct {
-	Items []PluginContribution `json:"items"`
+	// ContractLevel Level of the plugin contracts this Control Plane implements. v1alpha supports first-party Stellwerk plugins only and is not a stable partner contract.
+	ContractLevel PluginContractLevel  `json:"contract_level"`
+	Items         []PluginContribution `json:"items"`
 }
 
 // PluginDelegationProof defines model for PluginDelegationProof.
@@ -2220,7 +2238,27 @@ type PluginDispatchCheckAction string
 // PluginEntitlementStatus Non-secret server-derived licence projection. Neither this projection nor a capability grants IAM permissions or authorizes execution.
 type PluginEntitlementStatus struct {
 	Features map[string]PluginFeatureAccess `json:"features"`
+
+	// Warning Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.
+	Warning *PluginEntitlementWarning `json:"warning,omitempty"`
 }
+
+// PluginEntitlementWarning Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.
+type PluginEntitlementWarning struct {
+	Code PluginEntitlementWarningCode `json:"code"`
+
+	// Features Declared features in their grace period, sorted.
+	Features []string `json:"features"`
+
+	// GraceUntil Earliest end of the grace period among the listed features.
+	GraceUntil time.Time `json:"grace_until"`
+
+	// Message Human-readable text a client can show as is.
+	Message string `json:"message"`
+}
+
+// PluginEntitlementWarningCode defines model for PluginEntitlementWarning.Code.
+type PluginEntitlementWarningCode string
 
 // PluginFeatureAccess defines model for PluginFeatureAccess.
 type PluginFeatureAccess struct {
@@ -2230,7 +2268,7 @@ type PluginFeatureAccess struct {
 	Read       bool       `json:"read"`
 	Safety     bool       `json:"safety"`
 
-	// State Effective persisted licence state for this declared feature.
+	// State Effective persisted licence state for this declared feature: valid, grace, expired, not_yet_valid, revoked, untrusted, not_entitled or missing. Forward work is allowed in valid and grace.
 	State string `json:"state"`
 
 	// TrustClass Development or production issuer trust. Empty when there is no verified grant.
@@ -2273,8 +2311,11 @@ type PluginInvocation struct {
 
 // PluginInvocationResult defines model for PluginInvocationResult.
 type PluginInvocationResult struct {
-	Body   json.RawMessage `json:"body"`
-	Status int             `json:"status"`
+	Body json.RawMessage `json:"body"`
+
+	// EntitlementWarning Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.
+	EntitlementWarning *PluginEntitlementWarning `json:"entitlement_warning,omitempty"`
+	Status             int                       `json:"status"`
 }
 
 // PluginModuleOperationReceipt defines model for PluginModuleOperationReceipt.
@@ -4456,6 +4497,9 @@ type ClientInterface interface {
 
 	PublishPluginEvent(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, body PublishPluginEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ReadPluginOperationInventory request
+	ReadPluginOperationInventory(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ApplyPluginModuleOperationWithBody request with any body
 	ApplyPluginModuleOperationWithBody(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -6099,6 +6143,18 @@ func (c *Client) PublishPluginEventWithBody(ctx context.Context, orgId OrgIdPath
 
 func (c *Client) PublishPluginEvent(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, body PublishPluginEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPublishPluginEventRequest(c.Server, orgId, pluginId, operationId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReadPluginOperationInventory(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReadPluginOperationInventoryRequest(c.Server, orgId, pluginId, operationId)
 	if err != nil {
 		return nil, err
 	}
@@ -11538,6 +11594,54 @@ func NewPublishPluginEventRequestWithBody(server string, orgId OrgIdPathParam, p
 	return req, nil
 }
 
+// NewReadPluginOperationInventoryRequest generates requests for ReadPluginOperationInventory
+func NewReadPluginOperationInventoryRequest(server string, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pluginId", runtime.ParamLocationPath, pluginId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "operationId", runtime.ParamLocationPath, operationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/plugins/%s/operations/%s/inventory", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewApplyPluginModuleOperationRequest calls the generic ApplyPluginModuleOperation builder with application/json body
 func NewApplyPluginModuleOperationRequest(server string, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, body ApplyPluginModuleOperationJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -14043,6 +14147,9 @@ type ClientWithResponsesInterface interface {
 
 	PublishPluginEventWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, body PublishPluginEventJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishPluginEventResponse, error)
 
+	// ReadPluginOperationInventoryWithResponse request
+	ReadPluginOperationInventoryWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ReadPluginOperationInventoryResponse, error)
+
 	// ApplyPluginModuleOperationWithBodyWithResponse request with any body
 	ApplyPluginModuleOperationWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyPluginModuleOperationResponse, error)
 
@@ -16230,6 +16337,31 @@ func (r PublishPluginEventResponse) StatusCode() int {
 	return 0
 }
 
+type ReadPluginOperationInventoryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginInventory
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r ReadPluginOperationInventoryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReadPluginOperationInventoryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ApplyPluginModuleOperationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18152,6 +18284,15 @@ func (c *ClientWithResponses) PublishPluginEventWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParsePublishPluginEventResponse(rsp)
+}
+
+// ReadPluginOperationInventoryWithResponse request returning *ReadPluginOperationInventoryResponse
+func (c *ClientWithResponses) ReadPluginOperationInventoryWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, operationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ReadPluginOperationInventoryResponse, error) {
+	rsp, err := c.ReadPluginOperationInventory(ctx, orgId, pluginId, operationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReadPluginOperationInventoryResponse(rsp)
 }
 
 // ApplyPluginModuleOperationWithBodyWithResponse request with arbitrary body returning *ApplyPluginModuleOperationResponse
@@ -22191,6 +22332,53 @@ func ParsePublishPluginEventResponse(rsp *http.Response) (*PublishPluginEventRes
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReadPluginOperationInventoryResponse parses an HTTP response from a ReadPluginOperationInventoryWithResponse call
+func ParseReadPluginOperationInventoryResponse(rsp *http.Response) (*ReadPluginOperationInventoryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReadPluginOperationInventoryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginInventory
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
 		var dest N403Forbidden

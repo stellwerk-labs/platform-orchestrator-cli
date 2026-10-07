@@ -409,6 +409,25 @@ paths:
         '403': {$ref: '#/components/responses/403Forbidden'}
         '404': {$ref: '#/components/responses/404NotFound'}
         '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/inventory:
+    get:
+      operationId: readPluginOperationInventory
+      tags: [Plugin]
+      security: [{userIdHeader: []}]
+      description: Read, without a user, the current inventory of exactly the frozen Modules and Environments of an operation, for example to resynchronise after plugin_resource_cursor_expired. Only the configured plugin service may call. The frozen operation must delegate inventory.read, the operator must register that service grant, and the operation's controller must still pass current scoped IAM checks. Prepared, active and suspended operations may read, matching the resource journal, and released ones for one journal retention window after their release. Contains no Module source, provider configuration or secrets.
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: pluginId, in: path, required: true, schema: {type: string}}
+        - {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: One repeatable-read snapshot of the operation scope.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInventory'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /orgs/{orgId}/plugins/{pluginId}/operations/{operationId}/events:
     post:
       operationId: publishPluginEvent
@@ -3426,10 +3445,16 @@ components:
         versions: {type: array, items: {$ref: '#/components/schemas/CoreModuleVersion'}}
         pins: {type: array, items: {$ref: '#/components/schemas/EnvironmentModuleVersionPin'}}
         pin_events: {type: array, items: {$ref: '#/components/schemas/ModuleVersionPinEvent'}}
+    PluginContractLevel:
+      type: string
+      enum: [v1alpha]
+      x-enum-varnames: [PluginContractLevelV1alpha]
+      description: Level of the plugin contracts this Control Plane implements. v1alpha supports first-party Stellwerk plugins only and is not a stable partner contract.
     PluginContributionPage:
       type: object
-      required: [items]
+      required: [contract_level, items]
       properties:
+        contract_level: {$ref: '#/components/schemas/PluginContractLevel'}
         items:
           type: array
           items: {$ref: '#/components/schemas/PluginContribution'}
@@ -3701,6 +3726,9 @@ components:
         status: {type: integer}
         body:
           x-go-type: json.RawMessage
+        entitlement_warning:
+          description: Set when the operation's required feature is in its signed grace period. The operation was still performed; clients should show the warning.
+          $ref: '#/components/schemas/PluginEntitlementWarning'
     PluginAvailabilityState:
       type: string
       enum: [available, not_installed, not_enabled, not_entitled, incompatible, unavailable]
@@ -3714,11 +3742,27 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/PluginFeatureAccess'
+        warning: {$ref: '#/components/schemas/PluginEntitlementWarning'}
+    PluginEntitlementWarning:
+      type: object
+      description: Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.
+      required: [code, message, grace_until, features]
+      properties:
+        code:
+          type: string
+          enum: [plugin_entitlement_grace]
+          x-enum-varnames: [PluginEntitlementWarningCodeGrace]
+        message: {type: string, description: Human-readable text a client can show as is.}
+        grace_until: {type: string, format: date-time, description: Earliest end of the grace period among the listed features.}
+        features:
+          type: array
+          items: {type: string}
+          description: Declared features in their grace period, sorted.
     PluginFeatureAccess:
       type: object
       required: [state, trust_class, forward, read, safety]
       properties:
-        state: {type: string, description: Effective persisted licence state for this declared feature.}
+        state: {type: string, description: 'Effective persisted licence state for this declared feature: valid, grace, expired, not_yet_valid, revoked, untrusted, not_entitled or missing. Forward work is allowed in valid and grace.'}
         trust_class: {type: string, description: Development or production issuer trust. Empty when there is no verified grant.}
         forward: {type: boolean}
         read: {type: boolean}
@@ -3727,8 +3771,9 @@ components:
         grace_until: {type: string, format: date-time}
     PluginCapability:
       type: object
-      required: [id, display_name, state, capabilities]
+      required: [contract_level, id, display_name, state, capabilities]
       properties:
+        contract_level: {$ref: '#/components/schemas/PluginContractLevel'}
         id: {type: string, description: Immutable reverse-DNS plugin identity.}
         display_name: {type: string}
         version: {type: string, description: Immutable installed plugin artifact version when installed.}

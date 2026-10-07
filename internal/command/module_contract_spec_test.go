@@ -1,6 +1,7 @@
 package command
 
 import (
+	"crypto/sha1" //nolint:gosec // Git object IDs are SHA-1 by definition.
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const coreContractDir = "../../clients/platform-orchestrator-cp"
+const (
+	coreContractDir      = "../../clients/platform-orchestrator-cp"
+	dataPlaneContractDir = "../../clients/platform-orchestrator-dp"
+)
 
 func readVendoredFile(t *testing.T, dir, filename string) []byte {
 	t.Helper()
@@ -46,17 +50,30 @@ func contractDocument(t *testing.T, dir, filename string) map[string]any {
 	return result
 }
 
+// requireRecordedSource checks that a vendored server contract is the
+// byte-identical document its SOURCE.md pins.
+func requireRecordedSource(t *testing.T, dir, repository string) {
+	t.Helper()
+	raw := readVendoredFile(t, dir, "spec.yaml")
+	require.Equal(t, recordedSourceValue(t, dir, "File SHA-256"), fmt.Sprintf("%x", sha256.Sum256(raw)),
+		"spec.yaml must be the byte-identical document recorded in %s/SOURCE.md", dir)
+	require.Regexp(t, "^[0-9a-f]{40}$", recordedSourceValue(t, dir, "Commit"))
+	blob := sha1.Sum(append([]byte(fmt.Sprintf("blob %d\x00", len(raw))), raw...))
+	require.Equal(t, recordedSourceValue(t, dir, "Git blob"), fmt.Sprintf("%x", blob), "Git blob in %s/SOURCE.md", dir)
+	require.Equal(t, repository, recordedSourceValue(t, dir, "Repository"))
+	require.Equal(t, "openapi/spec.yaml", recordedSourceValue(t, dir, "File"))
+}
+
 func TestCoreContractMatchesRecordedSource(t *testing.T) {
-	raw := readVendoredFile(t, coreContractDir, "spec.yaml")
-	require.Equal(t, recordedSourceValue(t, coreContractDir, "File SHA-256"), fmt.Sprintf("%x", sha256.Sum256(raw)),
-		"spec.yaml must be the byte-identical Core document recorded in SOURCE.md")
-	require.Regexp(t, "^[0-9a-f]{40}$", recordedSourceValue(t, coreContractDir, "Commit"))
-	require.Equal(t, "stellwerk-labs/platform-orchestrator-cp", recordedSourceValue(t, coreContractDir, "Repository"))
-	require.Equal(t, "openapi/spec.yaml", recordedSourceValue(t, coreContractDir, "File"))
+	requireRecordedSource(t, coreContractDir, "stellwerk-labs/platform-orchestrator-cp")
+}
+
+func TestDataPlaneContractMatchesRecordedSource(t *testing.T) {
+	requireRecordedSource(t, dataPlaneContractDir, "stellwerk-labs/platform-orchestrator-dp")
 }
 
 func TestCoreOpenAPISpecValidatesWithExamples(t *testing.T) {
-	document, err := openapi3.NewLoader().LoadFromFile("../../clients/platform-orchestrator-cp/spec.yaml")
+	document, err := openapi3.NewLoader().LoadFromFile(coreContractDir + "/spec.yaml")
 	require.NoError(t, err)
 	require.NoError(t, document.Validate(t.Context(), openapi3.EnableExamplesValidation()))
 }
