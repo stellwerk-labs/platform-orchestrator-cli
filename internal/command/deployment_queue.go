@@ -280,7 +280,10 @@ var AcknowledgeDeploymentOutcome = &cobra.Command{
 A failed deployment started by a plugin whose Runner never reported a result blocks its environment: the Runner may
 still be changing it. After confirming that the Runner can no longer change the environment, an operator records that
 with a reason. The deployment's status and history stay unchanged, requests that waited in the queue were rejected, and
-nothing starts by itself: new deploys work again.`,
+nothing starts by itself: new deploys work again.
+
+The acknowledgement is accepted only after the deployment's Runner dispatch window closed. 'octl deploy' shows the
+fence and when that is; a refused acknowledgement says it too.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
 		orgId, err := ShouldOrg(cmd.Context())
@@ -312,6 +315,8 @@ nothing starts by itself: new deploys work again.`,
 			acknowledgement = r.JSON201
 		case http.StatusOK:
 			acknowledgement = r.JSON200
+		case http.StatusConflict:
+			return acknowledgeConflictError(cmd.Context(), orgId, deployment, r.JSON409, r.Body)
 		}
 		if acknowledgement == nil {
 			return errors.Errorf("unexpected status code %d when acknowledging deployment outcome: %s", r.StatusCode(), string(r.Body))

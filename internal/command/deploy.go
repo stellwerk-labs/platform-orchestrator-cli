@@ -328,6 +328,9 @@ func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, project
 	} else if len(r.JSON200.Items) > 0 {
 		lastDeployment = &r.JSON200.Items[0]
 		successMessageF("Found previous stateful deployment %s.", lastDeployment.Id)
+		if lastDeployment.EnvironmentFence != nil {
+			changedMessageF("%s", environmentFenceMessage(*lastDeployment.EnvironmentFence, time.Now()))
+		}
 		if lastDeployment.Status == "executing" {
 			if !queueing {
 				return nil, lastDeploymentManifest, errors.Errorf("last deployment %s is still executing for %s", lastDeployment.Id, time.Since(lastDeployment.CreatedAt))

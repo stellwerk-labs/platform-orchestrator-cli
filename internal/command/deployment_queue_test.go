@@ -51,6 +51,9 @@ type deployQueueServer struct {
 	// queueReads answer successive reads of the queue item; the last repeats.
 	queueReads []dp.DeploymentQueueItem
 	deployment dp.Deployment
+	// ackStatus and ackBody, when set, answer acknowledge-outcome.
+	ackStatus int
+	ackBody   any
 
 	creates      []dp.DeploymentCreateBody
 	queueQueries []string
@@ -166,6 +169,10 @@ func (f *deployQueueServer) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		var body cp.DeploymentOutcomeAcknowledgementBody
 		assert.NoError(f.t, json.NewDecoder(r.Body).Decode(&body))
 		f.acks = append(f.acks, path+" "+body.Reason)
+		if f.ackStatus != 0 {
+			write(f.ackStatus, f.ackBody)
+			return
+		}
 		write(http.StatusCreated, cp.DeploymentOutcomeAcknowledgement{DeploymentId: f.deployment.Id, Reason: body.Reason, PluginId: progressiveRolloutsPluginID})
 	default:
 		f.t.Errorf("unexpected request %s %s", r.Method, path)
