@@ -20,9 +20,9 @@ var LogsCmd = &cobra.Command{
 	Short: "Get logs for a deployment",
 	Long: `Get logs for a deployment.
 
-This command can be used to show deployment logs for a given deployment. Logs are encrypted, so a private key needs to be passed to this command in the 'key' argument. The key is generated during the deployment and can be found in the output of the 'deploy' command.
+This command can be used to show deployment logs for a given deployment. Logs are encrypted, so a private key needs to be passed to this command in the 'key' argument. The key is generated during the deployment; 'octl deploy --print-logs-key' prints it.
 
-$ octl logs 01234567-89ab-cdef-0123-456789abcdef --key=AGE-SECRET-KEY-1SGKT64UHNGURNZUQSAJ9J0C65R2F2PXDCZQVVGRUPN98L33G2HFSUC24EJ
+$ octl logs 01234567-89ab-cdef-0123-456789abcdef --key="$RUNNER_LOGS_KEY"
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,7 +63,7 @@ $ octl logs 01234567-89ab-cdef-0123-456789abcdef --key=AGE-SECRET-KEY-1SGKT64UHN
 }
 
 func init() {
-	LogsCmd.Flags().String(logsCmdKey, "", "The private secret key needed to decrypt the logs for the given deployment. You can find this key in the output of the `deploy` command.")
+	LogsCmd.Flags().String(logsCmdKey, "", "The private secret key needed to decrypt the logs for the given deployment. 'octl deploy --print-logs-key' prints this key.")
 	oldHelp := LogsCmd.HelpFunc()
 	LogsCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 		_ = command.Flags().MarkHidden(printer.OutputFormatFlag)

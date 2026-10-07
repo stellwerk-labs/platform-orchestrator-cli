@@ -43,6 +43,7 @@ const (
 	deployCmdSkipLogsFlag        = "skip-logs"
 	deployCmdRunnerLogsLevelFlag = "runner-logs-level"
 	deployCmdShowLogsFlag        = "show-logs"
+	deployCmdPrintLogsKeyFlag    = "print-logs-key"
 
 	// Deprecated flags
 	deprecatedDeployCmdOutputFlag = "output"
@@ -270,6 +271,7 @@ func init() {
 	DeployCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
 	DeployCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	DeployCmd.Flags().Bool(deployCmdShowLogsFlag, false, "Show runner logs in the output of this command")
+	addPrintLogsKeyFlag(DeployCmd)
 	addDeployQueueFlags(DeployCmd)
 
 	// Deprecated flags
@@ -375,6 +377,28 @@ func commonDeployCmdDiff(newManifest dp.DeploymentManifest, lastDeploymentManife
 	return nil
 }
 
+// addPrintLogsKeyFlag offers the only way to see the key that decrypts a
+// deployment's runner logs. It is never printed by default: terminal output
+// ends up in CI logs and scrollback, and whoever reads it can read the logs.
+func addPrintLogsKeyFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool(deployCmdPrintLogsKeyFlag, false, "Print the secret key that decrypts this deployment's runner logs, for 'octl logs --key'. Anyone who can read the output can read the logs.")
+	cmd.MarkFlagsMutuallyExclusive(deployCmdSkipLogsFlag, deployCmdPrintLogsKeyFlag)
+}
+
+// announceLogsKey tells the user how to reach the runner logs of a created
+// deployment. The key itself is printed only with --print-logs-key.
+func announceLogsKey(cmd *cobra.Command, deploymentId uuid.UUID, key *age.X25519Identity) {
+	if printKey, _ := cmd.Flags().GetBool(deployCmdPrintLogsKeyFlag); printKey {
+		changedMessageF("Warning: the key below decrypts the runner logs of deployment %s. Anyone who can read this output, including CI logs and terminal scrollback, can read those logs.", deploymentId)
+		infoMessageF("Runner logs key: %s", key)
+		infoMessageF("Once the deployment is complete, read its logs with 'octl logs %s --key <runner logs key>'.", deploymentId)
+		return
+	}
+	if show, _ := cmd.Flags().GetBool(deployCmdShowLogsFlag); !show {
+		infoMessageF("Runner logs are encrypted with a key that is not printed; pass --%s to print it for 'octl logs'.", deployCmdPrintLogsKeyFlag)
+	}
+}
+
 // commonDeployCmdInner confirms the diff against base, creates the Deployment,
 // follows it through the Environment's deployment queue when it has to wait,
 // and waits for it to complete. base is nil for an Environment without a
@@ -422,7 +446,7 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 	}
 	successMessageF("Deployment %s created.", deployment.Id)
 	if logsAgeKey != nil {
-		infoMessageF("Once deployment is complete, logs will be available. To access logs use this secret key: %s, e.g. 'octl logs %s --key=%s'", logsAgeKey.String(), deployment.Id, logsAgeKey.String())
+		announceLogsKey(cmd, deployment.Id, logsAgeKey)
 	}
 
 	for {

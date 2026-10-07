@@ -343,6 +343,7 @@ func init() {
 	ScoreDeployCmd.Flags().Bool(deployCmdDryRunFlag, false, "Dry run - validate the request but do not execute the deployment")
 	addDeployQueueFlags(ScoreDeployCmd)
 	ScoreDeployCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
+	addPrintLogsKeyFlag(ScoreDeployCmd)
 	ScoreDeployCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	ScoreDeployCmd.Flags().String(scorePrintManifestFlag, "", "Write the deployment manifest produced by score manifest conversion to the file at the given path and exit. Use '-' to write to stdout.")
 

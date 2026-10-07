@@ -141,6 +141,7 @@ func init() {
 	RollbackCmd.Flags().Bool(deployCmdSkipLogsFlag, false, "Logs produced by the runner will not be stored")
 	RollbackCmd.Flags().String(deployCmdRunnerLogsLevelFlag, "info", "Set the logging level for the runner (debug|info|warn|error)")
 	RollbackCmd.Flags().Bool(deployCmdShowLogsFlag, false, "Show runner logs in the output of this command")
+	addPrintLogsKeyFlag(RollbackCmd)
 	addDeployQueueFlags(RollbackCmd)
 
 	RootCmd.AddCommand(RollbackCmd)

@@ -149,11 +149,13 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating deploy deployment...
 Deployment %[2]s created.
-Once deployment is complete, logs will be available. To access logs use this secret key: %[4]s, e.g. 'octl logs %[2]s --key=%[4]s'
+Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 Retrieved outputs, writing to destination '%[5]s'
 `, testApiUrl, newDepId, orgId, lk.String(), path.Join(os.TempDir(), "outputs.raw")), stderr)
+	assert.NotContains(t, stderr, lk.String(), "the runner logs key is never printed by default")
+	assert.NotContains(t, stderr, "AGE-SECRET-KEY-")
 
 	raw, err := os.ReadFile(path.Join(os.TempDir(), "outputs.raw"))
 	require.NoError(t, err)
@@ -277,11 +279,13 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating deploy deployment...
 Deployment %[2]s created.
-Once deployment is complete, logs will be available. To access logs use this secret key: %[4]s, e.g. 'octl logs %[2]s --key=%[4]s'
+Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 Retrieved outputs, writing to destination '%[5]s'
 `, testApiUrl, newDepId, orgId, lk.String(), path.Join(os.TempDir(), "outputs.raw")), stderr)
+	assert.NotContains(t, stderr, lk.String(), "the runner logs key is never printed by default")
+	assert.NotContains(t, stderr, "AGE-SECRET-KEY-")
 
 	raw, err := os.ReadFile(path.Join(os.TempDir(), "outputs.raw"))
 	require.NoError(t, err)
@@ -651,7 +655,6 @@ Generating diff...
 No manifest changes detected - this will be a re-deployment.
 Creating deploy deployment...
 Deployment %[2]s created.
-Once deployment is complete, logs will be available. To access logs use this secret key: %[4]s, e.g. 'octl logs %[2]s --key=%[4]s'
 Waiting for deployment %[2]s to complete (0s)...
 
 Runner logs:
@@ -660,6 +663,8 @@ Deployment logs content
 Deployment %[2]s succeeded after 0s: it was successful!
 Outputs ignored due to unset --result flag.
 `, testApiUrl, newDepId, orgId, lk.String()), stderr)
+	assert.NotContains(t, stderr, lk.String(), "the runner logs key is never printed by default")
+	assert.NotContains(t, stderr, "AGE-SECRET-KEY-")
 }
 
 func TestNominal_deploy_with_show_logs_error(t *testing.T) {
@@ -751,7 +756,6 @@ Generating diff...
 No manifest changes detected - this will be a re-deployment.
 Creating deploy deployment...
 Deployment %[2]s created.
-Once deployment is complete, logs will be available. To access logs use this secret key: %[4]s, e.g. 'octl logs %[2]s --key=%[4]s'
 Waiting for deployment %[2]s to complete (0s)...
 
 Runner logs:
@@ -759,6 +763,8 @@ failed to get logs: %[5]s
 Deployment %[2]s succeeded after 0s: it was successful!
 Outputs ignored due to unset --result flag.
 `, testApiUrl, newDepId, orgId, lk.String(), errorMessage), stderr)
+	assert.NotContains(t, stderr, lk.String(), "the runner logs key is never printed by default")
+	assert.NotContains(t, stderr, "AGE-SECRET-KEY-")
 }
 
 func Test_loadRawManifest(t *testing.T) {
