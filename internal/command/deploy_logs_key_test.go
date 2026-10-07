@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const ageSecretKeyPrefix = "AGE-SECRET-KEY-"
+const ageSecretKeyPrefix = "AGE-SECRET-KEY-" //nolint:gosec // the prefix every age secret key starts with, not a credential
 
 // logsKeyFixture serves a deployment that is created at once and succeeds.
 func logsKeyFixture(t *testing.T) (*deployQueueServer, string, func(args ...string) (string, error)) {
@@ -26,10 +26,10 @@ func logsKeyFixture(t *testing.T) (*deployQueueServer, string, func(args ...stri
 
 func TestRunnerLogsKeyIsNeverPrintedByDefault(t *testing.T) {
 	for name, args := range map[string]func(t *testing.T, f *deployQueueServer) []string{
-		"deploy": func(t *testing.T, _ *deployQueueServer) []string {
+		testDeployCmd: func(t *testing.T, _ *deployQueueServer) []string {
 			return deployQueueArgs(t, noPromptFlag)
 		},
-		"rollback": func(_ *testing.T, f *deployQueueServer) []string {
+		queueTestRollback: func(_ *testing.T, f *deployQueueServer) []string {
 			f.withBase(deployTestStatusSucceeded)
 			return []string{orgFlag, queueTestOrg, queueTestRollback, testProjectId, testEnvId, f.deployment.Id.String(), noPromptFlag}
 		},

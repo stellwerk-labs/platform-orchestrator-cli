@@ -32,6 +32,9 @@ const (
 	tableTypeEnvironment            = "Environment"
 	tableTypeEnvironmentTypeSummary = "EnvironmentTypeSummary"
 	tableTypeMetadataKey            = "MetadataKey"
+	tableTypePluginAuditEvent       = "PluginAuditEvent"
+	tableTypePluginInstallation     = "PluginInstallation"
+	tableTypePluginPackage          = "PluginPackage"
 	tableTypeModule                 = "Module"
 	tableTypeModuleProvider         = "ModuleProvider"
 	tableTypeModuleProviderSummary  = "ModuleProviderSummary"
@@ -47,6 +50,7 @@ const (
 	tableTypeScimGroupMapping       = "ScimGroupMapping"
 	tableTypeServiceUserSummary     = "ServiceUserSummary"
 
+	tableFieldActor                   = "Actor"
 	tableFieldBuiltIn                 = "BuiltIn"
 	tableFieldCompletedAt             = "CompletedAt"
 	tableFieldConfiguration           = "Configuration"
@@ -80,6 +84,7 @@ const (
 	tableFieldProjectId               = "ProjectId"
 	tableFieldProviderMapping         = "ProviderMapping"
 	tableFieldProviderType            = "ProviderType"
+	tableFieldReason                  = "Reason"
 	tableFieldReasonCode              = "ReasonCode"
 	tableFieldResourceClass           = "ResourceClass"
 	tableFieldResourceType            = "ResourceType"
@@ -132,6 +137,9 @@ var tableColumns = map[string][]string{
 	tableTypeEnvironmentTypeSummary: {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt},
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},
 	tableTypeMetadataKey:            {tableFieldName, tableFieldDescription, tableFieldSchema, tableFieldCreatedAt},
+	tableTypePluginAuditEvent:       {tableFieldId, "Revision", "OccurredAt", tableFieldActor, "Action", "InstallationId", tableFieldOrgId, tableFieldReason},
+	tableTypePluginInstallation:     {"InstallationId", "PluginId", tableFieldState, "Availability", "PackageSha256", "TargetPackageSha256", tableFieldUpdatedAt},
+	tableTypePluginPackage:          {"PluginId", "Version", "ManifestSha256", tableFieldCreatedAt},
 	tableTypeModule:                 {tableFieldId, tableFieldDescription, tableFieldOrgId, tableFieldResourceType, tableFieldModuleSource, tableFieldModuleParams, tableFieldModuleInputs, tableFieldProviderMapping, tableFieldDependencies, tableFieldCoprovisioned, tableFieldUpdatedAt, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleSummary:          {tableFieldId, tableFieldDescription, tableFieldResourceType, tableFieldModuleSource, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleProvider:         {tableFieldId, tableFieldDescription, tableFieldProviderType, tableFieldSource, tableFieldVersionConstraint, tableFieldConfiguration, tableFieldCreatedAt},

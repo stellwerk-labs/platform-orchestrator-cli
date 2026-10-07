@@ -12,7 +12,10 @@ import (
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/ref"
 )
 
-const fenceTestReasonFlag = "--" + reasonFlag
+const (
+	reasonArg             = "--" + reasonFlag
+	acknowledgeOutcomeCmd = "acknowledge-outcome"
+)
 
 var fenceTestSince = time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC)
 
@@ -69,7 +72,7 @@ func TestAcknowledgeOutcomeExplainsWhenTheRemedyBecomesAvailable(t *testing.T) {
 		fixture, ctx := newDeployQueueServer(t)
 		fixture.ackStatus = http.StatusConflict
 		configure(fixture)
-		_, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, queueTestDeploymentsCmd, "acknowledge-outcome", fixture.deployment.Id.String(), fenceTestReasonFlag, "runner host gone"})
+		_, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, queueTestDeploymentsCmd, acknowledgeOutcomeCmd, fixture.deployment.Id.String(), reasonArg, "runner host gone"})
 		require.Len(t, fixture.acks, 1, "the Control Plane decides; the CLI never refuses on its own clock")
 		return err
 	}
