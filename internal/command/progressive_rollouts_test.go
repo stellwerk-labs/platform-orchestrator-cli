@@ -66,12 +66,12 @@ func TestProgressiveRolloutCapabilityDiscoverySupportsLegacyServers(t *testing.T
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "plugin_not_installed")
 		assert.Contains(t, err.Error(), progressiveRolloutsPluginID)
-		assert.Contains(t, err.Error(), "licence", "not_installed message must mention licence requirement per S1.5")
+		assert.Contains(t, err.Error(), "licence", "not_installed message must mention licence requirement")
 	}
 	err := progressiveRolloutsCapabilityDiscoveryError(http.StatusServiceUnavailable, nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "plugin_unavailable")
-	assert.Contains(t, err.Error(), progressiveRolloutsPluginID, "unavailable message must include plugin ID per S1.5")
+	assert.Contains(t, err.Error(), progressiveRolloutsPluginID, "unavailable message must include plugin ID")
 }
 
 func TestProgressiveRolloutPluginErrorFallbackMentionsLicence(t *testing.T) {
@@ -84,7 +84,7 @@ func TestProgressiveRolloutPluginErrorFallbackMentionsLicence(t *testing.T) {
 			Id: progressiveRolloutsPluginID, DisplayName: "Progressive Rollouts", State: state,
 		}, progressiveRolloutsMutate)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "licence", "fallback admin action must mention licence per S1.5")
+		assert.Contains(t, err.Error(), "licence", "fallback admin action must mention licence")
 	}
 }
 
