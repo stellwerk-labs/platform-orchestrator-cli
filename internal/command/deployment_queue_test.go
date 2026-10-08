@@ -484,23 +484,27 @@ func TestDeployDerivedManifestsNameTheirBase(t *testing.T) {
 
 func TestQueuedDeploymentThatNeverStartsFailsWithItsReason(t *testing.T) {
 	for name, tc := range map[string]struct {
-		state   dp.DeploymentQueueItemState
-		code    string
-		message string
-		want    []string
+		state            dp.DeploymentQueueItemState
+		code             string
+		message          string
+		reasonDeployment string
+		want             []string
+		unwanted         string
 	}{
-		"base changed": {dp.Rejected, errorCodeDeploymentBaseChanged, "the Environment's current Deployment is no longer the expected base",
-			[]string{"was rejected (deployment_base_changed)", "Another deployment changed the environment while this request waited"}},
-		"expired": {dp.Expired, "expired", "", []string{"expired at 2026-10-07T14:00:00Z", queueTestTTLFlag}},
-		"cancelled": {dp.Cancelled, "cancelled", "superseded by release 42",
-			[]string{"queue item 22222222-2222-4222-8222-222222222222 was cancelled (cancelled): superseded by release 42"}},
-		"rejected": {dp.Rejected, "pin_protection", "module is pinned", []string{"was rejected (pin_protection): module is pinned"}},
-		"halted after a failure": {dp.Rejected, errorCodePreviousDeploymentFailed, "the previous Deployment '" + queueTestFailedID + "' failed",
-			[]string{"queue item 22222222-2222-4222-8222-222222222222 was rejected (previous_deployment_failed): the previous Deployment '" + queueTestFailedID + "' failed. " +
+		"base changed": {state: dp.Rejected, code: errorCodeDeploymentBaseChanged, message: "the Environment's current Deployment is no longer the expected base",
+			want: []string{"was rejected (deployment_base_changed)", "Another deployment changed the environment while this request waited"}},
+		"expired": {state: dp.Expired, code: "expired", want: []string{"expired at 2026-10-07T14:00:00Z", queueTestTTLFlag}},
+		"cancelled": {state: dp.Cancelled, code: "cancelled", message: "superseded by release 42",
+			want: []string{"queue item 22222222-2222-4222-8222-222222222222 was cancelled (cancelled): superseded by release 42"}},
+		"rejected": {state: dp.Rejected, code: "pin_protection", message: "module is pinned", want: []string{"was rejected (pin_protection): module is pinned"}},
+		// The failed Deployment comes from reason_deployment_id; the message is only quoted.
+		"halted after a failure": {state: dp.Rejected, code: errorCodePreviousDeploymentFailed, message: "the previous Deployment failed", reasonDeployment: queueTestFailedID,
+			want: []string{"queue item 22222222-2222-4222-8222-222222222222 was rejected (previous_deployment_failed): the previous Deployment failed. " +
 				"The request was queued with --halt-on-failure, so it did not start after deployment " + queueTestFailedID + " failed; " +
 				"inspect it with 'octl get deployment " + queueTestFailedID + "', fix the cause and run the command again"}},
-		"halted after an unnamed failure": {dp.Rejected, errorCodePreviousDeploymentFailed, "the previous Deployment failed",
-			[]string{"did not start after the deployment it waited for failed; find out why it failed, fix the cause and run the command again"}},
+		"halted after an unnamed failure": {state: dp.Rejected, code: errorCodePreviousDeploymentFailed, message: "the previous Deployment '" + queueTestFailedID + "' failed",
+			want:     []string{"did not start after the deployment it waited for failed; find out why it failed, fix the cause and run the command again"},
+			unwanted: "octl get deployment " + queueTestFailedID},
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture, ctx := newDeployQueueServer(t)
@@ -508,11 +512,17 @@ func TestQueuedDeploymentThatNeverStartsFailsWithItsReason(t *testing.T) {
 			fixture.createStatus, fixture.createBody = http.StatusAccepted, fixture.queueItem(dp.Queued, 1)
 			settled := fixture.queueItem(tc.state, 0)
 			settled.ReasonCode, settled.ReasonMessage = ref.Ref(tc.code), ref.RefStringEmptyNil(tc.message)
+			if tc.reasonDeployment != "" {
+				settled.ReasonDeploymentId = ref.Ref(uuid.MustParse(tc.reasonDeployment))
+			}
 			fixture.queueReads = []dp.DeploymentQueueItem{settled}
 
 			_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, queueTestMergeFlag))
 			for _, want := range tc.want {
 				require.ErrorContains(t, err, want)
+			}
+			if tc.unwanted != "" {
+				require.NotContains(t, err.Error(), tc.unwanted, "the message text is never parsed")
 			}
 			require.Equal(t, ref.Ref(baseID), fixture.createdBodies()[0].ExpectedBaseDeploymentId)
 		})

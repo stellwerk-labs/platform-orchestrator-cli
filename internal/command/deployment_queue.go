@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"regexp"
 	"slices"
 	"time"
 
@@ -32,10 +31,6 @@ const (
 	errorCodeOutcomeUnreconciled      = "outcome_unreconciled"
 	errorCodePreviousDeploymentFailed = "previous_deployment_failed"
 )
-
-// deploymentIDPattern finds the failed deployment that a
-// previous_deployment_failed reason message names.
-var deploymentIDPattern = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 
 // deploymentQueuePollInterval is how often a waiting queue item is read again.
 var deploymentQueuePollInterval = 5 * time.Second
@@ -185,7 +180,7 @@ func waitForQueuedDeployment(ctx context.Context, orgId string, item dp.Deployme
 	case reason == errorCodeDeploymentBaseChanged:
 		return dp.Deployment{}, errors.Errorf("queue item %s was rejected (%s): %s. Another deployment changed the environment while this request waited; run the command again to review the diff against the current state", item.Id, reason, message)
 	case reason == errorCodePreviousDeploymentFailed:
-		return dp.Deployment{}, haltedQueueItemError(item.Id, message)
+		return dp.Deployment{}, haltedQueueItemError(item.Id, message, item.ReasonDeploymentId)
 	case item.State == dp.Expired:
 		return dp.Deployment{}, errors.Errorf("queue item %s expired at %s before the environment became free; run the command again, with a longer --%s if needed", item.Id, item.ExpiresAt.Format(time.RFC3339), deployCmdQueueTTLFlag)
 	default:
@@ -195,11 +190,11 @@ func waitForQueuedDeployment(ctx context.Context, orgId string, item dp.Deployme
 
 // haltedQueueItemError explains a request queued with --halt-on-failure that
 // did not start because the deployment it waited for failed. The Data Plane
-// names that deployment only in the reason message.
-func haltedQueueItemError(itemId uuid.UUID, message string) error {
+// names that deployment in the item's reason_deployment_id.
+func haltedQueueItemError(itemId uuid.UUID, message string, failedId *uuid.UUID) error {
 	failed, next := "the deployment it waited for", "find out why it failed"
-	if id := deploymentIDPattern.FindString(message); id != "" {
-		failed, next = "deployment "+id, fmt.Sprintf("inspect it with 'octl get deployment %s'", id)
+	if failedId != nil {
+		failed, next = "deployment "+failedId.String(), fmt.Sprintf("inspect it with 'octl get deployment %s'", *failedId)
 	}
 	return errors.Errorf("queue item %s was rejected (%s): %s. The request was queued with --%s, so it did not start after %s failed; %s, fix the cause and run the command again",
 		itemId, errorCodePreviousDeploymentFailed, message, deployCmdHaltOnFailureFlag, failed, next)
