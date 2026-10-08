@@ -311,8 +311,71 @@ func TestEnvironmentBusyNamesWhyTheRequestDidNotWait(t *testing.T) {
 		baseID := fixture.withBase("executing")
 		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, planOnlyFlag))
 		require.ErrorContains(t, err, "last deployment "+baseID.String()+" is still executing")
+		require.ErrorContains(t, err, "plan-only requests do not run beside another deployment of the environment, retry once it finished")
 		require.Empty(t, fixture.createdBodies())
 	})
+}
+
+// Plans and dry runs describe the environment as it is now. While deployments
+// run or wait in its queue, the Data Plane says so in pending_changes and the
+// command passes it on. A dry run is answered beside a running deployment.
+func TestPlansAndDryRunsSayWhenTheirResultMayChange(t *testing.T) {
+	pending := func(running, queued int) *dp.PendingEnvironmentChanges {
+		return &dp.PendingEnvironmentChanges{Code: dp.ResultMayChange, Running: running, Queued: queued}
+	}
+	for name, tc := range map[string]struct {
+		base    string
+		args    func(*testing.T, *deployQueueServer) []string
+		status  int
+		pending *dp.PendingEnvironmentChanges
+		hint    string
+	}{
+		"dry run beside a running deployment": {base: "executing", status: http.StatusOK, pending: pending(1, 2),
+			args: func(t *testing.T, _ *deployQueueServer) []string { return deployQueueArgs(t, noPromptFlag, dryRunFlag) },
+			hint: "The result may change: 1 Deployment running, 2 queued. They change the environment first.\n"},
+		"plan-only while requests wait": {base: deployTestStatusSucceeded, status: http.StatusCreated, pending: pending(0, 2),
+			args: func(t *testing.T, _ *deployQueueServer) []string {
+				return deployQueueArgs(t, noPromptFlag, planOnlyFlag)
+			},
+			hint: "The result may change: 0 Deployments running, 2 queued. They change the environment first.\n"},
+		"rollback dry run": {base: "executing", status: http.StatusOK, pending: pending(1, 0),
+			args: func(_ *testing.T, f *deployQueueServer) []string {
+				return []string{orgFlag, queueTestOrg, queueTestRollback, testProjectId, testEnvId, f.deployment.Id.String(), noPromptFlag, dryRunFlag}
+			},
+			hint: "The result may change: 1 Deployment running, 0 queued."},
+		"score plan-only": {base: deployTestStatusSucceeded, status: http.StatusCreated, pending: pending(0, 1),
+			args: func(t *testing.T, _ *deployQueueServer) []string {
+				return []string{orgFlag, queueTestOrg, scoreTestCmd, testDeployCmd, testProjectId, testEnvId, writeTestFile(t, "score.yaml", queueTestScoreFile), noPromptFlag, planOnlyFlag}
+			},
+			hint: "The result may change: 0 Deployments running, 1 queued."},
+		"dry run of an idle environment": {base: deployTestStatusSucceeded, status: http.StatusOK,
+			args: func(t *testing.T, _ *deployQueueServer) []string { return deployQueueArgs(t, noPromptFlag, dryRunFlag) }},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture, ctx := newDeployQueueServer(t)
+			fixture.withBase(tc.base)
+			fixture.createStatus = tc.status
+			if tc.status == http.StatusOK {
+				fixture.createBody = dp.DeploymentDryRun{RunnerId: "runner", PendingChanges: tc.pending}
+			} else {
+				created := fixture.deployment
+				created.PendingChanges = tc.pending
+				fixture.createBody = created
+			}
+
+			_, stderr, err := executeAndResetCommand(ctx, RootCmd, tc.args(t, fixture))
+			require.NoError(t, err)
+			bodies := fixture.createdBodies()
+			require.Len(t, bodies, 1)
+			require.Nil(t, bodies[0].WhenBusy, "plans and dry runs are never queued")
+			if tc.hint == "" {
+				require.NotContains(t, stderr, "The result may change")
+				return
+			}
+			require.Contains(t, stderr, tc.hint)
+			require.Equal(t, 1, strings.Count(stderr, "The result may change"))
+		})
+	}
 }
 
 func TestDeployQueueFlags(t *testing.T) {

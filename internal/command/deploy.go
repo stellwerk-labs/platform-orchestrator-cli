@@ -102,7 +102,7 @@ shared:
 
 By default, the command will prompt for confirmation of the diff before proceeding. This can be disabled with the --no-prompt flag and may be needed for non-interactive use.
 
-Deployments of one environment run one at a time. If another deployment is running or requests are already waiting, the request waits in the environment's deployment queue and starts in order once the environment is free; the command shows its position until then. Use --queue-ttl to bound the wait, or --no-queue to fail with environment_busy instead. With --halt-on-failure the request does not start if the deployment it waits for fails: it is rejected with previous_deployment_failed. Plan-only requests and dry runs are never queued. A queued request is resolved against the environment as it is when it starts, so a confirmed diff and manifests derived with --merge, --drop-workload or --drop-shared name their base deployment: if another deployment changed the environment in the meantime, the request fails with deployment_base_changed instead of reverting that change.
+Deployments of one environment run one at a time. If another deployment is running or requests are already waiting, the request waits in the environment's deployment queue and starts in order once the environment is free; the command shows its position until then. Use --queue-ttl to bound the wait, or --no-queue to fail with environment_busy instead. With --halt-on-failure the request does not start if the deployment it waits for fails: it is rejected with previous_deployment_failed. Plan-only requests and dry runs are never queued: a dry run is answered while other deployments run or wait, and a plan-only request starts while requests wait but not while another deployment of the environment runs. Both say when deployments that run or wait may still change their result. A queued request is resolved against the environment as it is when it starts, so a confirmed diff and manifests derived with --merge, --drop-workload or --drop-shared name their base deployment: if another deployment changed the environment in the meantime, the request fails with deployment_base_changed instead of reverting that change.
 
 Once a deployment is created, the CLI shows a URL which can be used to download the runner logs when the deployment completes. The level of the log produced by the runner might be defined with the --runner-logs-level flag, while the CLI will not produce any URL and logs will not be downloadable if the flag --skip-logs is set.
 `,
@@ -436,6 +436,9 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 			return nil, errors.Errorf("unexpected status code %d when creating deployment: %s", r.StatusCode(), string(r.Body))
 		}
 		successMessageF("Dry-run deployment is valid.")
+		if r.JSON200 != nil {
+			warnPendingChanges(r.JSON200.PendingChanges)
+		}
 		return nil, nil
 	} else if r.StatusCode() == http.StatusAccepted && r.JSON202 != nil {
 		if deployment, err = waitForQueuedDeployment(cmd.Context(), orgId, *r.JSON202); err != nil {
@@ -447,6 +450,7 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 		deployment = *r.JSON201
 	}
 	successMessageF("Deployment %s created.", deployment.Id)
+	warnPendingChanges(deployment.PendingChanges)
 	if logsAgeKey != nil {
 		announceLogsKey(cmd, deployment.Id, logsAgeKey)
 	}

@@ -100,18 +100,35 @@ func (q deployQueue) apply(body *dp.DeploymentCreateBody) {
 }
 
 // executingBase decides what the request does while base, the Environment's
-// current deployment, still executes: a deploy or rollback waits behind it in
-// the queue, anything else fails before the diff is shown.
+// current deployment, still executes, as the Data Plane decides it: a dry run is
+// answered beside it, a deploy or rollback waits behind it in the queue, and
+// anything else fails before the diff is shown.
 func (q deployQueue) executingBase(base dp.DeploymentSummary) error {
 	executing := fmt.Sprintf("last deployment %s is still executing for %s", base.Id, time.Since(base.CreatedAt))
 	switch {
-	case !q.queueable():
-		return errors.New(executing)
+	case q.dryRun:
+		return nil
+	case q.planOnly:
+		return errors.Errorf("%s; plan-only requests do not run beside another deployment of the environment, retry once it finished", executing)
 	case q.reject:
 		return errors.Errorf("%s; retry once it finished, or run the command without --%s to wait in the environment's deployment queue", executing, deployCmdNoQueueFlag)
 	}
 	changedMessageF("Deployment %s is still executing; this request will wait in the environment's deployment queue.", base.Id)
 	return nil
+}
+
+// warnPendingChanges says why a plan or dry run may not describe what a deploy
+// requested now would do: deployments that run or wait in the environment's
+// deployment queue change the environment first.
+func warnPendingChanges(pending *dp.PendingEnvironmentChanges) {
+	if pending == nil {
+		return
+	}
+	running := "Deployments"
+	if pending.Running == 1 {
+		running = "Deployment"
+	}
+	changedMessageF("The result may change: %d %s running, %d queued. They change the environment first.", pending.Running, running, pending.Queued)
 }
 
 // waitForQueuedDeployment follows a queued request until it became a
