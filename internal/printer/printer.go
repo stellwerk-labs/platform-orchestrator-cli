@@ -132,7 +132,7 @@ var tableColumns = map[string][]string{
 	tableTypeActiveResourceNode:     {tableFieldId, tableFieldResourceType, tableFieldModuleId, tableFieldModuleVersion},
 	tableTypeDeployment:             {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt, tableFieldManifest, tableFieldRunnerId},
 	tableTypeDeploymentManifest:     {tableFieldWorkloads},
-	tableTypeDeploymentQueueItem:    {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldMode, tableFieldState, tableFieldPosition, tableFieldCreatedAt, tableFieldExpiresAt, tableFieldDeploymentId, tableFieldReasonCode},
+	tableTypeDeploymentQueueItem:    {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldMode, tableFieldState, tableFieldPosition, "HaltOnFailure", tableFieldCreatedAt, tableFieldExpiresAt, tableFieldDeploymentId, tableFieldReasonCode},
 	tableTypeDeploymentSummary:      {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt},
 	tableTypeEnvironmentTypeSummary: {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt},
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"time"
 
@@ -19,16 +20,22 @@ import (
 )
 
 const (
-	deployCmdNoQueueFlag  = "no-queue"
-	deployCmdQueueTTLFlag = "queue-ttl"
-	queueItemStateFlag    = "state"
-	reasonFlag            = "reason"
+	deployCmdNoQueueFlag       = "no-queue"
+	deployCmdQueueTTLFlag      = "queue-ttl"
+	deployCmdHaltOnFailureFlag = "halt-on-failure"
+	queueItemStateFlag         = "state"
+	reasonFlag                 = "reason"
 
-	errorCodeEnvironmentBusy       = "environment_busy"
-	errorCodeDeploymentQueueFull   = "deployment_queue_full"
-	errorCodeDeploymentBaseChanged = "deployment_base_changed"
-	errorCodeOutcomeUnreconciled   = "outcome_unreconciled"
+	errorCodeEnvironmentBusy          = "environment_busy"
+	errorCodeDeploymentQueueFull      = "deployment_queue_full"
+	errorCodeDeploymentBaseChanged    = "deployment_base_changed"
+	errorCodeOutcomeUnreconciled      = "outcome_unreconciled"
+	errorCodePreviousDeploymentFailed = "previous_deployment_failed"
 )
+
+// deploymentIDPattern finds the failed deployment that a
+// previous_deployment_failed reason message names.
+var deploymentIDPattern = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 
 // deploymentQueuePollInterval is how often a waiting queue item is read again.
 var deploymentQueuePollInterval = 5 * time.Second
@@ -39,9 +46,12 @@ var deploymentQueuePollInterval = 5 * time.Second
 func addDeployQueueFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(deployCmdNoQueueFlag, false, "Fail with environment_busy instead of waiting in the environment's deployment queue while another deployment runs")
 	cmd.Flags().Duration(deployCmdQueueTTLFlag, 0, "How long the request may wait in the deployment queue before it expires, for example 45m (default: the server's queue TTL)")
-	cmd.MarkFlagsMutuallyExclusive(deployCmdNoQueueFlag, deployCmdQueueTTLFlag)
-	cmd.MarkFlagsMutuallyExclusive(deployCmdPlanOnlyFlag, deployCmdQueueTTLFlag)
-	cmd.MarkFlagsMutuallyExclusive(deployCmdDryRunFlag, deployCmdQueueTTLFlag)
+	cmd.Flags().Bool(deployCmdHaltOnFailureFlag, false, "Do not start the request if the deployment it waits for in the environment's deployment queue fails; it is then rejected with previous_deployment_failed")
+	for _, queueOnly := range []string{deployCmdQueueTTLFlag, deployCmdHaltOnFailureFlag} {
+		cmd.MarkFlagsMutuallyExclusive(deployCmdNoQueueFlag, queueOnly)
+		cmd.MarkFlagsMutuallyExclusive(deployCmdPlanOnlyFlag, queueOnly)
+		cmd.MarkFlagsMutuallyExclusive(deployCmdDryRunFlag, queueOnly)
+	}
 }
 
 // deployQueue says what a request does when its Environment is busy. Deploy and
@@ -52,6 +62,7 @@ type deployQueue struct {
 	planOnly bool
 	dryRun   bool
 	reject   bool
+	halt     bool
 	ttl      time.Duration
 }
 
@@ -59,11 +70,12 @@ func deployQueueFromFlags(cmd *cobra.Command) (deployQueue, error) {
 	noQueue, _ := cmd.Flags().GetBool(deployCmdNoQueueFlag)
 	planOnly, _ := cmd.Flags().GetBool(deployCmdPlanOnlyFlag)
 	dryRun, _ := cmd.Flags().GetBool(deployCmdDryRunFlag)
+	halt, _ := cmd.Flags().GetBool(deployCmdHaltOnFailureFlag)
 	ttl, _ := cmd.Flags().GetDuration(deployCmdQueueTTLFlag)
 	if cmd.Flags().Changed(deployCmdQueueTTLFlag) && (ttl < time.Second || ttl%time.Second != 0) {
 		return deployQueue{}, errors.Errorf("--%s must be a whole number of seconds of at least 1s, got %s", deployCmdQueueTTLFlag, ttl)
 	}
-	return deployQueue{planOnly: planOnly, dryRun: dryRun, reject: noQueue, ttl: ttl}, nil
+	return deployQueue{planOnly: planOnly, dryRun: dryRun, reject: noQueue, halt: halt, ttl: ttl}, nil
 }
 
 func (q deployQueue) queueable() bool {
@@ -80,6 +92,9 @@ func (q deployQueue) apply(body *dp.DeploymentCreateBody) {
 		body.WhenBusy = ref.Ref(dp.Queue)
 		if q.ttl > 0 {
 			body.QueueTtlSeconds = ref.Ref(int(q.ttl / time.Second))
+		}
+		if q.halt {
+			body.HaltOnFailure = ref.Ref(true)
 		}
 	}
 }
@@ -105,6 +120,9 @@ func (q deployQueue) executingBase(base dp.DeploymentSummary) error {
 func waitForQueuedDeployment(ctx context.Context, orgId string, item dp.DeploymentQueueItem) (dp.Deployment, error) {
 	dpClient := MustDpClient(ctx)
 	changedMessageF("Environment is busy: request queued as item %s at position %d, expires at %s.", item.Id, item.Position, item.ExpiresAt.Format(time.RFC3339))
+	if item.HaltOnFailure {
+		infoMessageF("It does not start if the deployment it waits for fails.")
+	}
 	ticker := time.NewTicker(deploymentQueuePollInterval)
 	defer ticker.Stop()
 	for item.State == dp.Queued {
@@ -149,11 +167,25 @@ func waitForQueuedDeployment(ctx context.Context, orgId string, item dp.Deployme
 		return *r.JSON200, nil
 	case reason == errorCodeDeploymentBaseChanged:
 		return dp.Deployment{}, errors.Errorf("queue item %s was rejected (%s): %s. Another deployment changed the environment while this request waited; run the command again to review the diff against the current state", item.Id, reason, message)
+	case reason == errorCodePreviousDeploymentFailed:
+		return dp.Deployment{}, haltedQueueItemError(item.Id, message)
 	case item.State == dp.Expired:
 		return dp.Deployment{}, errors.Errorf("queue item %s expired at %s before the environment became free; run the command again, with a longer --%s if needed", item.Id, item.ExpiresAt.Format(time.RFC3339), deployCmdQueueTTLFlag)
 	default:
 		return dp.Deployment{}, errors.Errorf("queue item %s was %s (%s): %s", item.Id, item.State, reason, message)
 	}
+}
+
+// haltedQueueItemError explains a request queued with --halt-on-failure that
+// did not start because the deployment it waited for failed. The Data Plane
+// names that deployment only in the reason message.
+func haltedQueueItemError(itemId uuid.UUID, message string) error {
+	failed, next := "the deployment it waited for", "find out why it failed"
+	if id := deploymentIDPattern.FindString(message); id != "" {
+		failed, next = "deployment "+id, fmt.Sprintf("inspect it with 'octl get deployment %s'", id)
+	}
+	return errors.Errorf("queue item %s was rejected (%s): %s. The request was queued with --%s, so it did not start after %s failed; %s, fix the cause and run the command again",
+		itemId, errorCodePreviousDeploymentFailed, message, deployCmdHaltOnFailureFlag, failed, next)
 }
 
 // deploymentConflictError turns a refused deploy or rollback into an error that

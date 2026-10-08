@@ -30,10 +30,12 @@ const (
 	queueTestBusyError      = `{"error":"environment_busy","message":"deployment is still executing"}`
 	queueTestRollback       = "rollback"
 	queueTestItemID         = "22222222-2222-4222-8222-222222222222"
+	queueTestFailedID       = "33333333-3333-4333-8333-333333333333"
 	queueTestWorkload       = "running"
 	queueTestDeploymentsCmd = "deployments"
 	queueTestTTLFlag        = "--" + deployCmdQueueTTLFlag
 	queueTestNoQueueFlag    = "--" + deployCmdNoQueueFlag
+	queueTestHaltFlag       = "--" + deployCmdHaltOnFailureFlag
 	queueTestMergeFlag      = "--" + deployCmdMergeFlag
 	queueTestScoreFile      = "apiVersion: score.dev/v1b1\nmetadata:\n  name: web\ncontainers:\n  main:\n    image: alpine:latest\n"
 )
@@ -322,11 +324,14 @@ func TestDeployQueueFlags(t *testing.T) {
 		require.Equal(t, ref.Ref(5400), fixture.createdBodies()[0].QueueTtlSeconds)
 	})
 	for name, args := range map[string][]string{
-		"sub-second ttl":     {queueTestTTLFlag, "1500ms"},
-		"zero ttl":           {queueTestTTLFlag, "0s"},
-		"ttl without queue":  {queueTestTTLFlag, "1m", queueTestNoQueueFlag},
-		"ttl with plan-only": {queueTestTTLFlag, "1m", "--plan-only"},
-		"ttl with dry-run":   {queueTestTTLFlag, "1m", "--dry-run"},
+		"sub-second ttl":      {queueTestTTLFlag, "1500ms"},
+		"zero ttl":            {queueTestTTLFlag, "0s"},
+		"ttl without queue":   {queueTestTTLFlag, "1m", queueTestNoQueueFlag},
+		"ttl with plan-only":  {queueTestTTLFlag, "1m", "--plan-only"},
+		"ttl with dry-run":    {queueTestTTLFlag, "1m", "--dry-run"},
+		"halt without queue":  {queueTestHaltFlag, queueTestNoQueueFlag},
+		"halt with plan-only": {queueTestHaltFlag, "--plan-only"},
+		"halt with dry-run":   {queueTestHaltFlag, "--dry-run"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture, ctx := newDeployQueueServer(t)
@@ -341,6 +346,49 @@ func TestDeployQueueFlags(t *testing.T) {
 		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, "--plan-only", "--dry-run"))
 		require.NoError(t, err)
 		require.Nil(t, fixture.createdBodies()[0].WhenBusy)
+	})
+}
+
+// --halt-on-failure travels with every queued deploy or rollback request, and
+// only with those.
+func TestHaltOnFailureIsSentWithEveryQueuedRequest(t *testing.T) {
+	for name, args := range map[string]func(*testing.T, *deployQueueServer) []string{
+		"deploy": func(t *testing.T, _ *deployQueueServer) []string {
+			return deployQueueArgs(t, noPromptFlag, queueTestHaltFlag)
+		},
+		"rollback": func(_ *testing.T, f *deployQueueServer) []string {
+			return []string{orgFlag, queueTestOrg, queueTestRollback, testProjectId, testEnvId, f.deployment.Id.String(), noPromptFlag, queueTestHaltFlag}
+		},
+		"score deploy": func(t *testing.T, _ *deployQueueServer) []string {
+			return []string{orgFlag, queueTestOrg, scoreTestCmd, testDeployCmd, testProjectId, testEnvId, writeTestFile(t, "score.yaml", queueTestScoreFile), noPromptFlag, queueTestHaltFlag}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture, ctx := newDeployQueueServer(t)
+			fixture.withBase(deployTestStatusSucceeded)
+			fixture.createStatus = http.StatusAccepted
+			queued := fixture.queueItem(dp.Queued, 1)
+			queued.HaltOnFailure = true
+			fixture.createBody = queued
+			fixture.queueReads = []dp.DeploymentQueueItem{fixture.queueItem(dp.Dispatched, 0)}
+
+			_, stderr, err := executeAndResetCommand(ctx, RootCmd, args(t, fixture))
+			require.NoError(t, err)
+			require.Contains(t, stderr, "request queued as item "+queueTestItemID+" at position 1, expires at 2026-10-07T14:00:00Z.\nIt does not start if the deployment it waits for fails.\n")
+			bodies := fixture.createdBodies()
+			require.Len(t, bodies, 1)
+			require.Equal(t, ref.Ref(dp.Queue), bodies[0].WhenBusy)
+			require.Equal(t, ref.Ref(true), bodies[0].HaltOnFailure)
+		})
+	}
+	t.Run("not sent without the flag", func(t *testing.T) {
+		fixture, ctx := newDeployQueueServer(t)
+		fixture.createStatus, fixture.createBody = http.StatusAccepted, fixture.queueItem(dp.Queued, 1)
+		fixture.queueReads = []dp.DeploymentQueueItem{fixture.queueItem(dp.Dispatched, 0)}
+		_, stderr, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag))
+		require.NoError(t, err)
+		require.NotContains(t, stderr, "It does not start if")
+		require.Nil(t, fixture.createdBodies()[0].HaltOnFailure)
 	})
 }
 
@@ -384,6 +432,12 @@ func TestQueuedDeploymentThatNeverStartsFailsWithItsReason(t *testing.T) {
 		"cancelled": {dp.Cancelled, "cancelled", "superseded by release 42",
 			[]string{"queue item 22222222-2222-4222-8222-222222222222 was cancelled (cancelled): superseded by release 42"}},
 		"rejected": {dp.Rejected, "pin_protection", "module is pinned", []string{"was rejected (pin_protection): module is pinned"}},
+		"halted after a failure": {dp.Rejected, errorCodePreviousDeploymentFailed, "the previous Deployment '" + queueTestFailedID + "' failed",
+			[]string{"queue item 22222222-2222-4222-8222-222222222222 was rejected (previous_deployment_failed): the previous Deployment '" + queueTestFailedID + "' failed. " +
+				"The request was queued with --halt-on-failure, so it did not start after deployment " + queueTestFailedID + " failed; " +
+				"inspect it with 'octl get deployment " + queueTestFailedID + "', fix the cause and run the command again"}},
+		"halted after an unnamed failure": {dp.Rejected, errorCodePreviousDeploymentFailed, "the previous Deployment failed",
+			[]string{"did not start after the deployment it waited for failed; find out why it failed, fix the cause and run the command again"}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture, ctx := newDeployQueueServer(t)
@@ -443,7 +497,9 @@ func TestRollbackWaitsInTheQueueByDefault(t *testing.T) {
 func TestDeploymentQueueCommands(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		fixture, ctx := newDeployQueueServer(t)
-		fixture.queueReads = []dp.DeploymentQueueItem{fixture.queueItem(dp.Queued, 1)}
+		halting := fixture.queueItem(dp.Queued, 1)
+		halting.HaltOnFailure = true
+		fixture.queueReads = []dp.DeploymentQueueItem{halting}
 		stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, testGetCmd, "deployment-queue-items", testProjectId, testEnvId, "--state", "queued", outFlag, jsonOutput})
 		require.NoError(t, err)
 		require.Equal(t, []string{"env_id=my-env&project_id=my-project&state=queued"}, fixture.queueQueries)
@@ -451,11 +507,15 @@ func TestDeploymentQueueCommands(t *testing.T) {
 		require.NoError(t, json.Unmarshal([]byte(stdout), &items))
 		require.Len(t, items, 1)
 		require.Equal(t, 1, items[0].Position)
+		require.True(t, items[0].HaltOnFailure)
+		require.Contains(t, stdout, `"halt_on_failure": true`)
 
 		stdout, _, err = executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, testGetCmd, "deployment-queue"})
 		require.NoError(t, err)
 		require.Contains(t, stdout, queueTestItemID)
 		require.Contains(t, stdout, "queued")
+		require.Regexp(t, `(?m)^Id\s+ProjectId\s+EnvId\s+Mode\s+State\s+Position\s+HaltOnFailure\s+CreatedAt\s`, stdout)
+		require.Regexp(t, `(?m)^`+queueTestItemID+`\s+my-project\s+my-env\s+deploy\s+queued\s+1\s+true\s`, stdout)
 
 		_, _, err = executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, testGetCmd, "deployment-queue-items", "--state", "waiting"})
 		require.ErrorContains(t, err, "unsupported value waiting for --state")
@@ -466,6 +526,7 @@ func TestDeploymentQueueCommands(t *testing.T) {
 		stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, testGetCmd, "deployment-queue-item", queueTestItemID, outFlag, jsonOutput})
 		require.NoError(t, err)
 		require.Contains(t, stdout, `"deployment_id": "`+fixture.deployment.Id.String()+`"`)
+		require.Contains(t, stdout, `"halt_on_failure": false`, "an item without the flag says so")
 	})
 	t.Run("cancel", func(t *testing.T) {
 		fixture, ctx := newDeployQueueServer(t)

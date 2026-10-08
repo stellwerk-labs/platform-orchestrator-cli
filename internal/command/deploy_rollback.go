@@ -28,8 +28,8 @@ may affect a normal deploy to this environment.
 
 Rollback does not revert changes to the runner or provider configurations.
 
-Like 'deploy', this command supports --plan-only, --dry-run, the deployment queue flags --no-queue and --queue-ttl, and
-flags for controlling deployment output and logs.
+Like 'deploy', this command supports --plan-only, --dry-run, the deployment queue flags --no-queue, --queue-ttl and
+--halt-on-failure, and flags for controlling deployment output and logs.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
