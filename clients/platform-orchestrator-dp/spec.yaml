@@ -205,9 +205,17 @@ paths:
       summary: Create a new deployment in the target project and environment.
       description: |
         Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
-        busy fails with 409 and the error code `environment_busy`, unless it sets `when_busy` to `queue`: then it waits
-        in the Environment's deployment queue and the response is 202 with the queue item. Queued requests are promoted
-        strictly in order and resolved against the Environment state at promotion.
+        busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+        `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+        organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+        resolved against the Environment state at promotion.
+
+        Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+        `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+        requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+        would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+        carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+        diff may still change.
 
         Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
         plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
@@ -1703,6 +1711,7 @@ components:
         - mode
         - state
         - position
+        - halt_on_failure
         - created_by
         - created_at
         - expires_at
@@ -1733,6 +1742,11 @@ components:
         expected_base_deployment_id:
           type: string
           format: uuid
+        halt_on_failure:
+          type: boolean
+          description: |
+            The item is rejected with `previous_deployment_failed` instead of being promoted when the Deployment it waited
+            for failed.
         created_by:
           type: string
           format: uuid
@@ -1752,7 +1766,8 @@ components:
           type: string
           description: |
             Why the item was cancelled, expired or rejected, for example `cancelled`, `expired`, `environment_deleting`,
-            `outcome_unreconciled`, `deployment_base_changed`, `pin_protection` or `actor_forbidden`.
+            `outcome_unreconciled`, `deployment_base_changed`, `previous_deployment_failed`, `pin_protection` or
+            `actor_forbidden`.
         reason_message:
           type: string
         settled_by:
@@ -1891,6 +1906,36 @@ components:
               description: The Runner ID that this deployment executes on
               type: string
               example: my-runner
+            pending_changes:
+              $ref: "#/components/schemas/PendingEnvironmentChanges"
+
+    PendingEnvironmentChanges:
+      description: |
+        Reported only on the response that creates a plan-only Deployment or answers a dry run, and only when Deployments
+        that change the Environment run or wait in its deployment queue. The plan or diff describes the Environment as it
+        is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
+        never queued.
+      type: object
+      required:
+        - code
+        - running
+        - queued
+      properties:
+        code:
+          type: string
+          enum:
+            - result_may_change
+          example: result_may_change
+        running:
+          description: Deploy, rollback or destroy Deployments changing the Environment now.
+          type: integer
+          minimum: 0
+          example: 1
+        queued:
+          description: Deploy and rollback requests waiting in the Environment's deployment queue.
+          type: integer
+          minimum: 0
+          example: 2
 
     DeploymentCreateBody:
       type: object
@@ -1985,21 +2030,31 @@ components:
         when_busy:
           description: |
             What a deploy or rollback request does when its Environment is busy with another Deployment, has queued requests
-            or is still settling the previous Deployment with Core. `reject` (the default) answers 409 with the error code
-            `environment_busy`. `queue` waits in the Environment's deployment queue and answers 202 with the queue item.
-            A queued request is resolved like a new request when it reaches the head of the queue. Plan-only requests and
-            dry runs are never queued.
+            or is still settling the previous Deployment with Core. `queue` (the default) waits in the Environment's
+            deployment queue and answers 202 with the queue item. `reject` answers 409 with the error code
+            `environment_busy`. A queued request is resolved like a new request when it reaches the head of the queue.
+            Requests authorized by an organization token cannot wait and get 409 `environment_busy` either way. Plan-only
+            requests and dry runs are never queued and ignore this field.
           type: string
           enum:
             - reject
             - queue
-          default: reject
+          default: queue
         queue_ttl_seconds:
           description: |
             How long a queued request may wait before it expires. Defaults to the Data Plane's configured queue TTL and must not
-            exceed its configured maximum. Only valid with `when_busy` set to `queue`.
+            exceed its configured maximum. Not valid with `when_busy` set to `reject`.
           type: integer
           minimum: 1
+        halt_on_failure:
+          description: |
+            Whether a queued request must not start when the Deployment it waited for failed. That Deployment is the
+            Environment's last deploy, rollback or destroy at promotion, provided it ended after the request was queued;
+            plan runs never count, and a later Deployment supersedes an earlier failure. The request then ends `rejected`
+            with the reason code `previous_deployment_failed` and the queue continues with the next request. A request that
+            starts at once, a plan-only request and a dry run never halt. Not valid with `when_busy` set to `reject`.
+          type: boolean
+          default: false
         expected_base_deployment_id:
           description: |
             The Deployment the request's manifest was derived from. The request fails with the error code `deployment_base_changed`
@@ -2020,6 +2075,8 @@ components:
           example: my-runner
         diff:
           $ref: "#/components/schemas/DeploymentDiff"
+        pending_changes:
+          $ref: "#/components/schemas/PendingEnvironmentChanges"
 
     DeploymentEncryptedOutputs:
       type: object

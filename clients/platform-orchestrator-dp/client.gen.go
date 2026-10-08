@@ -138,6 +138,11 @@ const (
 	MetadataKeySchemaTypeString MetadataKeySchemaType = "string"
 )
 
+// Defines values for PendingEnvironmentChangesCode.
+const (
+	ResultMayChange PendingEnvironmentChangesCode = "result_may_change"
+)
+
 // Defines values for UpdateMetadataKeySchemaType.
 const (
 	UpdateMetadataKeySchemaTypeString UpdateMetadataKeySchemaType = "string"
@@ -217,6 +222,12 @@ type Deployment struct {
 	// OrgId The Organization ID
 	OrgId OrganizationId `json:"org_id"`
 
+	// PendingChanges Reported only on the response that creates a plan-only Deployment or answers a dry run, and only when Deployments
+	// that change the Environment run or wait in its deployment queue. The plan or diff describes the Environment as it
+	// is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
+	// never queued.
+	PendingChanges *PendingEnvironmentChanges `json:"pending_changes,omitempty"`
+
 	// PlanOnly Whether the deployment is executed in plan mode.
 	PlanOnly bool `json:"plan_only"`
 
@@ -259,6 +270,13 @@ type DeploymentCreateBody struct {
 	// is promoted. Dry runs do not check it.
 	ExpectedBaseDeploymentId *openapi_types.UUID `json:"expected_base_deployment_id,omitempty"`
 
+	// HaltOnFailure Whether a queued request must not start when the Deployment it waited for failed. That Deployment is the
+	// Environment's last deploy, rollback or destroy at promotion, provided it ended after the request was queued;
+	// plan runs never count, and a later Deployment supersedes an earlier failure. The request then ends `rejected`
+	// with the reason code `previous_deployment_failed` and the queue continues with the next request. A request that
+	// starts at once, a plan-only request and a dry run never halt. Not valid with `when_busy` set to `reject`.
+	HaltOnFailure *bool `json:"halt_on_failure,omitempty"`
+
 	// IsDryRun Whether to just validate the request and not persist or execute it.
 	IsDryRun bool `json:"is_dry_run,omitempty"`
 
@@ -281,7 +299,7 @@ type DeploymentCreateBody struct {
 	ProjectId string `json:"project_id"`
 
 	// QueueTtlSeconds How long a queued request may wait before it expires. Defaults to the Data Plane's configured queue TTL and must not
-	// exceed its configured maximum. Only valid with `when_busy` set to `queue`.
+	// exceed its configured maximum. Not valid with `when_busy` set to `reject`.
 	QueueTtlSeconds *int `json:"queue_ttl_seconds,omitempty"`
 
 	// RollbackToDeploymentId Optional ID to rollback to when the deployment mode is 'rollback' or 'rollback_plan'.
@@ -291,10 +309,11 @@ type DeploymentCreateBody struct {
 	RunnerLogLevel *DeploymentCreateBodyRunnerLogLevel `json:"runner_log_level,omitempty"`
 
 	// WhenBusy What a deploy or rollback request does when its Environment is busy with another Deployment, has queued requests
-	// or is still settling the previous Deployment with Core. `reject` (the default) answers 409 with the error code
-	// `environment_busy`. `queue` waits in the Environment's deployment queue and answers 202 with the queue item.
-	// A queued request is resolved like a new request when it reaches the head of the queue. Plan-only requests and
-	// dry runs are never queued.
+	// or is still settling the previous Deployment with Core. `queue` (the default) waits in the Environment's
+	// deployment queue and answers 202 with the queue item. `reject` answers 409 with the error code
+	// `environment_busy`. A queued request is resolved like a new request when it reaches the head of the queue.
+	// Requests authorized by an organization token cannot wait and get 409 `environment_busy` either way. Plan-only
+	// requests and dry runs are never queued and ignore this field.
 	WhenBusy *DeploymentCreateBodyWhenBusy `json:"when_busy,omitempty"`
 }
 
@@ -307,10 +326,11 @@ type DeploymentCreateBodyMode string
 type DeploymentCreateBodyRunnerLogLevel string
 
 // DeploymentCreateBodyWhenBusy What a deploy or rollback request does when its Environment is busy with another Deployment, has queued requests
-// or is still settling the previous Deployment with Core. `reject` (the default) answers 409 with the error code
-// `environment_busy`. `queue` waits in the Environment's deployment queue and answers 202 with the queue item.
-// A queued request is resolved like a new request when it reaches the head of the queue. Plan-only requests and
-// dry runs are never queued.
+// or is still settling the previous Deployment with Core. `queue` (the default) waits in the Environment's
+// deployment queue and answers 202 with the queue item. `reject` answers 409 with the error code
+// `environment_busy`. A queued request is resolved like a new request when it reaches the head of the queue.
+// Requests authorized by an organization token cannot wait and get 409 `environment_busy` either way. Plan-only
+// requests and dry runs are never queued and ignore this field.
 type DeploymentCreateBodyWhenBusy string
 
 // DeploymentDiff Describes a diff between the resource graphs of two deployments.
@@ -355,6 +375,12 @@ type DeploymentDiffChangeType string
 type DeploymentDryRun struct {
 	// Diff Describes a diff between the resource graphs of two deployments.
 	Diff DeploymentDiff `json:"diff"`
+
+	// PendingChanges Reported only on the response that creates a plan-only Deployment or answers a dry run, and only when Deployments
+	// that change the Environment run or wait in its deployment queue. The plan or diff describes the Environment as it
+	// is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
+	// never queued.
+	PendingChanges *PendingEnvironmentChanges `json:"pending_changes,omitempty"`
 
 	// RunnerId The Runner ID that this deployment would have executed on
 	RunnerId string `json:"runner_id"`
@@ -471,7 +497,11 @@ type DeploymentQueueItem struct {
 	EnvId                    string              `json:"env_id"`
 	ExpectedBaseDeploymentId *openapi_types.UUID `json:"expected_base_deployment_id,omitempty"`
 	ExpiresAt                time.Time           `json:"expires_at"`
-	Id                       openapi_types.UUID  `json:"id"`
+
+	// HaltOnFailure The item is rejected with `previous_deployment_failed` instead of being promoted when the Deployment it waited
+	// for failed.
+	HaltOnFailure bool               `json:"halt_on_failure"`
+	Id            openapi_types.UUID `json:"id"`
 
 	// LastError The most recent transient promotion failure.
 	LastError *string `json:"last_error,omitempty"`
@@ -486,7 +516,8 @@ type DeploymentQueueItem struct {
 	ProjectId string `json:"project_id"`
 
 	// ReasonCode Why the item was cancelled, expired or rejected, for example `cancelled`, `expired`, `environment_deleting`,
-	// `outcome_unreconciled`, `deployment_base_changed`, `pin_protection` or `actor_forbidden`.
+	// `outcome_unreconciled`, `deployment_base_changed`, `previous_deployment_failed`, `pin_protection` or
+	// `actor_forbidden`.
 	ReasonCode             *string             `json:"reason_code,omitempty"`
 	ReasonMessage          *string             `json:"reason_message,omitempty"`
 	RollbackToDeploymentId *openapi_types.UUID `json:"rollback_to_deployment_id,omitempty"`
@@ -969,6 +1000,23 @@ type OpenidConfiguration struct {
 
 // OrganizationId The Organization ID
 type OrganizationId = string
+
+// PendingEnvironmentChanges Reported only on the response that creates a plan-only Deployment or answers a dry run, and only when Deployments
+// that change the Environment run or wait in its deployment queue. The plan or diff describes the Environment as it
+// is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
+// never queued.
+type PendingEnvironmentChanges struct {
+	Code PendingEnvironmentChangesCode `json:"code"`
+
+	// Queued Deploy and rollback requests waiting in the Environment's deployment queue.
+	Queued int `json:"queued"`
+
+	// Running Deploy, rollback or destroy Deployments changing the Environment now.
+	Running int `json:"running"`
+}
+
+// PendingEnvironmentChangesCode defines model for PendingEnvironmentChanges.Code.
+type PendingEnvironmentChangesCode string
 
 // ResourceClass A resource class requested by the resource graph. 'default' is the default value.
 type ResourceClass = string
