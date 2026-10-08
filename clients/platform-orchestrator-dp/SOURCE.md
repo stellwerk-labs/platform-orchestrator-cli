@@ -4,16 +4,16 @@
 the only input of the generated `dp` client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-dp`
-- Commit: `2ab9b9ac6784dc31580fab0bb03b18ef2907f7df`
+- Commit: `c101ee24c0171eea581899d131fcb61dfa5560b7`
 - File: `openapi/spec.yaml`
-- Git blob: `4940df060d33276691b33b720e6a51592794944d`
-- File SHA-256: `a4c2a3fc2f11684499c3ec2c2f0fb2d43b3cccbd50038a69f667cda3711a74a1`
+- Git blob: `47cfe212334619403f40f75b078e277658ce01d0`
+- File SHA-256: `410482810079b527428180a468ac943f98f1ca86368c8032d5eddc85791381ec`
 
 The commit is the Data Plane plugin foundation export (deployment queue with
-`queue` as the default, `halt_on_failure`, `pending_changes` on plans and dry
-runs, Environment fence, schema 34) and is not published yet. Repin to the
-published commit at release: copy `openapi/spec.yaml` from that commit
-unchanged, update commit, blob and SHA-256 here, then run `make generate` and
-`make check-api-specs`.
+`queue` as the default, `halt_on_failure`, `reason_deployment_id` on queue
+items, `pending_changes` on plans and dry runs, Environment fence, schema 35)
+and is not published yet. Repin to the published commit at release: copy
+`openapi/spec.yaml` from that commit unchanged, update commit, blob and
+SHA-256 here, then run `make generate` and `make check-api-specs`.
 
 Never edit `spec.yaml` or the generated client by hand.

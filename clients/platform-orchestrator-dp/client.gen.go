@@ -518,7 +518,13 @@ type DeploymentQueueItem struct {
 	// ReasonCode Why the item was cancelled, expired or rejected, for example `cancelled`, `expired`, `environment_deleting`,
 	// `outcome_unreconciled`, `deployment_base_changed`, `previous_deployment_failed`, `pin_protection` or
 	// `actor_forbidden`.
-	ReasonCode             *string             `json:"reason_code,omitempty"`
+	ReasonCode *string `json:"reason_code,omitempty"`
+
+	// ReasonDeploymentId The Deployment the reason refers to: for `previous_deployment_failed` the failed Deployment the item waited
+	// for, for `outcome_unreconciled` the failed plugin-dispatched Deployment whose outcome is unreconciled, for
+	// `deployment_base_changed` the Environment's current Deployment that replaced the expected base. Absent when
+	// the reason refers to no Deployment.
+	ReasonDeploymentId     *openapi_types.UUID `json:"reason_deployment_id,omitempty"`
 	ReasonMessage          *string             `json:"reason_message,omitempty"`
 	RollbackToDeploymentId *openapi_types.UUID `json:"rollback_to_deployment_id,omitempty"`
 	SettledAt              *time.Time          `json:"settled_at,omitempty"`

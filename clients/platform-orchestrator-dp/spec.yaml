@@ -1770,6 +1770,14 @@ components:
             `actor_forbidden`.
         reason_message:
           type: string
+        reason_deployment_id:
+          type: string
+          format: uuid
+          description: |
+            The Deployment the reason refers to: for `previous_deployment_failed` the failed Deployment the item waited
+            for, for `outcome_unreconciled` the failed plugin-dispatched Deployment whose outcome is unreconciled, for
+            `deployment_base_changed` the Environment's current Deployment that replaced the expected base. Absent when
+            the reason refers to no Deployment.
         settled_by:
           type: string
           format: uuid
