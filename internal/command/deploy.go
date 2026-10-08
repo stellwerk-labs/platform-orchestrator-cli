@@ -159,7 +159,7 @@ Once a deployment is created, the CLI shows a URL which can be used to download 
 			return err
 		}
 
-		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue.enabled)
+		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue)
 		if err != nil {
 			return err
 		}
@@ -310,9 +310,9 @@ func checkEnvironmentExistsForDeployment(ctx context.Context, orgId, projectId, 
 
 // getLastDeploymentManifestForEnvironment returns the Environment's current
 // stateful Deployment, the base a new manifest is compared against, and its
-// manifest. A request that may queue waits behind an executing base; any other
-// request fails fast.
-func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, projectId, envId string, queueing bool) (*dp.DeploymentSummary, dp.DeploymentManifest, error) {
+// manifest. queue decides whether the request may go on while that base still
+// executes.
+func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, projectId, envId string, queue deployQueue) (*dp.DeploymentSummary, dp.DeploymentManifest, error) {
 	dpClient := MustDpClient(ctx)
 	var lastDeployment *dp.DeploymentSummary
 	var lastDeploymentManifest dp.DeploymentManifest
@@ -332,10 +332,9 @@ func getLastDeploymentManifestForEnvironment(ctx context.Context, orgId, project
 			changedMessageF("%s", environmentFenceMessage(*lastDeployment.EnvironmentFence, time.Now()))
 		}
 		if lastDeployment.Status == "executing" {
-			if !queueing {
-				return nil, lastDeploymentManifest, errors.Errorf("last deployment %s is still executing for %s", lastDeployment.Id, time.Since(lastDeployment.CreatedAt))
+			if err := queue.executingBase(*lastDeployment); err != nil {
+				return nil, lastDeploymentManifest, err
 			}
-			changedMessageF("Deployment %s is still executing; this request will wait in the environment's deployment queue.", lastDeployment.Id)
 		}
 
 		if r, err := dpClient.GetDeploymentWithResponse(ctx, orgId, lastDeployment.Id); err != nil {

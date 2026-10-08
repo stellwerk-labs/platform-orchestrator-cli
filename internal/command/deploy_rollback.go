@@ -66,7 +66,7 @@ flags for controlling deployment output and logs.
 			return err
 		}
 
-		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue.enabled)
+		base, lastDeploymentManifest, err := getLastDeploymentManifestForEnvironment(cmd.Context(), orgId, projectId, envId, queue)
 		if err != nil {
 			return err
 		}

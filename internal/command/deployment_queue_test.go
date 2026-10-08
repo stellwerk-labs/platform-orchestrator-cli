@@ -33,7 +33,9 @@ const (
 	queueTestWorkload       = "running"
 	queueTestDeploymentsCmd = "deployments"
 	queueTestTTLFlag        = "--" + deployCmdQueueTTLFlag
+	queueTestNoQueueFlag    = "--" + deployCmdNoQueueFlag
 	queueTestMergeFlag      = "--" + deployCmdMergeFlag
+	queueTestScoreFile      = "apiVersion: score.dev/v1b1\nmetadata:\n  name: web\ncontainers:\n  main:\n    image: alpine:latest\n"
 )
 
 // deployQueueServer is a Data Plane and Control Plane fake that speaks the
@@ -234,20 +236,80 @@ func TestDeployNoQueueKeepsTheFailFastBehaviour(t *testing.T) {
 	t.Run("executing base", func(t *testing.T) {
 		fixture, ctx := newDeployQueueServer(t)
 		baseID := fixture.withBase("executing")
-		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, "--no-queue"))
+		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, queueTestNoQueueFlag))
 		require.ErrorContains(t, err, "last deployment "+baseID.String()+" is still executing")
+		require.ErrorContains(t, err, "retry once it finished, or run the command without --no-queue to wait in the environment's deployment queue")
 		require.Empty(t, fixture.createdBodies())
 	})
 	t.Run("busy environment", func(t *testing.T) {
 		fixture, ctx := newDeployQueueServer(t)
 		fixture.withBase(deployTestStatusSucceeded)
 		fixture.createStatus, fixture.createBody = http.StatusConflict, queueTestBusyError
-		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, "--no-queue"))
+		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, queueTestNoQueueFlag))
 		require.ErrorContains(t, err, "conflict (environment_busy): deployment is still executing. Retry once the running deployment finished")
-		require.ErrorContains(t, err, "unless --no-queue is set")
+		require.ErrorContains(t, err, "or run the command without --no-queue to wait in the environment's deployment queue")
 		bodies := fixture.createdBodies()
 		require.Len(t, bodies, 1)
-		require.Nil(t, bodies[0].WhenBusy)
+		require.Equal(t, ref.Ref(dp.Reject), bodies[0].WhenBusy, "the Data Plane queues a request without when_busy")
+	})
+}
+
+// The Data Plane queues a busy deploy or rollback that omits when_busy, so
+// --no-queue must ask for reject explicitly, on every command that deploys.
+func TestNoQueueSendsRejectFromEveryDeployingCommand(t *testing.T) {
+	for name, args := range map[string]func(*testing.T, *deployQueueServer) []string{
+		"deploy": func(t *testing.T, _ *deployQueueServer) []string {
+			return deployQueueArgs(t, noPromptFlag, queueTestNoQueueFlag)
+		},
+		"rollback": func(_ *testing.T, f *deployQueueServer) []string {
+			return []string{orgFlag, queueTestOrg, queueTestRollback, testProjectId, testEnvId, f.deployment.Id.String(), noPromptFlag, queueTestNoQueueFlag}
+		},
+		"score deploy": func(t *testing.T, _ *deployQueueServer) []string {
+			return []string{orgFlag, queueTestOrg, scoreTestCmd, testDeployCmd, testProjectId, testEnvId, writeTestFile(t, "score.yaml", queueTestScoreFile), noPromptFlag, queueTestNoQueueFlag}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture, ctx := newDeployQueueServer(t)
+			fixture.withBase(deployTestStatusSucceeded)
+			fixture.createStatus, fixture.createBody = http.StatusCreated, fixture.deployment
+			_, _, err := executeAndResetCommand(ctx, RootCmd, args(t, fixture))
+			require.NoError(t, err)
+			bodies := fixture.createdBodies()
+			require.Len(t, bodies, 1)
+			require.Equal(t, ref.Ref(dp.Reject), bodies[0].WhenBusy)
+			require.Nil(t, bodies[0].QueueTtlSeconds)
+		})
+	}
+}
+
+// A request that sent queue and still got environment_busy was authorized by
+// an organization token; a plan-only request never waits. Each error says why
+// the request did not wait and what to do instead.
+func TestEnvironmentBusyNamesWhyTheRequestDidNotWait(t *testing.T) {
+	t.Run("organization token", func(t *testing.T) {
+		fixture, ctx := newDeployQueueServer(t)
+		fixture.withBase(deployTestStatusSucceeded)
+		fixture.createStatus, fixture.createBody = http.StatusConflict, `{"error":"environment_busy","message":"the Environment is busy; queueing a Deployment requires an attributable user, not an organization token"}`
+		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag))
+		require.EqualError(t, err, "conflict (environment_busy): the Environment is busy; queueing a Deployment requires an attributable user, not an organization token. "+
+			"Requests authorized by an organization token cannot wait in the deployment queue; retry once the running deployment finished, or authenticate as a user ('octl login') or service user to wait")
+		require.Equal(t, ref.Ref(dp.Queue), fixture.createdBodies()[0].WhenBusy)
+	})
+	t.Run("plan-only request beside a running plan", func(t *testing.T) {
+		fixture, ctx := newDeployQueueServer(t)
+		fixture.withBase(deployTestStatusSucceeded)
+		fixture.createStatus, fixture.createBody = http.StatusConflict, queueTestBusyError
+		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, planOnlyFlag))
+		require.EqualError(t, err, "conflict (environment_busy): deployment is still executing. "+
+			"Plan-only requests never wait in the deployment queue and do not run beside another deployment of the environment; retry once it finished")
+		require.Nil(t, fixture.createdBodies()[0].WhenBusy)
+	})
+	t.Run("plan-only request beside an executing base", func(t *testing.T) {
+		fixture, ctx := newDeployQueueServer(t)
+		baseID := fixture.withBase("executing")
+		_, _, err := executeAndResetCommand(ctx, RootCmd, deployQueueArgs(t, noPromptFlag, planOnlyFlag))
+		require.ErrorContains(t, err, "last deployment "+baseID.String()+" is still executing")
+		require.Empty(t, fixture.createdBodies())
 	})
 }
 
@@ -262,7 +324,7 @@ func TestDeployQueueFlags(t *testing.T) {
 	for name, args := range map[string][]string{
 		"sub-second ttl":     {queueTestTTLFlag, "1500ms"},
 		"zero ttl":           {queueTestTTLFlag, "0s"},
-		"ttl without queue":  {queueTestTTLFlag, "1m", "--no-queue"},
+		"ttl without queue":  {queueTestTTLFlag, "1m", queueTestNoQueueFlag},
 		"ttl with plan-only": {queueTestTTLFlag, "1m", "--plan-only"},
 		"ttl with dry-run":   {queueTestTTLFlag, "1m", "--dry-run"},
 	} {

@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
@@ -43,12 +44,15 @@ func addDeployQueueFlags(cmd *cobra.Command) {
 	cmd.MarkFlagsMutuallyExclusive(deployCmdDryRunFlag, deployCmdQueueTTLFlag)
 }
 
-// deployQueue says whether a request waits in the Environment's deployment
-// queue when the Environment is busy. The raw API rejects by default; the CLI
-// queues unless --no-queue is set. Plan-only requests and dry runs never queue.
+// deployQueue says what a request does when its Environment is busy. Deploy and
+// rollback requests always say it explicitly: they wait in the Environment's
+// deployment queue, or fail with environment_busy under --no-queue. Plan-only
+// requests and dry runs are never queued and send no queue fields.
 type deployQueue struct {
-	enabled bool
-	ttl     time.Duration
+	planOnly bool
+	dryRun   bool
+	reject   bool
+	ttl      time.Duration
 }
 
 func deployQueueFromFlags(cmd *cobra.Command) (deployQueue, error) {
@@ -59,17 +63,40 @@ func deployQueueFromFlags(cmd *cobra.Command) (deployQueue, error) {
 	if cmd.Flags().Changed(deployCmdQueueTTLFlag) && (ttl < time.Second || ttl%time.Second != 0) {
 		return deployQueue{}, errors.Errorf("--%s must be a whole number of seconds of at least 1s, got %s", deployCmdQueueTTLFlag, ttl)
 	}
-	return deployQueue{enabled: !noQueue && !planOnly && !dryRun, ttl: ttl}, nil
+	return deployQueue{planOnly: planOnly, dryRun: dryRun, reject: noQueue, ttl: ttl}, nil
+}
+
+func (q deployQueue) queueable() bool {
+	return !q.planOnly && !q.dryRun
 }
 
 func (q deployQueue) apply(body *dp.DeploymentCreateBody) {
-	if !q.enabled {
-		return
+	switch {
+	case !q.queueable():
+	case q.reject:
+		// Omitting when_busy means queue: fail fast only when asked to.
+		body.WhenBusy = ref.Ref(dp.Reject)
+	default:
+		body.WhenBusy = ref.Ref(dp.Queue)
+		if q.ttl > 0 {
+			body.QueueTtlSeconds = ref.Ref(int(q.ttl / time.Second))
+		}
 	}
-	body.WhenBusy = ref.Ref(dp.Queue)
-	if q.ttl > 0 {
-		body.QueueTtlSeconds = ref.Ref(int(q.ttl / time.Second))
+}
+
+// executingBase decides what the request does while base, the Environment's
+// current deployment, still executes: a deploy or rollback waits behind it in
+// the queue, anything else fails before the diff is shown.
+func (q deployQueue) executingBase(base dp.DeploymentSummary) error {
+	executing := fmt.Sprintf("last deployment %s is still executing for %s", base.Id, time.Since(base.CreatedAt))
+	switch {
+	case !q.queueable():
+		return errors.New(executing)
+	case q.reject:
+		return errors.Errorf("%s; retry once it finished, or run the command without --%s to wait in the environment's deployment queue", executing, deployCmdNoQueueFlag)
 	}
+	changedMessageF("Deployment %s is still executing; this request will wait in the environment's deployment queue.", base.Id)
+	return nil
 }
 
 // waitForQueuedDeployment follows a queued request until it became a
@@ -137,8 +164,13 @@ func deploymentConflictError(conflict *dp.N409Conflict, raw []byte, body dp.Depl
 	}
 	switch conflict.Error {
 	case errorCodeEnvironmentBusy:
-		if body.WhenBusy == nil {
-			return errors.Errorf("conflict (%s): %s. Retry once the running deployment finished; deploys and rollbacks wait in the environment's deployment queue unless --%s is set, plan-only requests and dry runs never wait", conflict.Error, conflict.Message, deployCmdNoQueueFlag)
+		switch {
+		case body.WhenBusy == nil:
+			return errors.Errorf("conflict (%s): %s. Plan-only requests never wait in the deployment queue and do not run beside another deployment of the environment; retry once it finished", conflict.Error, conflict.Message)
+		case *body.WhenBusy == dp.Reject:
+			return errors.Errorf("conflict (%s): %s. Retry once the running deployment finished, or run the command without --%s to wait in the environment's deployment queue", conflict.Error, conflict.Message, deployCmdNoQueueFlag)
+		default:
+			return errors.Errorf("conflict (%s): %s. Requests authorized by an organization token cannot wait in the deployment queue; retry once the running deployment finished, or authenticate as a user ('octl login') or service user to wait", conflict.Error, conflict.Message)
 		}
 	case errorCodeDeploymentQueueFull:
 		return errors.Errorf("conflict (%s): %s. List the waiting requests with 'octl get deployment-queue-items %s %s --state queued' and cancel obsolete ones with 'octl deployments cancel-queued <queue-item-id>'", conflict.Error, conflict.Message, body.ProjectId, body.EnvId)
