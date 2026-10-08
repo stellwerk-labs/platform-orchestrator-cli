@@ -20,6 +20,18 @@ octl config set-url https://api.stellwerk.localhost
 
 The configuration file is stored at `~/.config/octl/config.yaml`.
 
+Log in with `octl login`, or store a token, for example a service user's, with
+`octl config set-token`. It reads the token from a file or from standard input,
+so the token does not end up in shell history or the process list:
+
+```bash
+octl config set-token --token-file service-user.token
+octl config set-token --token-file -    # paste the token, then press Ctrl-D
+```
+
+A token given as an argument still works, with a warning. `PO_AUTH_TOKEN`
+overrides the stored token.
+
 Progressive Rollouts uses Core's plugin discovery and invocation path. Each
 operation must be advertised by organization-scoped plugin discovery. Requests and
 responses use the plugin's own API contract in `clients/progressive-rollouts`; the
