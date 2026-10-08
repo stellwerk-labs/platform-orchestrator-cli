@@ -37,6 +37,10 @@ const (
 	pluginWorkUnsettled      = "plugin_work_unsettled"
 	pluginInstallationExists = "plugin_installation_exists"
 	pluginRevisionConflict   = "plugin_manager_revision_conflict"
+
+	// Refusals after Core asked IAM about the installation's service user.
+	pluginWorkloadBindingMissing = "plugin_workload_binding_missing"
+	pluginServiceUserOrgMismatch = "plugin_service_user_organization_mismatch"
 )
 
 // pluginActivationHints turn the diagnostics of a refused activation into
@@ -68,6 +72,13 @@ func pluginManagerError(op string, status int, raw []byte, installationID string
 		return errors.Errorf("%s. Core still holds work of this plugin (operation grants, dispatches or Module reservations) and uninstall has no force option. Stop new work with 'octl plugin-manager disable %s --%s <text>', let the running work settle, then uninstall again", refused, installationID, reasonFlag)
 	case pluginInstallationExists:
 		return errors.Errorf("%s. Continue the existing installation with the same command and --%s", refused, pluginManagerResumeFlag)
+	case pluginWorkloadBindingMissing:
+		return errors.Errorf("%s. The binding names the installation UUID, so it can only exist after the installation: create it for installation %s in IAM "+
+			"(POST /plugin-workload-bindings, platform permission plugin_workload_binding_write), then run the command again", refused, installationID)
+	case pluginServiceUserOrgMismatch:
+		return errors.Errorf("%s. Enable the organization of the installation's service user instead, or give the installation a service user of this organization: "+
+			"create the service user there, bind it to installation %s in IAM, record it with 'octl plugin-manager set-identity' "+
+			"(only in state installed: uninstall and reinstall an active installation first), activate it, then enable the organization", refused, installationID)
 	case pluginRevisionConflict:
 		return errors.Errorf("%s. Review the current state with 'octl get plugin-installations' and run the command again; without --%s it uses the current revision", refused, pluginManagerExpectedRevisionFlag)
 	case "plugin_manager_forbidden":
@@ -346,14 +357,16 @@ var InstallPlugin = &cobra.Command{
 	Short: "Install a registered package: create the installation, record its identity, activate it and enable an organization",
 	Long: `Install a registered package and take it as far as the flags say:
 
-  1. create the installation (Core assigns the installation UUID the plugin runtime and licences name),
-  2. record the plugin service user and admission checker (--service-user, --admission-checker),
+  1. create the installation (Core assigns the installation UUID the plugin runtime, IAM and licences name),
+  2. record the plugin service user and admission checker (--service-user, --admission-checker): the service user
+     belongs to the organization to enable, and IAM binds it to the plugin and the new installation UUID,
   3. activate it once the running plugin proves the installation UUID, package and migration generation,
-  4. enable it for an organization (--enable-org, with --timezone and --approval-policy).
+  4. enable it for the organization of its service user (--enable-org, with --timezone and --approval-policy).
 
-When a step fails, for example because the plugin runtime is not running yet, the steps before it stay done. Run the
-same command again with --resume to continue from the state the Plugin Manager recorded: it finds the plugin's
-installation and skips every step whose target state already holds. Nothing is kept locally.`,
+When a step fails, for example because the IAM workload binding or the plugin runtime does not exist yet, the steps
+before it stay done. Run the same command again with --resume to continue from the state the Plugin Manager recorded:
+it finds the plugin's installation and skips every step whose target state already holds, in the order above. Nothing
+is kept locally.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
 		digest := args[0]
@@ -640,7 +653,7 @@ func enablementCommand(use string, state cp.PluginEnablementPutState, short stri
 
 var (
 	EnablePluginOrganization = enablementCommand("enable-org", cp.PluginEnablementPutStateEnabled,
-		"Enable an active installation for an organization")
+		"Enable an active installation for the organization of its service user")
 	DisablePluginOrganization = enablementCommand("disable-org", cp.PluginEnablementPutStateDisabled,
 		"Keep an installation safety-only for an organization")
 )
@@ -730,7 +743,7 @@ func init() {
 	_ = InstallPlugin.MarkFlagRequired(pluginManagerBackendURLFlag)
 	InstallPlugin.Flags().String(pluginManagerUIOriginFlag, "", "Origin of the plugin UI, exactly when the package contributes a UI")
 	InstallPlugin.Flags().Bool(pluginManagerResumeFlag, false, "Continue the plugin's recorded installation after a partial failure")
-	InstallPlugin.Flags().String(pluginManagerEnableOrgFlag, "", "Enable the installation for this organization")
+	InstallPlugin.Flags().String(pluginManagerEnableOrgFlag, "", "Enable the installation for this organization, the organization of its service user")
 	for _, cmd := range []*cobra.Command{InstallPlugin, SetPluginIdentity} {
 		cmd.Flags().String(pluginManagerServiceUserFlag, "", "IAM service user the plugin acts as")
 		cmd.Flags().String(pluginManagerAdmissionCheckerFlag, "", "IAM service user of the plugin's admission checker")

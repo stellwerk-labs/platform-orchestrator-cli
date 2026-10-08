@@ -43,6 +43,7 @@ const (
 	pmTestPolicyScope      = "environment"
 	pmTestInstall          = "install"
 	pmTestGetInstallations = "GET /plugin-installations"
+	pmTestGetPackages      = "GET /plugin-packages"
 )
 
 var pmTestKey = regexp.MustCompile(`^octl-[0-9a-f]{40}$`)
@@ -80,6 +81,13 @@ type pluginManagerServer struct {
 	activationRefusal string
 	// workUnsettled refuses uninstall with plugin_work_unsettled.
 	workUnsettled bool
+	// bindingMissing refuses identities with plugin_workload_binding_missing:
+	// IAM does not bind the service user to the installation yet.
+	bindingMissing bool
+	// serviceUserOrg, when set, is the organization every service user
+	// belongs to: a new enablement of another organization is refused with
+	// plugin_service_user_organization_mismatch.
+	serviceUserOrg string
 	// hostDisabled answers every request with 404 plugin_host_disabled.
 	hostDisabled bool
 
@@ -338,6 +346,9 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	case len(parts) == 3 && parts[2] == "identity":
 		var body cp.PluginInstallationIdentity
 		f.decode(raw, &body)
+		if f.bindingMissing {
+			return conflict(pluginWorkloadBindingMissing, fmt.Sprintf("IAM has no workload binding of service user %s to installation %s of plugin %s; bind the plugin workload first.", body.ServiceUserId, item.InstallationId, item.PluginId))
+		}
 		if item.State != cp.PluginInstallationStateInstalled {
 			return state("")
 		}
@@ -349,6 +360,10 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	case len(parts) == 4 && parts[2] == "organizations":
 		var body cp.PluginEnablementPut
 		f.decode(raw, &body)
+		enabled := slices.ContainsFunc(item.Organizations, func(enablement cp.PluginEnablement) bool { return enablement.OrgId == parts[3] })
+		if f.serviceUserOrg != "" && item.ServiceUserId != nil && !enabled && parts[3] != f.serviceUserOrg {
+			return conflict(pluginServiceUserOrgMismatch, fmt.Sprintf("Service user %s does not belong to organization %s. In v1alpha an installation serves only the organization of its service user.", item.ServiceUserId, parts[3]))
+		}
 		enablement := cp.PluginEnablement{OrgId: parts[3], State: cp.PluginEnablementState(body.State), Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{}}
 		if body.Timezone != nil {
 			enablement.Timezone = *body.Timezone
@@ -485,7 +500,7 @@ func TestPluginManagerInstallResumesFromTheRecordedState(t *testing.T) {
 	require.Contains(t, stderr, "Resuming installation "+id+" of "+pmTestPlugin+": installed at revision "+strconv.FormatInt(revision, 10)+".")
 	require.Equal(t, []string{
 		pmTestGetInstallations,
-		"GET /plugin-packages",
+		pmTestGetPackages,
 		"POST /plugin-installations/" + id + "/actions/activate",
 		"PUT /plugin-installations/" + id + "/organizations/" + pmTestOrg,
 	}, fixture.requestLines(), "the recorded identity is not sent again")
@@ -533,6 +548,49 @@ func TestPluginManagerInstallResumesFromTheRecordedState(t *testing.T) {
 			require.Len(t, fixture.writes(), writes, name)
 		}
 	})
+}
+
+func TestPluginManagerInstallResumesInTheOrderOfTheServiceIdentity(t *testing.T) {
+	fixture, ctx := newPluginManagerServer(t)
+	pmRegister(t, ctx, pmTestPackage, "1.0.0")
+	fixture.bindingMissing = true
+	fixture.clearRequests()
+
+	_, _, err := pmRun(ctx, pmInstallArgs()...)
+	id := fixture.installations[0].InstallationId.String()
+	require.EqualError(t, err, "installation "+id+" is recorded; continue with --resume: failed to set the identity of installation "+id+" (plugin_workload_binding_missing): "+
+		"IAM has no workload binding of service user "+pmTestServiceUser+" to installation "+id+" of plugin "+pmTestPlugin+"; bind the plugin workload first. "+
+		"The binding names the installation UUID, so it can only exist after the installation: create it for installation "+id+" in IAM "+
+		"(POST /plugin-workload-bindings, platform permission plugin_workload_binding_write), then run the command again")
+	require.Equal(t, []string{pmTestGetInstallations, "POST /plugin-installations", "PUT /plugin-installations/" + id + "/identity"}, fixture.requestLines(), "nothing after the refused identity")
+	require.Equal(t, cp.PluginInstallationStateInstalled, fixture.installations[0].State)
+	require.Nil(t, fixture.installations[0].ServiceUserId)
+
+	// IAM binds the service user, which belongs to another organization.
+	fixture.bindingMissing, fixture.serviceUserOrg = false, "service-user-org"
+	fixture.clearRequests()
+	_, _, err = pmRun(ctx, pmInstallArgs(pmTestResumeFlag)...)
+	require.EqualError(t, err, "installation "+id+" is recorded; continue with --resume: failed to set organization "+pmTestOrg+" of installation "+id+" to enabled (plugin_service_user_organization_mismatch): "+
+		"Service user "+pmTestServiceUser+" does not belong to organization "+pmTestOrg+". In v1alpha an installation serves only the organization of its service user. "+
+		"Enable the organization of the installation's service user instead, or give the installation a service user of this organization: "+
+		"create the service user there, bind it to installation "+id+" in IAM, record it with 'octl plugin-manager set-identity' "+
+		"(only in state installed: uninstall and reinstall an active installation first), activate it, then enable the organization")
+	require.Equal(t, []string{
+		pmTestGetInstallations,
+		pmTestGetPackages,
+		"PUT /plugin-installations/" + id + "/identity",
+		"POST /plugin-installations/" + id + "/actions/activate",
+		"PUT /plugin-installations/" + id + "/organizations/" + pmTestOrg,
+	}, fixture.requestLines(), "identity, activation, then the organization")
+	require.Equal(t, cp.PluginInstallationStateActive, fixture.installations[0].State)
+	require.Empty(t, fixture.installations[0].Organizations)
+
+	fixture.clearRequests()
+	_, _, err = pmRun(ctx, pmInstallArgs(pmTestResumeFlag, "--"+pluginManagerEnableOrgFlag, fixture.serviceUserOrg)...)
+	require.NoError(t, err)
+	require.Equal(t, []string{pmTestGetInstallations, pmTestGetPackages, "PUT /plugin-installations/" + id + "/organizations/" + fixture.serviceUserOrg}, fixture.requestLines(),
+		"the recorded identity and activation are skipped")
+	require.Equal(t, fixture.serviceUserOrg, fixture.installations[0].Organizations[0].OrgId)
 }
 
 func TestPluginManagerActivationDiagnosticsAreActionable(t *testing.T) {
