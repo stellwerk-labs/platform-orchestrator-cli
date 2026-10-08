@@ -135,8 +135,7 @@ func requireNativeProgressiveRolloutsOperation(ctx context.Context, orgID, opera
 	if err != nil {
 		return err
 	}
-	capability := cp.PluginCapability{Id: contribution.Id, DisplayName: contribution.DisplayName, State: contribution.State}
-	if err := progressiveRolloutsPluginError(capability, access); err != nil {
+	if err := progressiveRolloutsPluginError(contribution, access); err != nil {
 		return err
 	}
 	if contribution.Mode == cp.Hidden ||

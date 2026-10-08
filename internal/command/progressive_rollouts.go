@@ -2,7 +2,11 @@ package command
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
+	"slices"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -89,17 +93,62 @@ func progressiveRolloutsCapabilityDiscoveryError(status int, body []byte) error 
 	}
 }
 
-func progressiveRolloutsPluginError(capability cp.PluginCapability, access progressiveRolloutsAccess) error {
-	if capability.State == cp.PluginAvailabilityStateAvailable {
+// progressiveRolloutsPluginError refuses an access the plugin's discovered
+// state does not allow. Discovery carries no admin action, so the message
+// names one: for not_entitled from the licence state Core reports per feature.
+func progressiveRolloutsPluginError(contribution cp.PluginContribution, access progressiveRolloutsAccess) error {
+	if contribution.State == cp.PluginAvailabilityStateAvailable {
 		return nil
 	}
 	if (access == progressiveRolloutsRead || access == progressiveRolloutsSafety) &&
-		(capability.State == cp.PluginAvailabilityStateNotEnabled || capability.State == cp.PluginAvailabilityStateNotEntitled) {
+		(contribution.State == cp.PluginAvailabilityStateNotEnabled || contribution.State == cp.PluginAvailabilityStateNotEntitled) {
 		return nil
 	}
-	code := "plugin_" + string(capability.State)
-	action := ref.DerefOr(capability.AdminAction, "Ask an organization administrator to check the plugin installation, activation and licence entitlement.")
-	return errors.Errorf("%s: %s (%s) is %s. %s", code, capability.DisplayName, capability.Id, capability.State, action)
+	action := "Ask an organization administrator to check the plugin installation, activation and licence entitlement."
+	if contribution.State == cp.PluginAvailabilityStateNotEntitled {
+		action = pluginLicenceAction(contribution.Entitlement)
+	}
+	return errors.Errorf("plugin_%s: %s (%s) is %s. %s", contribution.State, contribution.DisplayName, contribution.Id, contribution.State, action)
+}
+
+// pluginLicenceAction says why no licence allows forward work, from the state
+// of each declared feature that refuses it, and names the operator's step.
+func pluginLicenceAction(entitlement *cp.PluginEntitlementStatus) string {
+	var reasons []string
+	if entitlement != nil {
+		for _, feature := range slices.Sorted(maps.Keys(entitlement.Features)) {
+			if access := entitlement.Features[feature]; !access.Forward {
+				reasons = append(reasons, pluginLicenceReason(feature, access))
+			}
+		}
+	}
+	if len(reasons) == 0 {
+		reasons = []string{"No current licence covers this organization: it is missing or expired."}
+	}
+	return strings.Join(reasons, " ") + " Ask a platform operator to import a current licence for this organization with 'octl plugin-manager import-entitlements'."
+}
+
+func pluginLicenceReason(feature string, access cp.PluginFeatureAccess) string {
+	switch access.State {
+	case "expired":
+		reason := "The licence for feature " + feature + " expired"
+		if access.ExpiresAt != nil {
+			reason += " at " + access.ExpiresAt.UTC().Format(time.RFC3339)
+		}
+		if access.GraceUntil != nil {
+			reason += "; its grace period ended at " + access.GraceUntil.UTC().Format(time.RFC3339)
+		}
+		return reason + "."
+	case "revoked":
+		return "The licence for feature " + feature + " was revoked."
+	case "not_yet_valid":
+		return "The licence for feature " + feature + " is not valid yet."
+	case "untrusted":
+		return "The licence for feature " + feature + " no longer verifies against the licence issuers this Control Plane trusts."
+	case "not_entitled", "missing":
+		return "No licence covers feature " + feature + " for this organization."
+	}
+	return fmt.Sprintf("The licence for feature %s is %s.", feature, access.State)
 }
 
 var CreateProgressiveRollout = &cobra.Command{

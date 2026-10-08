@@ -50,14 +50,14 @@ func TestProgressiveRolloutControlCommandsRequireSemanticArguments(t *testing.T)
 
 func TestProgressiveRolloutPluginAvailabilityDiagnostics(t *testing.T) {
 	for _, state := range []cp.PluginAvailabilityState{cp.PluginAvailabilityStateNotInstalled, cp.PluginAvailabilityStateNotEnabled, cp.PluginAvailabilityStateNotEntitled, cp.PluginAvailabilityStateIncompatible, cp.PluginAvailabilityStateUnavailable} {
-		err := progressiveRolloutsPluginError(cp.PluginCapability{
+		err := progressiveRolloutsPluginError(cp.PluginContribution{
 			Id: progressiveRolloutsPluginID, DisplayName: "Progressive Rollouts", State: state,
 		}, progressiveRolloutsMutate)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "plugin_"+string(state))
 		assert.Contains(t, err.Error(), progressiveRolloutsPluginID)
 	}
-	assert.NoError(t, progressiveRolloutsPluginError(cp.PluginCapability{State: cp.PluginAvailabilityStateAvailable}, progressiveRolloutsMutate))
+	assert.NoError(t, progressiveRolloutsPluginError(cp.PluginContribution{State: cp.PluginAvailabilityStateAvailable}, progressiveRolloutsMutate))
 }
 
 func TestProgressiveRolloutCapabilityDiscoverySupportsLegacyServers(t *testing.T) {
@@ -80,7 +80,7 @@ func TestProgressiveRolloutPluginErrorFallbackMentionsLicence(t *testing.T) {
 		cp.PluginAvailabilityStateNotEntitled,
 		cp.PluginAvailabilityStateIncompatible,
 	} {
-		err := progressiveRolloutsPluginError(cp.PluginCapability{
+		err := progressiveRolloutsPluginError(cp.PluginContribution{
 			Id: progressiveRolloutsPluginID, DisplayName: "Progressive Rollouts", State: state,
 		}, progressiveRolloutsMutate)
 		require.Error(t, err)
@@ -97,15 +97,15 @@ func TestProgressiveRolloutHelpMarksEnterpriseRequirement(t *testing.T) {
 
 func TestProgressiveRolloutReadAndSafetyRemainAvailableAfterEntitlementExpiry(t *testing.T) {
 	for _, state := range []cp.PluginAvailabilityState{cp.PluginAvailabilityStateNotEnabled, cp.PluginAvailabilityStateNotEntitled} {
-		capability := cp.PluginCapability{State: state}
-		assert.NoError(t, progressiveRolloutsPluginError(capability, progressiveRolloutsRead))
-		assert.NoError(t, progressiveRolloutsPluginError(capability, progressiveRolloutsSafety))
-		require.Error(t, progressiveRolloutsPluginError(capability, progressiveRolloutsMutate))
+		contribution := cp.PluginContribution{State: state}
+		assert.NoError(t, progressiveRolloutsPluginError(contribution, progressiveRolloutsRead))
+		assert.NoError(t, progressiveRolloutsPluginError(contribution, progressiveRolloutsSafety))
+		require.Error(t, progressiveRolloutsPluginError(contribution, progressiveRolloutsMutate))
 	}
 	for _, state := range []cp.PluginAvailabilityState{cp.PluginAvailabilityStateNotInstalled, cp.PluginAvailabilityStateIncompatible, cp.PluginAvailabilityStateUnavailable} {
-		capability := cp.PluginCapability{State: state}
-		require.Error(t, progressiveRolloutsPluginError(capability, progressiveRolloutsRead))
-		require.Error(t, progressiveRolloutsPluginError(capability, progressiveRolloutsSafety))
+		contribution := cp.PluginContribution{State: state}
+		require.Error(t, progressiveRolloutsPluginError(contribution, progressiveRolloutsRead))
+		require.Error(t, progressiveRolloutsPluginError(contribution, progressiveRolloutsSafety))
 	}
 }
 

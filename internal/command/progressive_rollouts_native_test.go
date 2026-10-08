@@ -20,8 +20,10 @@ import (
 )
 
 const (
-	nativeTestBodyField  = "name"
-	nativeTestFirstQuery = "one"
+	nativeTestBodyField     = "name"
+	nativeTestFirstQuery    = "one"
+	nativeTestOrg           = "demo"
+	nativeTestDiscoveryPath = "/orgs/" + nativeTestOrg + "/plugins"
 )
 
 func cpClientContext(t *testing.T, server *httptest.Server) context.Context {
@@ -231,4 +233,78 @@ func TestRolloutCommandPrintsTheGraceWarningOnceToStderr(t *testing.T) {
 	require.JSONEq(t, `[]`, stdout)
 	require.Equal(t, 1, strings.Count(stderr, "Warning: The signed plugin licence is in its grace period."))
 	require.Contains(t, stderr, "grace until 2026-11-01T00:00:00Z")
+}
+
+const (
+	licenceTestAction = " Ask a platform operator to import a current licence for this organization with 'octl plugin-manager import-entitlements'."
+	licenceTestPrefix = "plugin_not_entitled: Progressive Rollouts (" + progressiveRolloutsPluginID + ") is not_entitled. "
+)
+
+// notEntitledServer advertises the plugin as Core does once no licence allows
+// forward work: not_entitled, safety_only, only read and safety operations,
+// and the entitlement projection given as JSON. Any invocation is an error.
+func notEntitledServer(t *testing.T, entitlement string) *httptest.Server {
+	t.Helper()
+	if entitlement != "" {
+		entitlement = `,"entitlement":` + entitlement
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != nativeTestDiscoveryPath {
+			t.Errorf("unexpected request %s %s", request.Method, request.URL.Path)
+			http.NotFound(w, request)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, `{"contract_level":"v1alpha","items":[{"id":%q,"display_name":"Progressive Rollouts","state":"not_entitled","mode":"safety_only","operations":[`+
+			`{"id":"listProgressiveRollouts","method":"GET","mutating":false,"required_feature":"progressive-rollouts"}]%s}]}`, progressiveRolloutsPluginID, entitlement)
+	}))
+	t.Cleanup(server.Close)
+	return server
+}
+
+func TestNotEntitledNamesTheLicenceStateCoreReports(t *testing.T) {
+	t.Parallel()
+	feature := func(state, extra string) string {
+		return `{"features":{"progressive-rollouts":{"state":"` + state + `","trust_class":"development","forward":false,"read":true,"safety":true` + extra + `}}}`
+	}
+	for name, tc := range map[string]struct{ entitlement, reason string }{
+		"expired after grace": {
+			entitlement: feature("expired", `,"expires_at":"2026-10-07T22:54:33Z","grace_until":"2026-10-08T01:04:33+02:00"`),
+			reason:      "The licence for feature progressive-rollouts expired at 2026-10-07T22:54:33Z; its grace period ended at 2026-10-07T23:04:33Z.",
+		},
+		"expired without dates": {entitlement: feature("expired", ""), reason: "The licence for feature progressive-rollouts expired."},
+		"revoked":               {entitlement: feature("revoked", ""), reason: "The licence for feature progressive-rollouts was revoked."},
+		"not yet valid":         {entitlement: feature("not_yet_valid", ""), reason: "The licence for feature progressive-rollouts is not valid yet."},
+		"untrusted":             {entitlement: feature("untrusted", ""), reason: "The licence for feature progressive-rollouts no longer verifies against the licence issuers this Control Plane trusts."},
+		"missing":               {entitlement: feature("missing", ""), reason: "No licence covers feature progressive-rollouts for this organization."},
+		"not entitled":          {entitlement: feature("not_entitled", ""), reason: "No licence covers feature progressive-rollouts for this organization."},
+		"unknown state":         {entitlement: feature("suspended", ""), reason: "The licence for feature progressive-rollouts is suspended."},
+		"only refusing features": {
+			entitlement: `{"features":{"z-reports":{"state":"valid","trust_class":"production","forward":true,"read":true,"safety":true},` +
+				`"progressive-rollouts":{"state":"expired","trust_class":"production","forward":false,"read":true,"safety":true},` +
+				`"approvals":{"state":"missing","trust_class":"","forward":false,"read":false,"safety":false}}}`,
+			reason: "No licence covers feature approvals for this organization. The licence for feature progressive-rollouts expired.",
+		},
+		"no projection":    {reason: "No current licence covers this organization: it is missing or expired."},
+		"no feature state": {entitlement: `{"features":{}}`, reason: "No current licence covers this organization: it is missing or expired."},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := cpClientContext(t, notEntitledServer(t, tc.entitlement))
+			err := requireNativeProgressiveRolloutsOperation(ctx, nativeTestOrg, "commandProgressiveRollout", progressiveRolloutsMutate)
+			require.EqualError(t, err, licenceTestPrefix+tc.reason+licenceTestAction)
+			require.NoError(t, requireNativeProgressiveRolloutsOperation(ctx, nativeTestOrg, "listProgressiveRollouts", progressiveRolloutsRead), "reads stay available")
+		})
+	}
+}
+
+func TestRolloutForwardCommandSaysWhenTheLicenceExpired(t *testing.T) {
+	server := notEntitledServer(t, `{"features":{"progressive-rollouts":{"state":"expired","trust_class":"development","forward":false,"read":true,"safety":true,"expires_at":"2026-10-07T22:54:33Z","grace_until":"2026-10-07T23:04:33Z"}}}`)
+	ctx := context.WithValue(cpClientContext(t, server), ConfigContextKey, config.Config{DefaultOrg: nativeTestOrg})
+	t.Setenv("PO_API_URL", server.URL)
+	cobra.EnableTraverseRunHooks = true
+
+	_, stderr, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, nativeTestOrg, "rollout", "resume", uuid.NewString(), "--" + rolloutExpectedVersionFlag, "3", noPromptFlag})
+	require.EqualError(t, err, licenceTestPrefix+"The licence for feature progressive-rollouts expired at 2026-10-07T22:54:33Z; its grace period ended at 2026-10-07T23:04:33Z."+licenceTestAction)
+	require.NotContains(t, stderr, "Warning:")
 }
