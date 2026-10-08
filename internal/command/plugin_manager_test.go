@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,6 +42,7 @@ const (
 	pmTestResumeFlag       = "--" + pluginManagerResumeFlag
 	pmTestPolicyScope      = "environment"
 	pmTestInstall          = "install"
+	pmTestGetInstallations = "GET /plugin-installations"
 )
 
 var pmTestKey = regexp.MustCompile(`^octl-[0-9a-f]{40}$`)
@@ -324,6 +326,8 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 		return conflict("plugin_installation_state", fmt.Sprintf("The installation is %s.", item.State))
 	}
 	switch {
+	case r.Method == http.MethodDelete && len(parts) == 4 && parts[2] == "organizations":
+		item.Organizations = slices.DeleteFunc(item.Organizations, func(enablement cp.PluginEnablement) bool { return enablement.OrgId == parts[3] })
 	case r.Method == http.MethodDelete:
 		if item.State == cp.PluginInstallationStatePurged {
 			return http.StatusOK, item, false
@@ -424,7 +428,7 @@ func TestPluginManagerInstallFlow(t *testing.T) {
 	stdout, stderr, err := pmRun(ctx, append(pmInstallArgs(), outFlag, jsonOutput)...)
 	require.NoError(t, err)
 	require.Equal(t, []string{
-		"GET /plugin-installations",
+		pmTestGetInstallations,
 		"POST /plugin-installations",
 		"PUT /plugin-installations/" + fixture.installations[0].InstallationId.String() + "/identity",
 		"POST /plugin-installations/" + fixture.installations[0].InstallationId.String() + "/actions/activate",
@@ -480,7 +484,7 @@ func TestPluginManagerInstallResumesFromTheRecordedState(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, stderr, "Resuming installation "+id+" of "+pmTestPlugin+": installed at revision "+strconv.FormatInt(revision, 10)+".")
 	require.Equal(t, []string{
-		"GET /plugin-installations",
+		pmTestGetInstallations,
 		"GET /plugin-packages",
 		"POST /plugin-installations/" + id + "/actions/activate",
 		"PUT /plugin-installations/" + id + "/organizations/" + pmTestOrg,
@@ -602,6 +606,52 @@ func TestPluginManagerLifecycle(t *testing.T) {
 	require.ErrorContains(t, err, "(plugin_installation_state): The installation is purged")
 }
 
+func TestPluginManagerRemovesAnOrganizationEnablement(t *testing.T) {
+	fixture, ctx := newPluginManagerServer(t)
+	pmRegister(t, ctx, pmTestPackage, "1.0.0")
+	_, _, err := pmRun(ctx, pmInstallArgs()...)
+	require.NoError(t, err)
+	id := fixture.installations[0].InstallationId.String()
+	revision := fixture.revision
+	audit := len(fixture.audit)
+	remove := []string{pmTestCmd, "remove-org", id, pmTestOrg, reasonArg, "offboard the organization", "--expected-revision", strconv.FormatInt(revision, 10), outFlag, jsonOutput}
+	fixture.clearRequests()
+
+	stdout, stderr, err := pmRun(ctx, remove...)
+	require.NoError(t, err)
+	require.Equal(t, []string{pmTestGetInstallations, "DELETE /plugin-installations/" + id + "/organizations/" + pmTestOrg}, fixture.requestLines())
+	require.Equal(t, map[string]any{"expected_revision": float64(revision), "reason": "offboard the organization"}, fixture.writes()[0].body, "the command carries only the revision and the reason")
+	require.Empty(t, fixture.installations[0].Organizations)
+	require.Equal(t, revision+1, fixture.revision)
+	require.Len(t, fixture.audit, audit+1)
+	require.Equal(t, "offboard the organization", fixture.audit[audit].Reason)
+	require.Contains(t, stderr, "Installation "+id+" of "+pmTestPlugin+": active, availability available, revision "+strconv.FormatInt(revision+1, 10)+".\n")
+	require.NotContains(t, stderr, "nothing changed")
+	var removed cp.PluginInstallation
+	require.NoError(t, json.Unmarshal([]byte(stdout), &removed))
+	require.Empty(t, removed.Organizations)
+
+	again, stderr, err := pmRun(ctx, remove...)
+	require.NoError(t, err, "the identical command after a lost answer replays it")
+	require.Equal(t, 1, fixture.replays)
+	require.Equal(t, stdout, again)
+	require.NotContains(t, stderr, "nothing changed", "the replayed answer is the change")
+
+	_, stderr, err = pmRun(ctx, pmTestCmd, "remove-org", id, pmTestOrg, reasonArg, "offboard it again")
+	require.NoError(t, err, "removing an absent enablement is no error")
+	require.Contains(t, stderr, "Installation "+id+" had no enablement for organization "+pmTestOrg+": nothing changed.\n")
+	require.Equal(t, revision+1, fixture.revision)
+	require.Len(t, fixture.audit, audit+1)
+
+	_, _, err = pmRun(ctx, pmTestCmd, "remove-org", id, pmTestOrg, reasonArg, "stale", "--expected-revision", strconv.FormatInt(revision, 10))
+	require.ErrorContains(t, err, "failed to remove organization "+pmTestOrg+" from installation "+id+" (plugin_manager_revision_conflict)")
+
+	unknown := uuid.NewString()
+	_, _, err = pmRun(ctx, pmTestCmd, "remove-org", unknown, pmTestOrg, reasonArg, "x")
+	require.EqualError(t, err, "failed to remove organization "+pmTestOrg+" from installation "+unknown+" (plugin_installation_not_found): The plugin installation does not exist")
+	require.Equal(t, revision+1, fixture.revision)
+}
+
 func TestPluginManagerRevisionAndIdempotency(t *testing.T) {
 	fixture, ctx := newPluginManagerServer(t)
 	id := pmInstalled(t, fixture, ctx)
@@ -635,7 +685,7 @@ func TestPluginManagerChangesRequireAReason(t *testing.T) {
 		{"install", pmTestPackage, pmTestBackendFlag, pmTestBackend},
 		{"set-identity", id, "--service-user", pmTestServiceUser, "--admission-checker", pmTestAdmissionChecker},
 		{"activate", id}, {"disable", id}, {"enable", id}, {"uninstall", id}, {"reinstall", id}, {"purge", id},
-		{"upgrade", id, pmTestNextPackage}, {"enable-org", id, pmTestOrg}, {"disable-org", id, pmTestOrg},
+		{"upgrade", id, pmTestNextPackage}, {"enable-org", id, pmTestOrg}, {"disable-org", id, pmTestOrg}, {"remove-org", id, pmTestOrg},
 		{"import-entitlements", "bundle.jws"},
 	} {
 		_, _, err := pmRun(ctx, append([]string{pmTestCmd}, args...)...)

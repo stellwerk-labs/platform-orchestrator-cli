@@ -239,6 +239,18 @@ func (w *pluginManagerWriter) putEnablement(cmd *cobra.Command, current cp.Plugi
 	return w.installationResult(fmt.Sprintf("set organization %s of installation %s to %s", orgId, id, state), id.String(), r.StatusCode(), r.Body, r.JSON200)
 }
 
+// removeEnablement removes the installation's enablement for an
+// organization. Removing an absent enablement changes nothing.
+func (w *pluginManagerWriter) removeEnablement(id uuid.UUID, orgId string) (cp.PluginInstallation, error) {
+	body := w.command()
+	params := &cp.RemovePluginEnablementParams{IdempotencyKey: pluginManagerIdempotencyKey(http.MethodDelete, fmt.Sprintf("/plugin-installations/%s/organizations/%s", id, orgId), body)}
+	r, err := w.client.RemovePluginEnablementWithResponse(w.ctx, id, orgId, params, body)
+	if err != nil {
+		return cp.PluginInstallation{}, errors.Wrapf(err, "failed to remove organization %s", orgId)
+	}
+	return w.installationResult(fmt.Sprintf("remove organization %s from installation %s", orgId, id), id.String(), r.StatusCode(), r.Body, r.JSON200)
+}
+
 // enablementHolds says whether the organization is enabled with the
 // settings the flags ask for.
 func enablementHolds(cmd *cobra.Command, item cp.PluginInstallation, orgId string) bool {
@@ -633,6 +645,41 @@ var (
 		"Keep an installation safety-only for an organization")
 )
 
+var RemovePluginOrganization = &cobra.Command{
+	Use:   "remove-org <installation-id> <org-id>",
+	Args:  cobra.ExactArgs(2),
+	Short: "Remove an installation's enablement for an organization, with its timezone and approval policies",
+	Long: `Remove an installation's enablement for an organization, with its timezone and approval policies.
+
+The organization then no longer discovers the plugin: reads and safety actions such as cancel and rollback stop too.
+disable-org instead keeps the plugin safety-only for the organization and keeps its settings. Core does not wait for
+the organization's running plugin work, so disable the organization first and let that work settle. When no resource
+event subscriber remains, the organization's resource event journal pauses; cursors issued before a later resume
+expire with plugin_resource_cursor_expired.
+
+Removing an enablement that does not exist changes nothing.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true
+		id, err := parseInstallationID(args[0])
+		if err != nil {
+			return err
+		}
+		w, err := newPluginManagerWriter(cmd)
+		if err != nil {
+			return err
+		}
+		decidedOn := w.revision
+		item, err := w.removeEnablement(id, args[1])
+		if err != nil {
+			return err
+		}
+		if item.Revision != nil && *item.Revision == decidedOn {
+			changedMessageF("Installation %s had no enablement for organization %s: nothing changed.", id, args[1])
+		}
+		return writePluginManagerResult(cmd, item)
+	},
+}
+
 var ImportPluginEntitlements = &cobra.Command{
 	Use:   "import-entitlements <bundle-file>",
 	Args:  cobra.ExactArgs(1),
@@ -669,7 +716,7 @@ plugin and organization of an enabled installation. A rejected document is repor
 
 func init() {
 	printer.SetupSingleOutputFormatFlag(PluginManagerCmd.PersistentFlags())
-	writes := []*cobra.Command{RegisterPluginPackage, InstallPlugin, SetPluginIdentity, ActivatePlugin, DisablePlugin, EnablePlugin, UninstallPlugin, ReinstallPlugin, UpgradePlugin, PurgePlugin, EnablePluginOrganization, DisablePluginOrganization, ImportPluginEntitlements}
+	writes := []*cobra.Command{RegisterPluginPackage, InstallPlugin, SetPluginIdentity, ActivatePlugin, DisablePlugin, EnablePlugin, UninstallPlugin, ReinstallPlugin, UpgradePlugin, PurgePlugin, EnablePluginOrganization, DisablePluginOrganization, RemovePluginOrganization, ImportPluginEntitlements}
 	for _, write := range writes {
 		write.Flags().String(reasonFlag, "", "Why the change is made, recorded in the audit trail")
 		_ = write.MarkFlagRequired(reasonFlag)
