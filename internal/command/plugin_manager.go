@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -30,6 +31,8 @@ const (
 	pluginManagerEnableOrgFlag        = "enable-org"
 	pluginManagerTimezoneFlag         = "timezone"
 	pluginManagerApprovalPolicyFlag   = "approval-policy"
+	pluginManagerDefaultTimezoneFlag  = "default-timezone"
+	pluginManagerDefaultPolicyFlag    = "default-approval-policy"
 	pluginManagerResumeFlag           = "resume"
 	pluginAuditEventsAfterFlag        = "after"
 	pluginAuditEventsLimitFlag        = "limit"
@@ -38,9 +41,13 @@ const (
 	pluginInstallationExists = "plugin_installation_exists"
 	pluginRevisionConflict   = "plugin_manager_revision_conflict"
 
-	// Refusals after Core asked IAM about the installation's service user.
-	pluginWorkloadBindingMissing = "plugin_workload_binding_missing"
-	pluginServiceUserOrgMismatch = "plugin_service_user_organization_mismatch"
+	// Refusals after Core asked IAM about the installation's identities.
+	pluginWorkloadBindingMissing               = "plugin_workload_binding_missing"
+	pluginServiceUserNotPlatformPrincipal      = "plugin_service_user_not_platform_principal"
+	pluginAdmissionCheckerNotPlatformPrincipal = "plugin_admission_checker_not_platform_principal"
+	pluginServesAllOrganizations               = "plugin_serves_all_organizations"
+	pluginOrganizationLimit                    = "plugin_organization_limit"
+	pluginInstallationIncomplete               = "plugin_installation_incomplete"
 )
 
 // pluginActivationHints turn the diagnostics of a refused activation into
@@ -73,12 +80,23 @@ func pluginManagerError(op string, status int, raw []byte, installationID string
 	case pluginInstallationExists:
 		return errors.Errorf("%s. Continue the existing installation with the same command and --%s", refused, pluginManagerResumeFlag)
 	case pluginWorkloadBindingMissing:
-		return errors.Errorf("%s. The binding names the installation UUID, so it can only exist after the installation: create it for installation %s in IAM "+
-			"(POST /plugin-workload-bindings, platform permission plugin_workload_binding_write), then run the command again", refused, installationID)
-	case pluginServiceUserOrgMismatch:
-		return errors.Errorf("%s. Enable the organization of the installation's service user instead, or give the installation a service user of this organization: "+
-			"create the service user there, bind it to installation %s in IAM, record it with 'octl plugin-manager set-identity' "+
-			"(only in state installed: uninstall and reinstall an active installation first), activate it, then enable the organization", refused, installationID)
+		return errors.Errorf("%s. The binding names the installation UUID, so it can only exist after the installation: create it for installation %s with "+
+			"'octl plugin-manager create-identities %s' (or in IAM: POST /plugin-workload-bindings with platform_principal, platform permission plugin_workload_binding_write), then run the command again", refused, installationID, installationID)
+	case pluginServiceUserNotPlatformPrincipal:
+		return errors.Errorf("%s. The installation's service user must be a platform principal, not the service user of an organization. "+
+			"Create the binding with a new platform principal: 'octl plugin-manager create-identities %s' (only in state installed: uninstall and reinstall an active installation first)", refused, installationID)
+	case pluginAdmissionCheckerNotPlatformPrincipal:
+		return errors.Errorf("%s. The admission checker must be a platform principal with a static token that no plugin workload is bound to. "+
+			"Create it with 'octl plugin-manager create-identities %s' or in IAM (POST /platform-principals), then record it again", refused, installationID)
+	case pluginServesAllOrganizations:
+		return errors.Errorf("%s. The installation serves every organization. Opt an organization out with 'octl plugin-manager disable-org %s <org-id> --%s <text>', "+
+			"or serve only the enabled organizations with 'octl plugin-manager organization-mode %s selected --%s <text>'", refused, installationID, reasonFlag, installationID, reasonFlag)
+	case pluginOrganizationLimit:
+		return errors.Errorf("%s. The installation-wide licence grant limits how many organizations the installation may enable. Import a grant with a higher limit "+
+			"('octl plugin-manager import-entitlements'), or disable an organization first: disabled organizations do not count", refused)
+	case pluginInstallationIncomplete:
+		return errors.Errorf("%s. Core cannot serve the installation with this package until what the message names is fixed: the recorded identities, "+
+			"the UI origin or the default approval policies ('octl plugin-manager organization-mode'). Then run the command again", refused)
 	case pluginRevisionConflict:
 		return errors.Errorf("%s. Review the current state with 'octl get plugin-installations' and run the command again; without --%s it uses the current revision", refused, pluginManagerExpectedRevisionFlag)
 	case "plugin_manager_forbidden":
@@ -160,7 +178,7 @@ func (w *pluginManagerWriter) installationResult(op string, id string, status in
 }
 
 func printPluginInstallationState(item cp.PluginInstallation) {
-	state := fmt.Sprintf("Installation %s of %s: %s, availability %s", item.InstallationId, item.PluginId, item.State, item.Availability)
+	state := fmt.Sprintf("Installation %s of %s: %s, availability %s, organizations %s", item.InstallationId, item.PluginId, item.State, item.Availability, item.OrganizationMode)
 	if item.TargetPackageSha256 != nil {
 		state += ", upgrade to package " + *item.TargetPackageSha256 + " pending"
 	}
@@ -170,6 +188,29 @@ func printPluginInstallationState(item cp.PluginInstallation) {
 	successMessageF("%s.", state)
 	if item.Diagnostic != nil {
 		changedMessageF("Diagnostic %s: %s", item.Diagnostic.Code, item.Diagnostic.Message)
+	}
+	for _, enablement := range item.Organizations {
+		line := fmt.Sprintf("Organization %s: %s, timezone %s, capabilities %s", enablement.OrgId, enablement.State, enablement.Timezone, enablement.CapabilityRegistration.State)
+		if enablement.CapabilityRegistration.Detail != nil {
+			line += " (" + *enablement.CapabilityRegistration.Detail + ")"
+		}
+		if grant := enablement.EntitlementGrant; grant != nil {
+			line += fmt.Sprintf(", %s licence grant %s", grant.Scope, grant.State)
+		}
+		infoMessageF("%s.", line)
+	}
+	if pending := item.PendingOrganizations; pending != nil && len(*pending) > 0 {
+		changedMessageF("Not enabled yet: %s. Run 'octl plugin-manager organization-mode %s all' again once the plugin host and the licence limit allow it.", strings.Join(*pending, ", "), item.InstallationId)
+	}
+	if licence := item.Entitlement; licence != nil {
+		line := fmt.Sprintf("Licence: %d organizations enabled", licence.EnabledOrganizations)
+		if grant := licence.InstallationGrant; grant != nil {
+			line += fmt.Sprintf(", installation-wide grant %s until %s", grant.State, grant.ExpiresAt.Format(time.DateOnly))
+			if grant.OrganizationLimit != nil {
+				line += fmt.Sprintf(", limit %d organizations", *grant.OrganizationLimit)
+			}
+		}
+		infoMessageF("%s.", line)
 	}
 }
 
@@ -248,6 +289,29 @@ func (w *pluginManagerWriter) putEnablement(cmd *cobra.Command, current cp.Plugi
 		return cp.PluginInstallation{}, errors.Wrapf(err, "failed to change organization %s", orgId)
 	}
 	return w.installationResult(fmt.Sprintf("set organization %s of installation %s to %s", orgId, id, state), id.String(), r.StatusCode(), r.Body, r.JSON200)
+}
+
+// setOrganizationMode sets how the installation's organizations are enabled.
+// Unset defaults keep the installation's current ones: the request replaces
+// mode and defaults together.
+func (w *pluginManagerWriter) setOrganizationMode(cmd *cobra.Command, current cp.PluginInstallation, mode cp.PluginOrganizationMode) (cp.PluginInstallation, error) {
+	body := cp.PluginOrganizationModePut{ExpectedRevision: w.revision, Reason: w.reason, Mode: mode,
+		DefaultTimezone: &current.OrganizationDefaults.Timezone, DefaultApprovalPolicies: &current.OrganizationDefaults.ApprovalPolicies}
+	if cmd.Flags().Changed(pluginManagerDefaultTimezoneFlag) {
+		timezone, _ := cmd.Flags().GetString(pluginManagerDefaultTimezoneFlag)
+		body.DefaultTimezone = &timezone
+	}
+	if cmd.Flags().Changed(pluginManagerDefaultPolicyFlag) {
+		policies, _ := cmd.Flags().GetStringToString(pluginManagerDefaultPolicyFlag)
+		body.DefaultApprovalPolicies = &policies
+	}
+	id := current.InstallationId
+	params := &cp.SetPluginOrganizationModeParams{IdempotencyKey: pluginManagerIdempotencyKey(http.MethodPut, fmt.Sprintf("/plugin-installations/%s/organization-mode", id), body)}
+	r, err := w.client.SetPluginOrganizationModeWithResponse(w.ctx, id, params, body)
+	if err != nil {
+		return cp.PluginInstallation{}, errors.Wrap(err, "failed to set the organization mode")
+	}
+	return w.installationResult(fmt.Sprintf("set organizations of installation %s to %s", id, mode), id.String(), r.StatusCode(), r.Body, r.JSON200)
 }
 
 // removeEnablement removes the installation's enablement for an
@@ -358,10 +422,12 @@ var InstallPlugin = &cobra.Command{
 	Long: `Install a registered package and take it as far as the flags say:
 
   1. create the installation (Core assigns the installation UUID the plugin runtime, IAM and licences name),
-  2. record the plugin service user and admission checker (--service-user, --admission-checker): the service user
-     belongs to the organization to enable, and IAM binds it to the plugin and the new installation UUID,
+  2. record the plugin service user and admission checker (--service-user, --admission-checker): both are IAM platform
+     principals that belong to no organization, and IAM binds the service user to the plugin and the new installation
+     UUID. That binding can only exist after the installation, so 'create-identities' creates and records both,
   3. activate it once the running plugin proves the installation UUID, package and migration generation,
-  4. enable it for the organization of its service user (--enable-org, with --timezone and --approval-policy).
+  4. enable it for an organization (--enable-org, with --timezone and --approval-policy); any organization can be
+     enabled, and 'organization-mode' serves all of them.
 
 When a step fails, for example because the IAM workload binding or the plugin runtime does not exist yet, the steps
 before it stay done. Run the same command again with --resume to continue from the state the Plugin Manager recorded:
@@ -509,7 +575,7 @@ func resumable(item cp.PluginInstallation, digest, backendURL, uiOrigin string) 
 var SetPluginIdentity = &cobra.Command{
 	Use:   "set-identity <installation-id>",
 	Args:  cobra.ExactArgs(1),
-	Short: "Record the plugin service user and admission checker of an installation before it is activated",
+	Short: "Record the plugin service user and admission checker (platform principals) of an installation before it is activated",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
 		id, err := parseInstallationID(args[0])
@@ -653,7 +719,7 @@ func enablementCommand(use string, state cp.PluginEnablementPutState, short stri
 
 var (
 	EnablePluginOrganization = enablementCommand("enable-org", cp.PluginEnablementPutStateEnabled,
-		"Enable an active installation for the organization of its service user")
+		"Enable an active installation for an organization")
 	DisablePluginOrganization = enablementCommand("disable-org", cp.PluginEnablementPutStateDisabled,
 		"Keep an installation safety-only for an organization")
 )
@@ -688,6 +754,47 @@ Removing an enablement that does not exist changes nothing.`,
 		}
 		if item.Revision != nil && *item.Revision == decidedOn {
 			changedMessageF("Installation %s had no enablement for organization %s: nothing changed.", id, args[1])
+		}
+		return writePluginManagerResult(cmd, item)
+	},
+}
+
+var SetPluginOrganizationMode = &cobra.Command{
+	Use:   "organization-mode <installation-id> all|selected",
+	Args:  cobra.ExactArgs(2),
+	Short: "Serve every organization from an installation (all) or only the ones enabled one by one (selected)",
+	Long: `Serve every organization from an installation (all) or only the ones enabled one by one (selected).
+
+With "all" Core enables the installation for every active organization at once and for every organization created
+later, in the transaction that creates it, with the default timezone and approval policies. An organization opts out
+with 'disable-org'; Core never enables it again, and removing an enablement is refused while the mode is all. An
+organization Core could not enable (the plugin host was off, or the installation-wide licence grant's organization
+limit was reached) is listed as pending until you run this command with "all" again. The mode needs an active or
+disabled installation.
+
+With "selected" every enablement stays as it is, organizations created later are not enabled, and 'remove-org' works
+again. The defaults apply only to enablements Core creates from then on; unset defaults keep the current ones.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true
+		id, err := parseInstallationID(args[0])
+		if err != nil {
+			return err
+		}
+		mode := cp.PluginOrganizationMode(args[1])
+		if mode != cp.PluginOrganizationModeAll && mode != cp.PluginOrganizationModeSelected {
+			return errors.Errorf("invalid mode '%s': use %s or %s", args[1], cp.PluginOrganizationModeAll, cp.PluginOrganizationModeSelected)
+		}
+		w, err := newPluginManagerWriter(cmd)
+		if err != nil {
+			return err
+		}
+		current, err := w.installation(id)
+		if err != nil {
+			return err
+		}
+		item, err := w.setOrganizationMode(cmd, current, mode)
+		if err != nil {
+			return err
 		}
 		return writePluginManagerResult(cmd, item)
 	},
@@ -729,7 +836,7 @@ plugin and organization of an enabled installation. A rejected document is repor
 
 func init() {
 	printer.SetupSingleOutputFormatFlag(PluginManagerCmd.PersistentFlags())
-	writes := []*cobra.Command{RegisterPluginPackage, InstallPlugin, SetPluginIdentity, ActivatePlugin, DisablePlugin, EnablePlugin, UninstallPlugin, ReinstallPlugin, UpgradePlugin, PurgePlugin, EnablePluginOrganization, DisablePluginOrganization, RemovePluginOrganization, ImportPluginEntitlements}
+	writes := []*cobra.Command{RegisterPluginPackage, InstallPlugin, SetPluginIdentity, ActivatePlugin, DisablePlugin, EnablePlugin, UninstallPlugin, ReinstallPlugin, UpgradePlugin, PurgePlugin, EnablePluginOrganization, DisablePluginOrganization, RemovePluginOrganization, SetPluginOrganizationMode, ImportPluginEntitlements}
 	for _, write := range writes {
 		write.Flags().String(reasonFlag, "", "Why the change is made, recorded in the audit trail")
 		_ = write.MarkFlagRequired(reasonFlag)
@@ -743,10 +850,10 @@ func init() {
 	_ = InstallPlugin.MarkFlagRequired(pluginManagerBackendURLFlag)
 	InstallPlugin.Flags().String(pluginManagerUIOriginFlag, "", "Origin of the plugin UI, exactly when the package contributes a UI")
 	InstallPlugin.Flags().Bool(pluginManagerResumeFlag, false, "Continue the plugin's recorded installation after a partial failure")
-	InstallPlugin.Flags().String(pluginManagerEnableOrgFlag, "", "Enable the installation for this organization, the organization of its service user")
+	InstallPlugin.Flags().String(pluginManagerEnableOrgFlag, "", "Enable the installation for this organization")
 	for _, cmd := range []*cobra.Command{InstallPlugin, SetPluginIdentity} {
-		cmd.Flags().String(pluginManagerServiceUserFlag, "", "IAM service user the plugin acts as")
-		cmd.Flags().String(pluginManagerAdmissionCheckerFlag, "", "IAM service user of the plugin's admission checker")
+		cmd.Flags().String(pluginManagerServiceUserFlag, "", "IAM platform principal the plugin acts as")
+		cmd.Flags().String(pluginManagerAdmissionCheckerFlag, "", "IAM platform principal with a static token that checks Deployments for the plugin")
 		cmd.MarkFlagsRequiredTogether(pluginManagerServiceUserFlag, pluginManagerAdmissionCheckerFlag)
 	}
 	_ = SetPluginIdentity.MarkFlagRequired(pluginManagerServiceUserFlag)
@@ -754,6 +861,9 @@ func init() {
 		cmd.Flags().String(pluginManagerTimezoneFlag, "", "IANA timezone of the organization for calendar policies (default: the current one, else UTC)")
 		cmd.Flags().StringToString(pluginManagerApprovalPolicyFlag, nil, "Deployment approval scope=policy, for example environment=two-person (default: the current ones)")
 	}
+
+	SetPluginOrganizationMode.Flags().String(pluginManagerDefaultTimezoneFlag, "", "IANA timezone of the enablements Core creates (default: the current one, else UTC)")
+	SetPluginOrganizationMode.Flags().StringToString(pluginManagerDefaultPolicyFlag, nil, "Deployment approval scope=policy of the enablements Core creates (default: the current ones)")
 
 	PluginManagerCmd.AddCommand(writes...)
 	RootCmd.AddCommand(PluginManagerCmd)

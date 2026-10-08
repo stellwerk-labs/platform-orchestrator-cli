@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
+	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
 )
 
@@ -84,10 +85,15 @@ type pluginManagerServer struct {
 	// bindingMissing refuses identities with plugin_workload_binding_missing:
 	// IAM does not bind the service user to the installation yet.
 	bindingMissing bool
-	// serviceUserOrg, when set, is the organization every service user
-	// belongs to: a new enablement of another organization is refused with
-	// plugin_service_user_organization_mismatch.
-	serviceUserOrg string
+	// identityRefusal, when set, is the code the identity step answers: IAM
+	// reports a service user or admission checker that is no platform principal.
+	identityRefusal string
+	// activeOrgs are the organizations of the platform; mode all enables them.
+	activeOrgs []string
+	// orgLimit, when set, is the installation-wide grant's organization limit.
+	orgLimit int
+	// iam is the IAM peer of create-identities.
+	iam *iamServer
 	// hostDisabled answers every request with 404 plugin_host_disabled.
 	hostDisabled bool
 
@@ -104,6 +110,10 @@ func newPluginManagerServer(t *testing.T) (*pluginManagerServer, context.Context
 	require.NoError(t, err)
 	ctx := context.WithValue(context.Background(), ConfigContextKey, config.Config{})
 	ctx = context.WithValue(ctx, CpClientContextKey, cpc)
+	fixture.iam = newIamServer(t)
+	iamc, err := iam.NewClientWithResponses(fixture.iam.url)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, IamClientContextKey, iamc)
 	t.Setenv("PO_API_URL", server.URL)
 	cobra.EnableTraverseRunHooks = true
 	color.NoColor = true
@@ -321,7 +331,8 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 			}
 		}
 		item := &cp.PluginInstallation{InstallationId: uuid.New(), PluginId: pkg.PluginId, PackageSha256: pkg.ManifestSha256, State: cp.PluginInstallationStateInstalled,
-			Availability: cp.PluginAvailabilityStateUnavailable, BackendUrl: body.BackendUrl, UiOrigin: body.UiOrigin, Organizations: []cp.PluginEnablement{}}
+			Availability: cp.PluginAvailabilityStateUnavailable, BackendUrl: body.BackendUrl, UiOrigin: body.UiOrigin, Organizations: []cp.PluginEnablement{},
+			OrganizationMode: cp.PluginOrganizationModeSelected, OrganizationDefaults: cp.PluginOrganizationDefaults{Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{}}}
 		f.installations = append(f.installations, item)
 		return http.StatusCreated, item, true
 	}
@@ -335,6 +346,9 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	}
 	switch {
 	case r.Method == http.MethodDelete && len(parts) == 4 && parts[2] == "organizations":
+		if item.OrganizationMode == cp.PluginOrganizationModeAll && slices.ContainsFunc(item.Organizations, func(e cp.PluginEnablement) bool { return e.OrgId == parts[3] }) {
+			return conflict(pluginServesAllOrganizations, "The installation serves all organizations; disable the enablement to opt the organization out.")
+		}
 		item.Organizations = slices.DeleteFunc(item.Organizations, func(enablement cp.PluginEnablement) bool { return enablement.OrgId == parts[3] })
 	case r.Method == http.MethodDelete:
 		if item.State == cp.PluginInstallationStatePurged {
@@ -346,6 +360,9 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	case len(parts) == 3 && parts[2] == "identity":
 		var body cp.PluginInstallationIdentity
 		f.decode(raw, &body)
+		if f.identityRefusal != "" {
+			return conflict(f.identityRefusal, "IAM does not know the identity as a platform principal.")
+		}
 		if f.bindingMissing {
 			return conflict(pluginWorkloadBindingMissing, fmt.Sprintf("IAM has no workload binding of service user %s to installation %s of plugin %s; bind the plugin workload first.", body.ServiceUserId, item.InstallationId, item.PluginId))
 		}
@@ -361,17 +378,47 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 		var body cp.PluginEnablementPut
 		f.decode(raw, &body)
 		enabled := slices.ContainsFunc(item.Organizations, func(enablement cp.PluginEnablement) bool { return enablement.OrgId == parts[3] })
-		if f.serviceUserOrg != "" && item.ServiceUserId != nil && !enabled && parts[3] != f.serviceUserOrg {
-			return conflict(pluginServiceUserOrgMismatch, fmt.Sprintf("Service user %s does not belong to organization %s. In v1alpha an installation serves only the organization of its service user.", item.ServiceUserId, parts[3]))
+		if !enabled && f.limitReached(item) {
+			return conflict(pluginOrganizationLimit, fmt.Sprintf("The installation-wide grant allows %d enabled organizations.", f.orgLimit))
 		}
-		enablement := cp.PluginEnablement{OrgId: parts[3], State: cp.PluginEnablementState(body.State), Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{}}
+		enablement := cp.PluginEnablement{OrgId: parts[3], State: cp.PluginEnablementState(body.State), Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{},
+			CapabilityRegistration: cp.PluginCapabilityRegistration{State: cp.PluginCapabilityRegistrationStateRegistered}}
 		if body.Timezone != nil {
 			enablement.Timezone = *body.Timezone
 		}
 		if body.ApprovalPolicies != nil {
 			enablement.ApprovalPolicies = *body.ApprovalPolicies
 		}
-		item.Organizations = []cp.PluginEnablement{enablement}
+		item.Organizations = slices.DeleteFunc(item.Organizations, func(e cp.PluginEnablement) bool { return e.OrgId == parts[3] })
+		item.Organizations = append(item.Organizations, enablement)
+		slices.SortFunc(item.Organizations, func(a, b cp.PluginEnablement) int { return strings.Compare(a.OrgId, b.OrgId) })
+	case len(parts) == 3 && parts[2] == "organization-mode":
+		var body cp.PluginOrganizationModePut
+		f.decode(raw, &body)
+		if item.State != cp.PluginInstallationStateActive && item.State != cp.PluginInstallationStateDisabled && body.Mode == cp.PluginOrganizationModeAll {
+			return state("")
+		}
+		item.OrganizationMode = body.Mode
+		item.OrganizationDefaults = cp.PluginOrganizationDefaults{Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{}}
+		if body.DefaultTimezone != nil {
+			item.OrganizationDefaults.Timezone = *body.DefaultTimezone
+		}
+		if body.DefaultApprovalPolicies != nil {
+			item.OrganizationDefaults.ApprovalPolicies = *body.DefaultApprovalPolicies
+		}
+		if body.Mode == cp.PluginOrganizationModeAll {
+			for _, org := range f.activeOrgs {
+				if slices.ContainsFunc(item.Organizations, func(e cp.PluginEnablement) bool { return e.OrgId == org }) {
+					continue
+				}
+				if f.limitReached(item) {
+					return conflict(pluginOrganizationLimit, fmt.Sprintf("The installation-wide grant allows %d enabled organizations.", f.orgLimit))
+				}
+				item.Organizations = append(item.Organizations, cp.PluginEnablement{OrgId: org, State: cp.PluginEnablementStateEnabled, Timezone: item.OrganizationDefaults.Timezone,
+					ApprovalPolicies: item.OrganizationDefaults.ApprovalPolicies, CapabilityRegistration: cp.PluginCapabilityRegistration{State: cp.PluginCapabilityRegistrationStatePending}})
+			}
+			slices.SortFunc(item.Organizations, func(a, b cp.PluginEnablement) int { return strings.Compare(a.OrgId, b.OrgId) })
+		}
 	case len(parts) == 4 && parts[2] == "actions":
 		switch action := parts[3]; {
 		case action == "activate" && (item.State == cp.PluginInstallationStateInstalled || item.TargetPackageSha256 != nil):
@@ -401,6 +448,17 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	}
 	after, _ := json.Marshal(item)
 	return http.StatusOK, item, string(before) != string(after)
+}
+
+// limitReached says whether one more enabled organization exceeds the limit.
+func (f *pluginManagerServer) limitReached(item *cp.PluginInstallation) bool {
+	enabled := 0
+	for _, e := range item.Organizations {
+		if e.State == cp.PluginEnablementStateEnabled {
+			enabled++
+		}
+	}
+	return f.orgLimit > 0 && enabled >= f.orgLimit
 }
 
 func pmRun(ctx context.Context, args ...string) (string, string, error) {
@@ -460,10 +518,10 @@ func TestPluginManagerInstallFlow(t *testing.T) {
 
 	id := fixture.installations[0].InstallationId.String()
 	for _, line := range []string{
-		"Installation " + id + " of " + pmTestPlugin + ": installed, availability unavailable, revision 2.",
-		"Installation " + id + " of " + pmTestPlugin + ": installed, availability unavailable, revision 3.",
-		"Installation " + id + " of " + pmTestPlugin + ": active, availability available, revision 4.",
-		"Installation " + id + " of " + pmTestPlugin + ": active, availability available, revision 5.",
+		"Installation " + id + " of " + pmTestPlugin + ": installed, availability unavailable, organizations selected, revision 2.",
+		"Installation " + id + " of " + pmTestPlugin + ": installed, availability unavailable, organizations selected, revision 3.",
+		"Installation " + id + " of " + pmTestPlugin + ": active, availability available, organizations selected, revision 4.",
+		"Installation " + id + " of " + pmTestPlugin + ": active, availability available, organizations selected, revision 5.",
 	} {
 		require.Contains(t, stderr, line+"\n")
 	}
@@ -472,7 +530,7 @@ func TestPluginManagerInstallFlow(t *testing.T) {
 	require.Equal(t, cp.PluginInstallationStateActive, installed.State)
 	require.Equal(t, int64(5), *installed.Revision)
 	require.Equal(t, pmTestServiceUser, installed.ServiceUserId.String())
-	require.Equal(t, []cp.PluginEnablement{{OrgId: pmTestOrg, State: cp.PluginEnablementStateEnabled, Timezone: "Europe/Berlin", ApprovalPolicies: map[string]string{}}}, installed.Organizations)
+	require.Equal(t, []cp.PluginEnablement{{OrgId: pmTestOrg, State: cp.PluginEnablementStateEnabled, Timezone: "Europe/Berlin", ApprovalPolicies: map[string]string{}, CapabilityRegistration: cp.PluginCapabilityRegistration{State: cp.PluginCapabilityRegistrationStateRegistered}}}, installed.Organizations)
 }
 
 func TestPluginManagerInstallResumesFromTheRecordedState(t *testing.T) {
@@ -560,21 +618,16 @@ func TestPluginManagerInstallResumesInTheOrderOfTheServiceIdentity(t *testing.T)
 	id := fixture.installations[0].InstallationId.String()
 	require.EqualError(t, err, "installation "+id+" is recorded; continue with --resume: failed to set the identity of installation "+id+" (plugin_workload_binding_missing): "+
 		"IAM has no workload binding of service user "+pmTestServiceUser+" to installation "+id+" of plugin "+pmTestPlugin+"; bind the plugin workload first. "+
-		"The binding names the installation UUID, so it can only exist after the installation: create it for installation "+id+" in IAM "+
-		"(POST /plugin-workload-bindings, platform permission plugin_workload_binding_write), then run the command again")
+		"The binding names the installation UUID, so it can only exist after the installation: create it for installation "+id+" with "+
+		"'octl plugin-manager create-identities "+id+"' (or in IAM: POST /plugin-workload-bindings with platform_principal, platform permission plugin_workload_binding_write), then run the command again")
 	require.Equal(t, []string{pmTestGetInstallations, "POST /plugin-installations", "PUT /plugin-installations/" + id + "/identity"}, fixture.requestLines(), "nothing after the refused identity")
 	require.Equal(t, cp.PluginInstallationStateInstalled, fixture.installations[0].State)
 	require.Nil(t, fixture.installations[0].ServiceUserId)
 
-	// IAM binds the service user, which belongs to another organization.
-	fixture.bindingMissing, fixture.serviceUserOrg = false, "service-user-org"
+	fixture.bindingMissing = false
 	fixture.clearRequests()
 	_, _, err = pmRun(ctx, pmInstallArgs(pmTestResumeFlag)...)
-	require.EqualError(t, err, "installation "+id+" is recorded; continue with --resume: failed to set organization "+pmTestOrg+" of installation "+id+" to enabled (plugin_service_user_organization_mismatch): "+
-		"Service user "+pmTestServiceUser+" does not belong to organization "+pmTestOrg+". In v1alpha an installation serves only the organization of its service user. "+
-		"Enable the organization of the installation's service user instead, or give the installation a service user of this organization: "+
-		"create the service user there, bind it to installation "+id+" in IAM, record it with 'octl plugin-manager set-identity' "+
-		"(only in state installed: uninstall and reinstall an active installation first), activate it, then enable the organization")
+	require.NoError(t, err)
 	require.Equal(t, []string{
 		pmTestGetInstallations,
 		pmTestGetPackages,
@@ -583,14 +636,12 @@ func TestPluginManagerInstallResumesInTheOrderOfTheServiceIdentity(t *testing.T)
 		"PUT /plugin-installations/" + id + "/organizations/" + pmTestOrg,
 	}, fixture.requestLines(), "identity, activation, then the organization")
 	require.Equal(t, cp.PluginInstallationStateActive, fixture.installations[0].State)
-	require.Empty(t, fixture.installations[0].Organizations)
+	require.Equal(t, pmTestOrg, fixture.installations[0].Organizations[0].OrgId)
 
 	fixture.clearRequests()
-	_, _, err = pmRun(ctx, pmInstallArgs(pmTestResumeFlag, "--"+pluginManagerEnableOrgFlag, fixture.serviceUserOrg)...)
+	_, _, err = pmRun(ctx, pmInstallArgs(pmTestResumeFlag)...)
 	require.NoError(t, err)
-	require.Equal(t, []string{pmTestGetInstallations, pmTestGetPackages, "PUT /plugin-installations/" + id + "/organizations/" + fixture.serviceUserOrg}, fixture.requestLines(),
-		"the recorded identity and activation are skipped")
-	require.Equal(t, fixture.serviceUserOrg, fixture.installations[0].Organizations[0].OrgId)
+	require.Equal(t, []string{pmTestGetInstallations, pmTestGetPackages}, fixture.requestLines(), "everything recorded is skipped")
 }
 
 func TestPluginManagerActivationDiagnosticsAreActionable(t *testing.T) {
@@ -631,7 +682,7 @@ func TestPluginManagerLifecycle(t *testing.T) {
 	}
 
 	stderr := step("upgrade", id, pmTestNextPackage)
-	require.Contains(t, stderr, "active, availability available, upgrade to package "+pmTestNextPackage+" pending, revision ")
+	require.Contains(t, stderr, "active, availability available, organizations selected, upgrade to package "+pmTestNextPackage+" pending, revision ")
 	require.Contains(t, stderr, "Core keeps serving package "+pmTestPackage+". Roll the plugin runtime to package "+pmTestNextPackage+", then switch with 'octl plugin-manager activate "+id+" --reason <text>'.")
 	step(pmTestActivate, id)
 	require.Equal(t, pmTestNextPackage, fixture.installations[0].PackageSha256)
@@ -642,20 +693,21 @@ func TestPluginManagerLifecycle(t *testing.T) {
 	require.Equal(t, "Europe/Berlin", put.body["timezone"], "a PUT keeps the organization's settings")
 	require.Equal(t, map[string]any{pmTestPolicyScope: "two-person"}, put.body["approval_policies"])
 	step("enable-org", id, pmTestOrg, "--timezone", pmTestTimezone)
-	require.Equal(t, cp.PluginEnablement{OrgId: pmTestOrg, State: cp.PluginEnablementStateEnabled, Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{pmTestPolicyScope: "two-person"}}, fixture.installations[0].Organizations[0])
+	require.Equal(t, cp.PluginEnablement{OrgId: pmTestOrg, State: cp.PluginEnablementStateEnabled, Timezone: pmTestTimezone, ApprovalPolicies: map[string]string{pmTestPolicyScope: "two-person"},
+		CapabilityRegistration: cp.PluginCapabilityRegistration{State: cp.PluginCapabilityRegistrationStateRegistered}}, fixture.installations[0].Organizations[0])
 
 	fixture.workUnsettled = true
 	_, _, err = pmRun(ctx, pmTestCmd, "uninstall", id, reasonArg, "retire")
 	require.EqualError(t, err, "failed to uninstall installation "+id+" (plugin_work_unsettled): Core still holds operation grants, dispatches or Module reservations of the plugin. "+
 		"Core still holds work of this plugin (operation grants, dispatches or Module reservations) and uninstall has no force option. "+
 		"Stop new work with 'octl plugin-manager disable "+id+" --reason <text>', let the running work settle, then uninstall again")
-	require.Contains(t, step("disable", id), ": disabled, availability not_enabled, revision ")
+	require.Contains(t, step("disable", id), ": disabled, availability not_enabled, organizations selected, revision ")
 	fixture.workUnsettled = false
-	require.Contains(t, step("uninstall", id), ": uninstalled, availability not_installed, revision ")
-	require.Contains(t, step("reinstall", id), ": installed, availability unavailable, revision ")
+	require.Contains(t, step("uninstall", id), ": uninstalled, availability not_installed, organizations selected, revision ")
+	require.Contains(t, step("reinstall", id), ": installed, availability unavailable, organizations selected, revision ")
 	step("uninstall", id)
 	stderr = step("purge", id)
-	require.Contains(t, stderr, ": purged, availability not_installed, revision ")
+	require.Contains(t, stderr, ": purged, availability not_installed, organizations selected, revision ")
 	require.Contains(t, stderr, "Core does not own plugin data: delete it through the plugin runtime.")
 
 	_, _, err = pmRun(ctx, pmTestCmd, "enable", id, reasonArg, "too late")
@@ -683,7 +735,7 @@ func TestPluginManagerRemovesAnOrganizationEnablement(t *testing.T) {
 	require.Equal(t, revision+1, fixture.revision)
 	require.Len(t, fixture.audit, audit+1)
 	require.Equal(t, "offboard the organization", fixture.audit[audit].Reason)
-	require.Contains(t, stderr, "Installation "+id+" of "+pmTestPlugin+": active, availability available, revision "+strconv.FormatInt(revision+1, 10)+".\n")
+	require.Contains(t, stderr, "Installation "+id+" of "+pmTestPlugin+": active, availability available, organizations selected, revision "+strconv.FormatInt(revision+1, 10)+".\n")
 	require.NotContains(t, stderr, "nothing changed")
 	var removed cp.PluginInstallation
 	require.NoError(t, json.Unmarshal([]byte(stdout), &removed))
@@ -726,7 +778,7 @@ func TestPluginManagerRevisionAndIdempotency(t *testing.T) {
 	require.NoError(t, err, "the identical command after a lost answer replays it")
 	require.Equal(t, 1, fixture.replays)
 	require.Equal(t, first, again)
-	require.Contains(t, stderr, ": active, availability available, revision ")
+	require.Contains(t, stderr, ": active, availability available, organizations selected, revision ")
 	writes := fixture.writes()
 	require.Equal(t, writes[len(writes)-1].key, writes[len(writes)-2].key)
 
@@ -800,12 +852,12 @@ func TestPluginManagerReads(t *testing.T) {
 
 	stdout, _, err = pmRun(ctx, testGetCmd, "plugin-installations")
 	require.NoError(t, err)
-	require.Regexp(t, id+`\s+`+pmTestPlugin+`\s+active\s+available\s+`+pmTestPackage+`\s+-`, stdout)
+	require.Regexp(t, id+`\s+`+pmTestPlugin+`\s+active\s+available\s+selected\s+`+pmTestPackage+`\s+-`, stdout)
 
 	fixture.installations[0].Diagnostic = &cp.PluginInstallationDiagnostic{Code: cp.PluginDiagnosticPackageDigestMismatch, Message: "the plugin runs another package"}
 	stdout, stderr, err = pmRun(ctx, testGetCmd, "plugin-installation", id, outFlag, jsonOutput)
 	require.NoError(t, err)
-	require.Contains(t, stderr, "Installation "+id+" of "+pmTestPlugin+": active, availability available, revision 5.\nDiagnostic plugin_package_digest_mismatch: the plugin runs another package\n")
+	require.Contains(t, stderr, "Installation "+id+" of "+pmTestPlugin+": active, availability available, organizations selected, revision 5.\nDiagnostic plugin_package_digest_mismatch: the plugin runs another package\n")
 	require.Contains(t, stdout, `"organizations": [`)
 
 	fixture.hostDisabled = true

@@ -138,7 +138,7 @@ var tableColumns = map[string][]string{
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},
 	tableTypeMetadataKey:            {tableFieldName, tableFieldDescription, tableFieldSchema, tableFieldCreatedAt},
 	tableTypePluginAuditEvent:       {tableFieldId, "Revision", "OccurredAt", tableFieldActor, "Action", "InstallationId", tableFieldOrgId, tableFieldReason},
-	tableTypePluginInstallation:     {"InstallationId", "PluginId", tableFieldState, "Availability", "PackageSha256", "TargetPackageSha256", tableFieldUpdatedAt},
+	tableTypePluginInstallation:     {"InstallationId", "PluginId", tableFieldState, "Availability", "OrganizationMode", "PackageSha256", "TargetPackageSha256", tableFieldUpdatedAt},
 	tableTypePluginPackage:          {"PluginId", "Version", "ManifestSha256", tableFieldCreatedAt},
 	tableTypeModule:                 {tableFieldId, tableFieldDescription, tableFieldOrgId, tableFieldResourceType, tableFieldModuleSource, tableFieldModuleParams, tableFieldModuleInputs, tableFieldProviderMapping, tableFieldDependencies, tableFieldCoprovisioned, tableFieldUpdatedAt, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleSummary:          {tableFieldId, tableFieldDescription, tableFieldResourceType, tableFieldModuleSource, tableFieldVersionId, tableFieldCreatedAt},
