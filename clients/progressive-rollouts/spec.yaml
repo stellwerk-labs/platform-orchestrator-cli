@@ -578,6 +578,29 @@ components:
         unpinned_pending: {type: integer, minimum: 0}
         environment_removed: {type: integer, minimum: 0}
         terminal_result: {$ref: '#/components/schemas/ProgressiveRolloutTerminalResult'}
+        entitlement_warning: {$ref: '#/components/schemas/ProgressiveRolloutEntitlementWarning'}
+        entitlement_suspension: {$ref: '#/components/schemas/ProgressiveRolloutEntitlementSuspension'}
+
+    ProgressiveRolloutEntitlementWarning:
+      type: object
+      description: Present only while the Rollout is Running and Core reports the signed licence in its grace period. Forward work continues until grace_until; after it the Rollout is suspended for the licence.
+      required: [state, grace_until]
+      properties:
+        state:
+          type: string
+          enum: [grace]
+          x-enum-varnames: [ProgressiveRolloutEntitlementWarningStateGrace]
+        grace_until: {type: string, format: date-time}
+
+    ProgressiveRolloutEntitlementSuspension:
+      type: object
+      description: Present only while the Rollout is Paused because Core stopped allowing forward work, which distinguishes it from a pause by a person. Renewal never resumes the Rollout; resume_available says that an explicit Resume by someone with rollout control is licensed again. Any command that moves the Rollout out of Paused ends the suspension.
+      required: [state, suspended_at, resume_available]
+      properties:
+        state: {type: string, description: 'Core licence state that denied forward work, for example expired, revoked, untrusted, not_entitled or unavailable.'}
+        suspended_at: {type: string, format: date-time}
+        resume_available: {type: boolean}
+        resume_available_at: {type: string, format: date-time}
 
     ProgressiveRolloutTerminalOutcomeCounts:
       type: object

@@ -7,7 +7,7 @@ Core publishes no Rollouts type.
 
 - Contract: `progressive-rollouts-v1alpha.openapi.yaml`
 - Contract level: `v1alpha`
-- File SHA-256: `4d93b69cbbe2fbfe78f63364a1a59146ce6f51a1e8a77a095524be1ef5b69b23`
+- File SHA-256: `bc1e49c348fc5c95a2c5eef6d5fd2f0bfb5a35ccbc374c3bab7a6fb76801a0fd`
 
 The document has no `paths`. Its `x-stellwerk-operations` list holds the 15
 plugin operations as OpenAPI Operation Objects with their method, mutation flag,

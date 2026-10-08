@@ -54,6 +54,11 @@ const (
 	ProgressiveRolloutConflictStatusResolved ProgressiveRolloutConflictStatus = "resolved"
 )
 
+// Defines values for ProgressiveRolloutEntitlementWarningState.
+const (
+	ProgressiveRolloutEntitlementWarningStateProgressiveRolloutEntitlementWarningStateGrace ProgressiveRolloutEntitlementWarningState = "grace"
+)
+
 // Defines values for ProgressiveRolloutEnvironmentState.
 const (
 	ProgressiveRolloutEnvironmentStateAlreadyCompliant   ProgressiveRolloutEnvironmentState = "AlreadyCompliant"
@@ -285,6 +290,25 @@ type ProgressiveRolloutDraftUpdate struct {
 	ExpectedResourceVersion int64                  `json:"expected_resource_version"`
 	Spec                    ProgressiveRolloutSpec `json:"spec"`
 }
+
+// ProgressiveRolloutEntitlementSuspension Present only while the Rollout is Paused because Core stopped allowing forward work, which distinguishes it from a pause by a person. Renewal never resumes the Rollout; resume_available says that an explicit Resume by someone with rollout control is licensed again. Any command that moves the Rollout out of Paused ends the suspension.
+type ProgressiveRolloutEntitlementSuspension struct {
+	ResumeAvailable   bool       `json:"resume_available"`
+	ResumeAvailableAt *time.Time `json:"resume_available_at,omitempty"`
+
+	// State Core licence state that denied forward work, for example expired, revoked, untrusted, not_entitled or unavailable.
+	State       string    `json:"state"`
+	SuspendedAt time.Time `json:"suspended_at"`
+}
+
+// ProgressiveRolloutEntitlementWarning Present only while the Rollout is Running and Core reports the signed licence in its grace period. Forward work continues until grace_until; after it the Rollout is suspended for the licence.
+type ProgressiveRolloutEntitlementWarning struct {
+	GraceUntil time.Time                                 `json:"grace_until"`
+	State      ProgressiveRolloutEntitlementWarningState `json:"state"`
+}
+
+// ProgressiveRolloutEntitlementWarningState defines model for ProgressiveRolloutEntitlementWarning.State.
+type ProgressiveRolloutEntitlementWarningState string
 
 // ProgressiveRolloutEnvironmentExecution defines model for ProgressiveRolloutEnvironmentExecution.
 type ProgressiveRolloutEnvironmentExecution struct {
@@ -595,35 +619,41 @@ type ProgressiveRolloutState string
 
 // ProgressiveRolloutStatus defines model for ProgressiveRolloutStatus.
 type ProgressiveRolloutStatus struct {
-	AlreadyCompliant           int                               `json:"already_compliant"`
-	AuthorizedWaveIds          *[]string                         `json:"authorized_wave_ids,omitempty"`
-	BakeBypassCount            *int                              `json:"bake_bypass_count,omitempty"`
-	BakeBypassReason           *string                           `json:"bake_bypass_reason,omitempty"`
-	BakeBypassedAt             *time.Time                        `json:"bake_bypassed_at,omitempty"`
-	BakeBypassedBy             *openapi_types.UUID               `json:"bake_bypassed_by,omitempty"`
-	BakeDueAt                  *time.Time                        `json:"bake_due_at,omitempty"`
-	BakeStartedAt              *time.Time                        `json:"bake_started_at,omitempty"`
-	BakingWaveId               *string                           `json:"baking_wave_id,omitempty"`
-	Blocked                    int                               `json:"blocked"`
-	Completed                  int                               `json:"completed"`
-	CompletedAt                *time.Time                        `json:"completed_at,omitempty"`
-	CompletedWaveIds           *[]string                         `json:"completed_wave_ids,omitempty"`
-	ConfirmedDefectiveRollback *bool                             `json:"confirmed_defective_rollback,omitempty"`
-	Conflicts                  int                               `json:"conflicts"`
-	CurrentWaveId              *string                           `json:"current_wave_id,omitempty"`
-	DefaultsPromoted           *bool                             `json:"defaults_promoted,omitempty"`
-	EnvironmentRemoved         *int                              `json:"environment_removed,omitempty"`
-	Failed                     int                               `json:"failed"`
-	Message                    *string                           `json:"message,omitempty"`
-	NotApplicable              int                               `json:"not_applicable"`
-	Pinned                     *int                              `json:"pinned,omitempty"`
-	RollbackCount              *int                              `json:"rollback_count,omitempty"`
-	RollbackEnvironmentIds     *[]openapi_types.UUID             `json:"rollback_environment_ids,omitempty"`
-	Running                    int                               `json:"running"`
-	StartedAt                  *time.Time                        `json:"started_at,omitempty"`
-	TerminalResult             *ProgressiveRolloutTerminalResult `json:"terminal_result,omitempty"`
-	Total                      int                               `json:"total"`
-	UnpinnedPending            *int                              `json:"unpinned_pending,omitempty"`
+	AlreadyCompliant           int                 `json:"already_compliant"`
+	AuthorizedWaveIds          *[]string           `json:"authorized_wave_ids,omitempty"`
+	BakeBypassCount            *int                `json:"bake_bypass_count,omitempty"`
+	BakeBypassReason           *string             `json:"bake_bypass_reason,omitempty"`
+	BakeBypassedAt             *time.Time          `json:"bake_bypassed_at,omitempty"`
+	BakeBypassedBy             *openapi_types.UUID `json:"bake_bypassed_by,omitempty"`
+	BakeDueAt                  *time.Time          `json:"bake_due_at,omitempty"`
+	BakeStartedAt              *time.Time          `json:"bake_started_at,omitempty"`
+	BakingWaveId               *string             `json:"baking_wave_id,omitempty"`
+	Blocked                    int                 `json:"blocked"`
+	Completed                  int                 `json:"completed"`
+	CompletedAt                *time.Time          `json:"completed_at,omitempty"`
+	CompletedWaveIds           *[]string           `json:"completed_wave_ids,omitempty"`
+	ConfirmedDefectiveRollback *bool               `json:"confirmed_defective_rollback,omitempty"`
+	Conflicts                  int                 `json:"conflicts"`
+	CurrentWaveId              *string             `json:"current_wave_id,omitempty"`
+	DefaultsPromoted           *bool               `json:"defaults_promoted,omitempty"`
+
+	// EntitlementSuspension Present only while the Rollout is Paused because Core stopped allowing forward work, which distinguishes it from a pause by a person. Renewal never resumes the Rollout; resume_available says that an explicit Resume by someone with rollout control is licensed again. Any command that moves the Rollout out of Paused ends the suspension.
+	EntitlementSuspension *ProgressiveRolloutEntitlementSuspension `json:"entitlement_suspension,omitempty"`
+
+	// EntitlementWarning Present only while the Rollout is Running and Core reports the signed licence in its grace period. Forward work continues until grace_until; after it the Rollout is suspended for the licence.
+	EntitlementWarning     *ProgressiveRolloutEntitlementWarning `json:"entitlement_warning,omitempty"`
+	EnvironmentRemoved     *int                                  `json:"environment_removed,omitempty"`
+	Failed                 int                                   `json:"failed"`
+	Message                *string                               `json:"message,omitempty"`
+	NotApplicable          int                                   `json:"not_applicable"`
+	Pinned                 *int                                  `json:"pinned,omitempty"`
+	RollbackCount          *int                                  `json:"rollback_count,omitempty"`
+	RollbackEnvironmentIds *[]openapi_types.UUID                 `json:"rollback_environment_ids,omitempty"`
+	Running                int                                   `json:"running"`
+	StartedAt              *time.Time                            `json:"started_at,omitempty"`
+	TerminalResult         *ProgressiveRolloutTerminalResult     `json:"terminal_result,omitempty"`
+	Total                  int                                   `json:"total"`
+	UnpinnedPending        *int                                  `json:"unpinned_pending,omitempty"`
 }
 
 // ProgressiveRolloutSupersessionCause defines model for ProgressiveRolloutSupersessionCause.
