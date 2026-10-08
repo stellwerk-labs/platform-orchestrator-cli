@@ -7,7 +7,7 @@ paths:
     get:
       operationId: listPluginPackages
       summary: List the plugin packages known to the Plugin Manager.
-      description: Platform-scoped. Requires the platform permission plugin_manager_read, held only by configured platform operators; organization roles and plugin workloads never qualify. Returns 404 plugin_host_disabled while the plugin host is off.
+      description: Platform-scoped. Requires the platform permission plugin_manager_read, held only by the operators configured in IAM; organization roles and plugin workloads never qualify. Returns 404 plugin_host_disabled while the plugin host is off.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       responses:
@@ -124,7 +124,7 @@ paths:
     post:
       operationId: upgradePluginInstallation
       summary: Request the package an installation serves next.
-      description: Requires plugin_manager_write. The package must be a later version of the same plugin that does not lower the migration generation and that Core can serve with the installation's origins, identities and approval policies (400 plugin_upgrade_invalid otherwise). Core keeps serving the current package, its registrations and every effect bound to it while the plugin runtime rolls; the next activate that reads the target digest and migration generation from the running plugin switches package and registrations atomically. The installation UUID and its licence binding never change. Requesting the served package withdraws a pending upgrade; requesting the pending target again changes nothing.
+      description: Requires plugin_manager_write. The package must be a later version of the same plugin that does not lower the migration generation and that Core can serve with the installation's origins, identities, approval policies and default approval policies (400 plugin_upgrade_invalid otherwise). Core keeps serving the current package, its registrations and every effect bound to it while the plugin runtime rolls; the next activate that reads the target digest and migration generation from the running plugin switches package and registrations atomically. The installation UUID and its licence binding never change. Requesting the served package withdraws a pending upgrade; requesting the pending target again changes nothing.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -149,7 +149,7 @@ paths:
     put:
       operationId: setPluginInstallationIdentity
       summary: Record the plugin service user and admission checker of an installation.
-      description: Requires plugin_manager_write. Identities are recorded before activation and exist exactly when the package declares service grants. Recording the same identities again changes nothing.
+      description: Requires plugin_manager_write. Identities are recorded before activation and exist exactly when the package declares service grants. Both are IAM platform principals, which belong to no organization and hold no role. IAM must hold a workload binding of exactly the installation's plugin ID, installation UUID and the service user; otherwise Core answers 409 plugin_workload_binding_missing. A binding of a service user of an organization is refused with 409 plugin_service_user_not_platform_principal. The admission checker must be a platform principal with a static token and no workload binding; otherwise Core answers 409 plugin_admission_checker_not_platform_principal. Core asks IAM on every request, also on a replay, and records nothing when IAM refuses. Recording the same identities again changes nothing.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -174,7 +174,7 @@ paths:
     post:
       operationId: transitionPluginInstallation
       summary: Activate, disable, enable, uninstall or reinstall an installation.
-      description: 'Requires plugin_manager_write. activate reads the running plugin''s status at /.well-known/stellwerk/plugin-status on the backend origin and serves the package registrations of an installed installation, or switches to the package of a pending upgrade, only when the plugin reports exactly the installation UUID, package digest and migration generation Core recorded; otherwise it changes nothing and answers 409 with the diagnostic plugin_status_unreachable, plugin_status_invalid, plugin_installation_mismatch, plugin_package_digest_mismatch or plugin_migration_generation_mismatch, which the installation also shows until a later read succeeds. disable keeps an active installation safety-only for every organization; enable returns it to active. uninstall removes the registrations and organization enablements and keeps the UUID, its licence binding and the plugin data; it is refused with 409 plugin_work_unsettled while Core holds operation grants, dispatches or Module reservations of the plugin, and has no force option. reinstall returns an uninstalled installation, with its UUID, to installed. A step whose target state already holds changes nothing. Every Control Plane replica serves the change within its refresh interval, without a restart.'
+      description: 'Requires plugin_manager_write. activate reads the running plugin''s status at /.well-known/stellwerk/plugin-status on the backend origin and serves the package registrations of an installed installation, or switches to the package of a pending upgrade, only when the plugin reports exactly the installation UUID, package digest and migration generation Core recorded; otherwise it changes nothing and answers 409 with the diagnostic plugin_status_unreachable, plugin_status_invalid, plugin_installation_mismatch, plugin_package_digest_mismatch or plugin_migration_generation_mismatch, which the installation also shows until a later read succeeds. disable keeps an active installation safety-only for every organization; enable returns it to active. uninstall removes the registrations and organization enablements, disabled ones included, returns the organization mode to selected and keeps the UUID, its licence binding and the plugin data; it is refused with 409 plugin_work_unsettled while Core holds operation grants, dispatches or Module reservations of the plugin, and has no force option. reinstall returns an uninstalled installation, with its UUID, to installed. An activation that would serve a UI route prefix another installation serves, also when it completes an upgrade, is refused with 409 plugin_registration_conflict and changes nothing. After an activation Core registers the capability declarations of the served package in IAM for every enabled organization. A step whose target state already holds changes nothing. Every Control Plane replica serves the change within its refresh interval, without a restart.'
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -202,11 +202,36 @@ paths:
         '403': {$ref: '#/components/responses/403Forbidden'}
         '404': {$ref: '#/components/responses/404NotFound'}
         '409': {$ref: '#/components/responses/409Conflict'}
+  /plugin-installations/{installationId}/organization-mode:
+    put:
+      operationId: setPluginOrganizationMode
+      summary: Choose whether an installation serves selected organizations or all of them.
+      description: 'Requires plugin_manager_write. With mode selected the operator enables each organization. With mode all Core enables, in this command, every active organization that has no enablement of the plugin, and later every new organization inside that organization''s creation transaction, each enabled with default_timezone and default_approval_policies; afterwards Core registers the capability declarations of the served package in IAM for those organizations. Core never changes an existing enablement: a disabled enablement is the organization''s opt-out and stays disabled across mode switches and restarts, and removing an enablement is refused with 409 plugin_serves_all_organizations while the mode is all. Switching back to selected keeps every enablement as it is; organizations created afterwards are no longer enabled. The defaults apply only to enablements Core creates from then on. Mode all needs an active or disabled installation (409 plugin_installation_state otherwise); uninstall returns the installation to selected. When the installation-wide grant limits the enabled organizations (organization_limit), a switch that would enable more is refused as a whole with 409 plugin_organization_limit, and an organization created while the limit is reached is still created, without an enablement. Such an organization, and one created while the plugin host was off, is listed in pending_organizations; setting mode all again enables it. Setting the mode and defaults that already hold, with nothing pending, changes nothing.'
+      tags: [Plugin Manager]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/installationIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PluginOrganizationModePut'}
+      responses:
+        '200':
+          description: The installation as of the revision after the command.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PluginInstallation'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /plugin-installations/{installationId}/organizations/{orgId}:
     put:
       operationId: putPluginEnablement
       summary: Enable or disable an active installation for an organization.
-      description: Requires plugin_manager_write. In v1alpha an installation is enabled for exactly one organization. A disabled enablement keeps the plugin safety-only. Enabling a resource event subscriber starts the organization's resource event journal in the same transaction. Every Core effect re-verifies the enablement in its own transaction.
+      description: Requires plugin_manager_write. One installation serves every organization it is enabled for, each with its own state, timezone and deployment approval policies; changing one organization's enablement leaves the others as they are. The installation's identities belong to no organization, so enabling, changing and removing an enablement never ask IAM about them. Right after the command Core registers the capability declarations of the served package in IAM for the organization; the response shows that registration as of the command, a later read shows its result, and the enablement stands whatever IAM answers. A disabled enablement keeps the plugin safety-only in that organization and keeps its capabilities in IAM. When the installation-wide grant limits the enabled organizations, enabling one beyond the limit is refused with 409 plugin_organization_limit; disabled enablements do not count, and an organization with a grant of its own counts like every other. Enabling a resource event subscriber starts the organization's resource event journal in the same transaction. Every Core effect re-verifies the enablement in its own transaction.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -231,7 +256,7 @@ paths:
     delete:
       operationId: removePluginEnablement
       summary: Remove an installation's enablement for an organization.
-      description: Requires plugin_manager_write. The organization's resource event journal pauses in the same transaction when no subscriber remains; cursors issued before a later resume expire with plugin_resource_cursor_expired. Removing an absent enablement changes nothing.
+      description: Requires plugin_manager_write. The organization's resource event journal pauses in the same transaction when no subscriber remains; cursors issued before a later resume expire with plugin_resource_cursor_expired. Removing an absent enablement changes nothing. While the installation serves all organizations, removing an enablement is refused with 409 plugin_serves_all_organizations; disable it to opt the organization out.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -257,7 +282,7 @@ paths:
     post:
       operationId: importPluginEntitlementBundle
       summary: Import signed entitlement grants and revocations.
-      description: Requires plugin_manager_write. Each document must verify against the configured issuer trust; a grant must match exactly the installation UUID, plugin and organization of an enabled installation. A rejected document is reported and never blocks the others. Imports take effect without a restart.
+      description: Requires plugin_manager_write. Each document must verify against the configured issuer trust. An organization grant must match exactly the installation UUID, plugin and organization of an enablement; an installation-wide grant (no organization) must match the installation UUID and plugin of an installed, active or disabled installation, also before any organization is enabled, and covers every organization without a grant of its own, including organizations created later. A higher sequence replaces the current grant of the same binding (plugin, installation and organization, or plugin and installation). A rejected document is reported and never blocks the others. Imports take effect without a restart.
       tags: [Plugin Manager]
       security: [{userIdHeader: []}]
       parameters:
@@ -324,7 +349,7 @@ paths:
     post:
       operationId: authorizeDeploymentAdmission
       summary: Protect one ordinary Data Plane admission against concurrent Pin changes.
-      description: Restricted to the operator-bound authenticated Data Plane service. Rechecks the original actor's deployment permission and exact immutable scope. Persists a guard before DP commits a Deployment. No plugin capability grants access. A settled identity can never authorize another Deployment.
+      description: Restricted to the operator-bound authenticated Data Plane service, an IAM platform principal with a static token that Core looks up in IAM on every call; another identity is refused with 403 deployment_admission_service_forbidden, and 503 authorization_unavailable means IAM could not answer. Rechecks the original actor's deployment permission and exact immutable scope. Persists a guard before DP commits a Deployment. No plugin capability grants access. A settled identity can never authorize another Deployment.
       tags: [Deployment admissions]
       security: [{userIdHeader: []}]
       parameters:
@@ -3521,7 +3546,7 @@ components:
         manifest_sha256: {type: string, pattern: '^[0-9a-f]{64}$', description: SHA-256 of the package manifest the plugin runtime verifies.}
         manifest:
           type: object
-          description: The registration manifest of the package (identity, migration generation, operations, UI contribution, service grants, authorization policies, entitlement declaration). Unknown fields are rejected. migration_generation is the plugin-owned schema generation the package runs on, 0 or absent while the plugin owns no schema.
+          description: The registration manifest of the package (identity, migration generation, capabilities, operations, UI contribution, service grants, authorization policies, entitlement declaration). Unknown fields are rejected. migration_generation is the plugin-owned schema generation the package runs on, 0 or absent while the plugin owns no schema. Each capability is declared once and in the plugin's own namespace, as an object with id (plugin.<plugin ID>.<name> with a one-segment name of lowercase letters, digits and inner hyphens, at most 255 characters in all), display_name, description, category, level (read, write or manage) and scopes (organization, project, environment); each operation is declared once and none in Core's host namespace (core., iam.); the UI route_prefix is a slash followed by lowercase segments without a trailing slash, its only spelling.
           x-go-type: json.RawMessage
     PluginPackage:
       type: object
@@ -3569,8 +3594,8 @@ components:
       properties:
         expected_revision: {type: integer, format: int64, minimum: 0}
         reason: {type: string, minLength: 1, maxLength: 1000}
-        service_user_id: {type: string, format: uuid}
-        admission_checker_id: {type: string, format: uuid}
+        service_user_id: {type: string, format: uuid, description: The platform principal IAM binds to the plugin workload of this installation.}
+        admission_checker_id: {type: string, format: uuid, description: 'The Data Plane admission checker, a platform principal with a static token.'}
     PluginEnablementPut:
       type: object
       additionalProperties: false
@@ -3585,11 +3610,38 @@ components:
         timezone: {type: string, description: IANA timezone of the organization for calendar policies. Omitted means UTC.}
         approval_policies:
           type: object
-          description: Deployment approval scope (environment or project) to an authorization policy the package owns.
+          description: Deployment approval scope (environment or project) to an authorization policy the package owns. They apply to approvals in this organization only.
+          additionalProperties: {type: string}
+    PluginOrganizationModePut:
+      type: object
+      additionalProperties: false
+      required: [expected_revision, reason, mode]
+      properties:
+        expected_revision: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 1000}
+        mode: {$ref: '#/components/schemas/PluginOrganizationMode'}
+        default_timezone: {type: string, description: IANA timezone of every enablement Core creates. Omitted means UTC.}
+        default_approval_policies:
+          type: object
+          description: Deployment approval scope (environment or project) to an authorization policy the package owns, for every enablement Core creates. Omitted means none.
+          additionalProperties: {type: string}
+    PluginOrganizationMode:
+      type: string
+      description: selected while the operator enables each organization; all while Core enables every organization, existing and created later, except those whose enablement is disabled.
+      enum: [selected, all]
+      x-enum-varnames: [PluginOrganizationModeSelected, PluginOrganizationModeAll]
+    PluginOrganizationDefaults:
+      type: object
+      description: The timezone and approval policies of every enablement Core creates on its own. Changing them changes no existing enablement.
+      required: [timezone, approval_policies]
+      properties:
+        timezone: {type: string}
+        approval_policies:
+          type: object
           additionalProperties: {type: string}
     PluginInstallation:
       type: object
-      required: [installation_id, plugin_id, package_sha256, state, availability, backend_url, organizations, created_at, created_by, updated_at, updated_by]
+      required: [installation_id, plugin_id, package_sha256, state, availability, backend_url, organization_mode, organization_defaults, organizations, created_at, created_by, updated_at, updated_by]
       properties:
         revision: {type: integer, format: int64, description: The Plugin Manager revision this response reflects.}
         installation_id: {type: string, format: uuid}
@@ -3609,9 +3661,17 @@ components:
         ui_origin: {type: string}
         service_user_id: {type: string, format: uuid}
         admission_checker_id: {type: string, format: uuid}
+        organization_mode: {$ref: '#/components/schemas/PluginOrganizationMode'}
+        organization_defaults: {$ref: '#/components/schemas/PluginOrganizationDefaults'}
         organizations:
           type: array
+          description: Every organization the installation is enabled for, ordered by organization ID.
           items: {$ref: '#/components/schemas/PluginEnablement'}
+        entitlement: {$ref: '#/components/schemas/PluginInstallationEntitlement'}
+        pending_organizations:
+          type: array
+          description: Only in organization mode all, absent when empty. The active organizations without an enablement, ordered by ID, which Core could not enable when they were created because the plugin host was off or the installation-wide grant's organization limit was reached. Setting mode all again enables them.
+          items: {type: string}
         created_at: {type: string, format: date-time}
         created_by: {type: string, format: uuid}
         updated_at: {type: string, format: date-time}
@@ -3640,9 +3700,22 @@ components:
         installation_id: {type: string, format: uuid, description: The installation UUID the plugin reported.}
         package_sha256: {type: string, description: The package digest the plugin reported.}
         migration_generation: {type: integer, format: int64, minimum: 0, description: The migration generation applied in the plugin database.}
+    PluginCapabilityRegistration:
+      type: object
+      description: Whether IAM holds the capability declarations of the served package for the organization. Core registers them right after the organization is enabled and after every activation, and at start-up and every minute compares every enabled organization's catalogue in IAM with the served package and replaces only what drifted. Disabling or removing an enablement keeps the catalogue in IAM.
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [registered, pending, failed]
+          x-enum-varnames: [PluginCapabilityRegistrationStateRegistered, PluginCapabilityRegistrationStatePending, PluginCapabilityRegistrationStateFailed]
+          description: registered once Core registered or confirmed the served package's declarations; pending until Core reconciled the served package for the organization, for example right after an upgrade switched it; failed when Core's last attempt for the served package failed, which Core retries.
+        package_sha256: {type: string, description: The package Core last reconciled for the organization.}
+        reconciled_at: {type: string, format: date-time, description: When Core last reconciled the organization.}
+        detail: {type: string, description: Why the last attempt failed.}
     PluginEnablement:
       type: object
-      required: [org_id, state, timezone, approval_policies, created_at, created_by, updated_at, updated_by]
+      required: [org_id, state, timezone, approval_policies, created_at, created_by, updated_at, updated_by, capability_registration]
       properties:
         org_id: {type: string}
         state:
@@ -3657,6 +3730,43 @@ components:
         created_by: {type: string, format: uuid}
         updated_at: {type: string, format: date-time}
         updated_by: {type: string, format: uuid}
+        capability_registration: {$ref: '#/components/schemas/PluginCapabilityRegistration'}
+        entitlement_grant:
+          description: Only when the served package requires a licence. The grant that covers the organization, its own organization grant or else the installation-wide grant; absent while none does, and the organization is then not entitled.
+          allOf:
+            - {$ref: '#/components/schemas/PluginEntitlementGrant'}
+    PluginInstallationEntitlement:
+      type: object
+      description: Only when the served package requires a licence. Each enablement shows the grant that covers its organization.
+      required: [enabled_organizations]
+      properties:
+        installation_grant: {$ref: '#/components/schemas/PluginEntitlementGrant'}
+        enabled_organizations: {type: integer, minimum: 0, description: "The enabled enablements of the installation, which the installation-wide grant's organization_limit caps."}
+    PluginEntitlementGrant:
+      type: object
+      description: An imported grant as an operator sees it. Core decides with the grant that covers an organization; plugins see only the non-secret feature projection.
+      required: [scope, issuer, issuance_id, sequence, features, trust_class, not_before, expires_at, grace_until, state]
+      properties:
+        scope: {$ref: '#/components/schemas/PluginGrantScope'}
+        issuer: {type: string}
+        issuance_id: {type: string, format: uuid}
+        sequence: {type: integer, format: int64, minimum: 1}
+        features:
+          type: array
+          items: {type: string}
+        organization_limit: {type: integer, format: int64, minimum: 1, description: Only on an installation-wide grant that carries one. The number of organizations the installation may enable.}
+        trust_class:
+          type: string
+          enum: [production, development]
+          x-enum-varnames: [PluginEntitlementGrantTrustClassProduction, PluginEntitlementGrantTrustClassDevelopment]
+        not_before: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        grace_until: {type: string, format: date-time}
+        state:
+          type: string
+          enum: [valid, grace, expired, not_yet_valid, revoked, untrusted]
+          x-enum-varnames: [PluginEntitlementGrantStateValid, PluginEntitlementGrantStateGrace, PluginEntitlementGrantStateExpired, PluginEntitlementGrantStateNotYetValid, PluginEntitlementGrantStateRevoked, PluginEntitlementGrantStateUntrusted]
+          description: The grant's state under the current issuer trust, never earlier than the time Core's decisions observed.
     PluginInstallationPage:
       type: object
       required: [revision, items]
@@ -4261,11 +4371,17 @@ components:
       description: Non-secret server-derived licence projection. Neither this projection nor a capability grants IAM permissions or authorizes execution.
       required: [features]
       properties:
+        grant_scope: {$ref: '#/components/schemas/PluginGrantScope'}
         features:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/PluginFeatureAccess'
         warning: {$ref: '#/components/schemas/PluginEntitlementWarning'}
+    PluginGrantScope:
+      type: string
+      description: 'The grant that covers the organization: organization when the organization has a grant of its own, which then decides alone (feature set, validity and revocation), installation when the installation-wide grant covers it. Absent while no grant covers the organization, which is then not entitled.'
+      enum: [organization, installation]
+      x-enum-varnames: [PluginGrantScopeOrganization, PluginGrantScopeInstallation]
     PluginEntitlementWarning:
       type: object
       description: Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.

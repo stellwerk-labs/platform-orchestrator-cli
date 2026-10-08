@@ -221,6 +221,49 @@ paths:
               schema:
                 type: string
 
+  /auth/plugin-workload-token:
+    post:
+      tags:
+        - PluginWorkload
+      operationId: exchangePluginWorkloadToken
+      summary: Exchange a Kubernetes ServiceAccount token for a plugin workload token (v1alpha).
+      description: >-
+        RFC 8693 token exchange for plugin workloads, contract level v1alpha. The subject token must be a projected
+        Kubernetes ServiceAccount token from the configured cluster issuer whose only audience is the exchange audience
+        of the workload binding for that ServiceAccount, and the bound service user must be active and hold no role.
+        The issued opaque token authenticates as the bound service user for at most 15 minutes and never longer than
+        the subject token. Revoking the binding, disabling the service user or a role on it rejects the next
+        authentication. This operation needs no prior authentication; every rejected subject token yields the same
+        invalid_grant error.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PluginWorkloadTokenExchangeRequest"
+      responses:
+        "200":
+          description: Plugin workload token issued.
+          headers:
+            Cache-Control:
+              description: Always no-store.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginWorkloadTokenExchangeResponse"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "503":
+          description: The verification keys of the configured issuer are temporarily unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /auth/check-permissions:
     post:
       tags:
@@ -553,6 +596,11 @@ paths:
         - internal
       operationId: internalAuthorize
       summary: Perform a policy enforcement check on the requested user, subjects, and permissions
+      description: >-
+        A check on the resource platform asks whether the user holds a platform-level permission such as
+        plugin_manager_read or plugin_manager_write. Only principals configured for that permission hold it; they must
+        be active and are never plugin workloads, organization roles never grant it, and the internal system identity
+        never holds it through this check.
       requestBody:
         content:
           application/json:
@@ -565,6 +613,39 @@ paths:
           $ref: "#/components/responses/400BadRequest"
         "403":
           $ref: "#/components/responses/403Forbidden"
+
+  /internal/plugin-workload-bindings:
+    get:
+      tags:
+        - internal
+      operationId: internalListPluginWorkloadBindings
+      summary: List the workload bindings of one plugin installation (v1alpha).
+      description: >-
+        Lets Core verify that a workload binding exists for exactly the plugin ID, installation UUID and service user
+        it records for an installation, and that this service user is a platform principal (service_user_scope).
+      parameters:
+        - name: plugin_id
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 200
+            pattern: ^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])$
+        - name: installation_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The bindings of the installation, oldest first; empty when it has none.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginWorkloadBindingList"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
 
   /current-user:
     get:
@@ -651,6 +732,7 @@ paths:
         - internal
       operationId: replaceServiceUserRoles
       summary: Replace all roles for a service user in an organization
+      description: A service user bound to a plugin workload holds no role; assigning any returns 409.
       security:
         - userIdHeader: []
       parameters:
@@ -700,6 +782,8 @@ paths:
                 $ref: "#/components/schemas/ServiceUserWithToken"
         "404":
           $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
   /orgs/{orgId}/invitations:
     post:
@@ -906,6 +990,262 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PermissionDefinitionPage"
+
+  /orgs/{orgId}/plugins/{pluginId}/capabilities:
+    put:
+      tags:
+        - Role
+      operationId: replacePluginCapabilities
+      summary: Replace an installed plugin's human-role capabilities.
+      description: Replaces the complete organization-scoped capability catalog for an operator-installed plugin. Capability identifiers are always derived as plugin.{pluginId}.{localSlug}, where localSlug is a flat lowercase letter, digit and hyphen slug; callers cannot register Core permissions or service-operation grants.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: pluginId
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 200
+            pattern: ^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PluginCapabilityRegistrationBody"
+      responses:
+        "204":
+          description: Plugin capabilities replaced.
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+  /plugin-workload-bindings:
+    get:
+      tags:
+        - PluginWorkload
+      operationId: listPluginWorkloadBindings
+      summary: List plugin workload bindings (v1alpha).
+      description: Requires the platform-level permission plugin_workload_binding_write.
+      security:
+        - userIdHeader: []
+      responses:
+        "200":
+          description: All plugin workload bindings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginWorkloadBindingList"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+    post:
+      tags:
+        - PluginWorkload
+      operationId: createPluginWorkloadBinding
+      summary: Bind a Kubernetes ServiceAccount to a plugin platform principal (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write, which organization roles cannot grant.
+        The binding names a platform principal: a service user that belongs to no organization, can hold no role and
+        has no static token. Either platform_principal creates a new one in the same transaction, or service_user_id
+        names an existing plugin workload principal without a binding, for example after a revocation, so the
+        principal and the identity Core records for the installation stay the same. An organization service user or
+        a static-token platform principal cannot be bound. A ServiceAccount and a principal each have at most one
+        binding. The issuer must be the configured workload token issuer.
+      security:
+        - userIdHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PluginWorkloadBindingCreateBody"
+      responses:
+        "201":
+          description: Plugin workload binding created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginWorkloadBinding"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
+  /plugin-workload-bindings/{bindingId}:
+    get:
+      tags:
+        - PluginWorkload
+      operationId: getPluginWorkloadBinding
+      summary: Get a plugin workload binding (v1alpha).
+      description: Requires the platform-level permission plugin_workload_binding_write.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/pluginWorkloadBindingIdPathParam"
+      responses:
+        "200":
+          description: The plugin workload binding.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginWorkloadBinding"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      tags:
+        - PluginWorkload
+      operationId: deletePluginWorkloadBinding
+      summary: Revoke a plugin workload binding (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write. Deletes the binding and every token issued
+        for it; the next authentication with such a token fails. The bound principal stays: a platform principal then
+        has no credential at all, and a new binding can name it again.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/pluginWorkloadBindingIdPathParam"
+      responses:
+        "204":
+          description: Plugin workload binding revoked.
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /platform-principals:
+    get:
+      tags:
+        - PlatformPrincipal
+      operationId: listPlatformPrincipals
+      summary: List platform principals (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write. Platform principals belong to no
+        organization, hold no role and never appear in an organization's service users.
+      security:
+        - userIdHeader: []
+      responses:
+        "200":
+          description: All platform principals, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformPrincipalList"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+    post:
+      tags:
+        - PlatformPrincipal
+      operationId: createPlatformPrincipal
+      summary: Create a static-token platform principal, such as the Data Plane admission checker (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write, held by a user or IAM's internal system
+        identity; a service user cannot issue static platform tokens. The principal belongs to no organization, can
+        hold no role and cannot be bound to a plugin workload. The token is returned only once.
+      security:
+        - userIdHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformPrincipalCreateBody"
+      responses:
+        "201":
+          description: Platform principal created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformPrincipalWithToken"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+  /platform-principals/{principalId}:
+    get:
+      tags:
+        - PlatformPrincipal
+      operationId: getPlatformPrincipal
+      summary: Get a platform principal (v1alpha).
+      description: Requires the platform-level permission plugin_workload_binding_write.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/platformPrincipalIdPathParam"
+      responses:
+        "200":
+          description: The platform principal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformPrincipal"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      tags:
+        - PlatformPrincipal
+      operationId: deletePlatformPrincipal
+      summary: Delete a platform principal (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write. Deletes the principal together with its
+        workload binding and every token issued for it. Due to internal caching, a static token may keep
+        authenticating for up to a minute.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/platformPrincipalIdPathParam"
+      responses:
+        "204":
+          description: Platform principal deleted.
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /platform-principals/{principalId}/actions/regenerate:
+    post:
+      tags:
+        - PlatformPrincipal
+      operationId: regeneratePlatformPrincipal
+      summary: Replace the static token of a platform principal (v1alpha).
+      description: >-
+        Requires the platform-level permission plugin_workload_binding_write, held by a user or IAM's internal system
+        identity. The previous token stops authenticating; due to internal caching this may take up to a minute. A
+        plugin workload principal has no static token and returns 409.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/platformPrincipalIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUserRegenerateBody"
+      responses:
+        "200":
+          description: Static token replaced.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformPrincipalWithToken"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
   /orgs/{orgId}/roles:
     get:
@@ -1258,6 +1598,24 @@ components:
       name: userId
       in: path
       description: The User ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    pluginWorkloadBindingIdPathParam:
+      name: bindingId
+      in: path
+      description: The plugin workload binding ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    platformPrincipalIdPathParam:
+      name: principalId
+      in: path
+      description: The platform principal ID
       example: 01234567-89ab-cdef-0123-456789abcdef
       required: true
       schema:
@@ -1729,15 +2087,16 @@ components:
         - permission
       properties:
         resource:
-          description: The resource to check permissions on.
+          description: The resource to check permissions on; platform for a platform-level permission.
           type: string
-          pattern: ^(organization|project|env):[a-zA-Z0-9/_|\-=+]+$
-          x-pattern-error: 'resource must be organization:<id>, project:<id>, or env:<id> where id matches regex pattern: ^[a-zA-Z0-9/_|\-=+]+$'
+          pattern: ^(platform|(organization|project|env):[a-zA-Z0-9/_|\-=+]+)$
+          x-pattern-error: 'resource must be platform, organization:<id>, project:<id>, or env:<id> where id matches regex pattern: ^[a-zA-Z0-9/_|\-=+]+$'
         permission:
-          description: The permission string.
+          description: The complete permission ID, including the namespace for a registered plugin capability. Accepting an ID does not grant it; current scope and registration are checked by the authorizer.
           type: string
-          pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
-          x-pattern-error: "permission must match regex pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$"
+          maxLength: 255
+          pattern: ^[a-z][a-z0-9_.-]{1,253}[a-z0-9]$
+          x-pattern-error: "permission must be a lowercase permission ID of 3 to 255 characters"
 
     ResourcePermissionCheckResult:
       type: object
@@ -2162,7 +2521,8 @@ components:
           uniqueItems: true
           items:
             type: string
-            pattern: ^[a-z][a-z0-9_]{1,62}[a-z0-9]$
+            maxLength: 255
+            pattern: ^[a-z][a-z0-9_.-]{1,253}[a-z0-9]$
 
     ScimGroupMappingPage:
       description: The SCIM group-to-role mappings configured for an organization.
@@ -2257,6 +2617,349 @@ components:
               - organization
               - project
               - environment
+
+    PluginCapabilityRegistrationBody:
+      description: The complete human-role capability catalog for one installed plugin. An empty array unregisters every capability for the plugin.
+      required:
+        - capabilities
+      properties:
+        capabilities:
+          type: array
+          maxItems: 128
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/PluginCapabilityRegistration"
+
+    PluginCapabilityRegistration:
+      description: A plugin-owned permission definition. The name is a flat slug local to the plugin namespace; dots are forbidden so the full identifier has one unambiguous plugin/local boundary.
+      required:
+        - name
+        - display_name
+        - description
+        - category
+        - level
+        - scopes
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          pattern: ^[a-z](?:[a-z0-9-]*[a-z0-9])?$
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        level:
+          type: string
+          enum:
+            - read
+            - write
+            - manage
+          x-enum-varnames:
+            - PluginCapabilityRegistrationLevelRead
+            - PluginCapabilityRegistrationLevelWrite
+            - PluginCapabilityRegistrationLevelManage
+        scopes:
+          type: array
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - organization
+              - project
+              - environment
+            x-enum-varnames:
+              - PluginCapabilityRegistrationScopesOrganization
+              - PluginCapabilityRegistrationScopesProject
+              - PluginCapabilityRegistrationScopesEnvironment
+
+    PluginWorkloadTokenExchangeRequest:
+      description: An RFC 8693 token exchange request. Only a Kubernetes ServiceAccount JWT is accepted as subject token.
+      type: object
+      additionalProperties: false
+      required:
+        - grant_type
+        - subject_token
+        - subject_token_type
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - urn:ietf:params:oauth:grant-type:token-exchange
+          x-enum-varnames:
+            - PluginWorkloadTokenExchangeGrantType
+        subject_token:
+          description: The projected ServiceAccount token of the plugin workload.
+          type: string
+          minLength: 1
+          maxLength: 16384
+        subject_token_type:
+          type: string
+          enum:
+            - urn:ietf:params:oauth:token-type:jwt
+          x-enum-varnames:
+            - PluginWorkloadSubjectTokenTypeJWT
+
+    PluginWorkloadTokenExchangeResponse:
+      description: An RFC 8693 token exchange response carrying an opaque plugin workload token.
+      type: object
+      required:
+        - access_token
+        - issued_token_type
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          description: The opaque plugin workload token. Present it as a Bearer token.
+          type: string
+        issued_token_type:
+          type: string
+          enum:
+            - urn:ietf:params:oauth:token-type:access_token
+          x-enum-varnames:
+            - PluginWorkloadIssuedTokenTypeAccessToken
+        token_type:
+          type: string
+          enum:
+            - Bearer
+          x-enum-varnames:
+            - PluginWorkloadTokenTypeBearer
+        expires_in:
+          description: Lifetime of the issued token in seconds.
+          type: integer
+          minimum: 1
+          maximum: 900
+
+    PluginWorkloadBindingCreateBody:
+      description: >-
+        Binds one Kubernetes ServiceAccount of one cluster issuer to the platform principal of a plugin installation.
+        Exactly one of platform_principal and service_user_id is required.
+      type: object
+      additionalProperties: false
+      required:
+        - issuer
+        - namespace
+        - service_account
+        - audience
+        - plugin_id
+        - installation_id
+      properties:
+        issuer:
+          description: The cluster's ServiceAccount token issuer. Must equal the issuer configured in IAM.
+          type: string
+          minLength: 1
+          maxLength: 512
+        namespace:
+          type: string
+          maxLength: 63
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+        service_account:
+          type: string
+          maxLength: 253
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+        audience:
+          description: The exact and only audience the projected ServiceAccount token must carry.
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: ^[!-~]+$
+        platform_principal:
+          $ref: "#/components/schemas/PluginWorkloadPrincipalCreateBody"
+        service_user_id:
+          description: >-
+            An existing plugin workload principal without a binding, for example one whose binding was revoked. The
+            plugin installation record names this principal.
+          type: string
+          format: uuid
+        plugin_id:
+          type: string
+          maxLength: 200
+          pattern: ^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])$
+        installation_id:
+          type: string
+          format: uuid
+
+    PluginWorkloadPrincipalCreateBody:
+      description: >-
+        Creates the platform principal of the plugin workload together with the binding. It belongs to no
+        organization, can hold no role and has no static token.
+      type: object
+      additionalProperties: false
+      required:
+        - display_name
+      properties:
+        display_name:
+          description: A display name of the platform principal
+          minLength: 2
+          maxLength: 200
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: progressive-rollouts
+
+    PluginWorkloadBinding:
+      description: A Kubernetes ServiceAccount bound to the service user of a plugin installation.
+      type: object
+      required:
+        - id
+        - issuer
+        - namespace
+        - service_account
+        - audience
+        - service_user_id
+        - service_user_scope
+        - plugin_id
+        - installation_id
+        - created_at
+        - created_by
+      properties:
+        id:
+          type: string
+          format: uuid
+        issuer:
+          type: string
+        namespace:
+          type: string
+        service_account:
+          type: string
+        audience:
+          type: string
+        service_user_id:
+          type: string
+          format: uuid
+        service_user_scope:
+          description: >-
+            platform for a platform principal, which belongs to no organization and holds no role; organization for a
+            service user of one organization, bound before platform principals existed.
+          type: string
+          enum:
+            - organization
+            - platform
+          x-enum-varnames:
+            - ServiceUserScopeOrganization
+            - ServiceUserScopePlatform
+        plugin_id:
+          type: string
+        installation_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+
+    PluginWorkloadBindingList:
+      description: All plugin workload bindings, oldest first.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PluginWorkloadBinding"
+
+    PlatformPrincipalCreateBody:
+      description: Creates a platform principal that authenticates with a static token.
+      type: object
+      additionalProperties: false
+      required:
+        - display_name
+        - expiry_in_days
+      properties:
+        display_name:
+          description: A display name of the platform principal
+          minLength: 2
+          maxLength: 200
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
+          type: string
+          example: Data Plane admission checker
+        expiry_in_days:
+          description: The expiry time of the token in days from the time of creation
+          type: integer
+          minimum: 1
+          maximum: 3660
+          example: 365
+
+    PlatformPrincipal:
+      description: >-
+        A service user that belongs to no organization and holds no role. A static_token principal, such as the Data
+        Plane admission checker, authenticates with a token from this API. A workload principal has no static token;
+        it authenticates only with tokens exchanged through its plugin workload binding.
+      type: object
+      required:
+        - id
+        - display_name
+        - credential
+        - generated_at
+        - generated_by
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        credential:
+          $ref: "#/components/schemas/PlatformPrincipalCredential"
+        generated_at:
+          description: The time the principal was created or its static token last regenerated
+          type: string
+          format: date-time
+        generated_by:
+          description: The principal that created it or last regenerated its static token
+          type: string
+          format: uuid
+        current_token_expires_at:
+          description: The expiry of the static token; absent for a workload principal.
+          type: string
+          format: date-time
+        workload_binding_id:
+          description: The plugin workload binding of a bound workload principal.
+          type: string
+          format: uuid
+
+    PlatformPrincipalCredential:
+      description: How a platform principal authenticates.
+      type: string
+      enum:
+        - static_token
+        - workload
+      x-enum-varnames:
+        - PlatformPrincipalCredentialStaticToken
+        - PlatformPrincipalCredentialWorkload
+
+    PlatformPrincipalWithToken:
+      allOf:
+        - $ref: "#/components/schemas/PlatformPrincipal"
+        - required:
+            - token
+          properties:
+            token:
+              description: The static bearer token. It is returned only here.
+              type: string
+
+    PlatformPrincipalList:
+      description: All platform principals, oldest first.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformPrincipal"
 
     ServiceUserRole:
       description: A role to assign to a user or service user.

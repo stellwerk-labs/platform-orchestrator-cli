@@ -181,6 +181,13 @@ const (
 	PluginAvailabilityStateUnavailable  PluginAvailabilityState = "unavailable"
 )
 
+// Defines values for PluginCapabilityRegistrationState.
+const (
+	PluginCapabilityRegistrationStateFailed     PluginCapabilityRegistrationState = "failed"
+	PluginCapabilityRegistrationStatePending    PluginCapabilityRegistrationState = "pending"
+	PluginCapabilityRegistrationStateRegistered PluginCapabilityRegistrationState = "registered"
+)
+
 // Defines values for PluginContractLevel.
 const (
 	PluginContractLevelV1alpha PluginContractLevel = "v1alpha"
@@ -255,9 +262,31 @@ const (
 	PluginEnablementPutStateEnabled  PluginEnablementPutState = "enabled"
 )
 
+// Defines values for PluginEntitlementGrantState.
+const (
+	PluginEntitlementGrantStateExpired     PluginEntitlementGrantState = "expired"
+	PluginEntitlementGrantStateGrace       PluginEntitlementGrantState = "grace"
+	PluginEntitlementGrantStateNotYetValid PluginEntitlementGrantState = "not_yet_valid"
+	PluginEntitlementGrantStateRevoked     PluginEntitlementGrantState = "revoked"
+	PluginEntitlementGrantStateUntrusted   PluginEntitlementGrantState = "untrusted"
+	PluginEntitlementGrantStateValid       PluginEntitlementGrantState = "valid"
+)
+
+// Defines values for PluginEntitlementGrantTrustClass.
+const (
+	PluginEntitlementGrantTrustClassDevelopment PluginEntitlementGrantTrustClass = "development"
+	PluginEntitlementGrantTrustClassProduction  PluginEntitlementGrantTrustClass = "production"
+)
+
 // Defines values for PluginEntitlementWarningCode.
 const (
 	PluginEntitlementWarningCodeGrace PluginEntitlementWarningCode = "plugin_entitlement_grace"
+)
+
+// Defines values for PluginGrantScope.
+const (
+	PluginGrantScopeInstallation PluginGrantScope = "installation"
+	PluginGrantScopeOrganization PluginGrantScope = "organization"
 )
 
 // Defines values for PluginInstallationState.
@@ -306,6 +335,12 @@ const (
 	PluginOperationGrantStatePrepared  PluginOperationGrantState = "prepared"
 	PluginOperationGrantStateReleased  PluginOperationGrantState = "released"
 	PluginOperationGrantStateSuspended PluginOperationGrantState = "suspended"
+)
+
+// Defines values for PluginOrganizationMode.
+const (
+	PluginOrganizationModeAll      PluginOrganizationMode = "all"
+	PluginOrganizationModeSelected PluginOrganizationMode = "selected"
 )
 
 // Defines values for PluginPinOperationReceiptAction.
@@ -2128,6 +2163,24 @@ type PluginCapability struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// PluginCapabilityRegistration Whether IAM holds the capability declarations of the served package for the organization. Core registers them right after the organization is enabled and after every activation, and at start-up and every minute compares every enabled organization's catalogue in IAM with the served package and replaces only what drifted. Disabling or removing an enablement keeps the catalogue in IAM.
+type PluginCapabilityRegistration struct {
+	// Detail Why the last attempt failed.
+	Detail *string `json:"detail,omitempty"`
+
+	// PackageSha256 The package Core last reconciled for the organization.
+	PackageSha256 *string `json:"package_sha256,omitempty"`
+
+	// ReconciledAt When Core last reconciled the organization.
+	ReconciledAt *time.Time `json:"reconciled_at,omitempty"`
+
+	// State registered once Core registered or confirmed the served package's declarations; pending until Core reconciled the served package for the organization, for example right after an upgrade switched it; failed when Core's last attempt for the served package failed, which Core retries.
+	State PluginCapabilityRegistrationState `json:"state"`
+}
+
+// PluginCapabilityRegistrationState registered once Core registered or confirmed the served package's declarations; pending until Core reconciled the served package for the organization, for example right after an upgrade switched it; failed when Core's last attempt for the served package failed, which Core retries.
+type PluginCapabilityRegistrationState string
+
 // PluginContractLevel Level of the plugin contracts this Control Plane implements. v1alpha supports first-party Stellwerk plugins only and is not a stable partner contract.
 type PluginContractLevel string
 
@@ -2307,14 +2360,20 @@ type PluginDispatchCheckAction string
 
 // PluginEnablement defines model for PluginEnablement.
 type PluginEnablement struct {
-	ApprovalPolicies map[string]string     `json:"approval_policies"`
-	CreatedAt        time.Time             `json:"created_at"`
-	CreatedBy        openapi_types.UUID    `json:"created_by"`
-	OrgId            string                `json:"org_id"`
-	State            PluginEnablementState `json:"state"`
-	Timezone         string                `json:"timezone"`
-	UpdatedAt        time.Time             `json:"updated_at"`
-	UpdatedBy        openapi_types.UUID    `json:"updated_by"`
+	ApprovalPolicies map[string]string `json:"approval_policies"`
+
+	// CapabilityRegistration Whether IAM holds the capability declarations of the served package for the organization. Core registers them right after the organization is enabled and after every activation, and at start-up and every minute compares every enabled organization's catalogue in IAM with the served package and replaces only what drifted. Disabling or removing an enablement keeps the catalogue in IAM.
+	CapabilityRegistration PluginCapabilityRegistration `json:"capability_registration"`
+	CreatedAt              time.Time                    `json:"created_at"`
+	CreatedBy              openapi_types.UUID           `json:"created_by"`
+
+	// EntitlementGrant Only when the served package requires a licence. The grant that covers the organization, its own organization grant or else the installation-wide grant; absent while none does, and the organization is then not entitled.
+	EntitlementGrant *PluginEntitlementGrant `json:"entitlement_grant,omitempty"`
+	OrgId            string                  `json:"org_id"`
+	State            PluginEnablementState   `json:"state"`
+	Timezone         string                  `json:"timezone"`
+	UpdatedAt        time.Time               `json:"updated_at"`
+	UpdatedBy        openapi_types.UUID      `json:"updated_by"`
 }
 
 // PluginEnablementState defines model for PluginEnablement.State.
@@ -2322,7 +2381,7 @@ type PluginEnablementState string
 
 // PluginEnablementPut defines model for PluginEnablementPut.
 type PluginEnablementPut struct {
-	// ApprovalPolicies Deployment approval scope (environment or project) to an authorization policy the package owns.
+	// ApprovalPolicies Deployment approval scope (environment or project) to an authorization policy the package owns. They apply to approvals in this organization only.
 	ApprovalPolicies *map[string]string       `json:"approval_policies,omitempty"`
 	ExpectedRevision int64                    `json:"expected_revision"`
 	Reason           string                   `json:"reason"`
@@ -2354,9 +2413,39 @@ type PluginEntitlementBundleImportRequest struct {
 	Reason           string `json:"reason"`
 }
 
+// PluginEntitlementGrant An imported grant as an operator sees it. Core decides with the grant that covers an organization; plugins see only the non-secret feature projection.
+type PluginEntitlementGrant struct {
+	ExpiresAt  time.Time          `json:"expires_at"`
+	Features   []string           `json:"features"`
+	GraceUntil time.Time          `json:"grace_until"`
+	IssuanceId openapi_types.UUID `json:"issuance_id"`
+	Issuer     string             `json:"issuer"`
+	NotBefore  time.Time          `json:"not_before"`
+
+	// OrganizationLimit Only on an installation-wide grant that carries one. The number of organizations the installation may enable.
+	OrganizationLimit *int64 `json:"organization_limit,omitempty"`
+
+	// Scope The grant that covers the organization: organization when the organization has a grant of its own, which then decides alone (feature set, validity and revocation), installation when the installation-wide grant covers it. Absent while no grant covers the organization, which is then not entitled.
+	Scope    PluginGrantScope `json:"scope"`
+	Sequence int64            `json:"sequence"`
+
+	// State The grant's state under the current issuer trust, never earlier than the time Core's decisions observed.
+	State      PluginEntitlementGrantState      `json:"state"`
+	TrustClass PluginEntitlementGrantTrustClass `json:"trust_class"`
+}
+
+// PluginEntitlementGrantState The grant's state under the current issuer trust, never earlier than the time Core's decisions observed.
+type PluginEntitlementGrantState string
+
+// PluginEntitlementGrantTrustClass defines model for PluginEntitlementGrant.TrustClass.
+type PluginEntitlementGrantTrustClass string
+
 // PluginEntitlementStatus Non-secret server-derived licence projection. Neither this projection nor a capability grants IAM permissions or authorizes execution.
 type PluginEntitlementStatus struct {
 	Features map[string]PluginFeatureAccess `json:"features"`
+
+	// GrantScope The grant that covers the organization: organization when the organization has a grant of its own, which then decides alone (feature set, validity and revocation), installation when the installation-wide grant covers it. Absent while no grant covers the organization, which is then not entitled.
+	GrantScope *PluginGrantScope `json:"grant_scope,omitempty"`
 
 	// Warning Machine-readable licence warning that never changes authorization. While a declared feature is in its signed grace period, forward work still succeeds. After grace_until forward work is refused with plugin_not_entitled; read, export, cancel and rollback remain available.
 	Warning *PluginEntitlementWarning `json:"warning,omitempty"`
@@ -2394,6 +2483,9 @@ type PluginFeatureAccess struct {
 	TrustClass string `json:"trust_class"`
 }
 
+// PluginGrantScope The grant that covers the organization: organization when the organization has a grant of its own, which then decides alone (feature set, validity and revocation), installation when the installation-wide grant covers it. Absent while no grant covers the organization, which is then not entitled.
+type PluginGrantScope string
+
 // PluginInstallation defines model for PluginInstallation.
 type PluginInstallation struct {
 	AdmissionCheckerId *openapi_types.UUID     `json:"admission_checker_id,omitempty"`
@@ -2403,16 +2495,30 @@ type PluginInstallation struct {
 	CreatedBy          openapi_types.UUID      `json:"created_by"`
 
 	// Diagnostic Why the last status read from the running plugin does not prove the package Core is to serve (the pending upgrade's, if any). Absent while it does or before Core read it.
-	Diagnostic     *PluginInstallationDiagnostic `json:"diagnostic,omitempty"`
-	InstallationId openapi_types.UUID            `json:"installation_id"`
+	Diagnostic *PluginInstallationDiagnostic `json:"diagnostic,omitempty"`
+
+	// Entitlement Only when the served package requires a licence. Each enablement shows the grant that covers its organization.
+	Entitlement    *PluginInstallationEntitlement `json:"entitlement,omitempty"`
+	InstallationId openapi_types.UUID             `json:"installation_id"`
 
 	// Observation What Core last read from the running plugin's status endpoint, on activation. Either the report or a failure with its detail.
-	Observation   *PluginStatusObservation `json:"observation,omitempty"`
-	Organizations []PluginEnablement       `json:"organizations"`
+	Observation *PluginStatusObservation `json:"observation,omitempty"`
+
+	// OrganizationDefaults The timezone and approval policies of every enablement Core creates on its own. Changing them changes no existing enablement.
+	OrganizationDefaults PluginOrganizationDefaults `json:"organization_defaults"`
+
+	// OrganizationMode selected while the operator enables each organization; all while Core enables every organization, existing and created later, except those whose enablement is disabled.
+	OrganizationMode PluginOrganizationMode `json:"organization_mode"`
+
+	// Organizations Every organization the installation is enabled for, ordered by organization ID.
+	Organizations []PluginEnablement `json:"organizations"`
 
 	// PackageSha256 The package Core serves.
 	PackageSha256 string `json:"package_sha256"`
-	PluginId      string `json:"plugin_id"`
+
+	// PendingOrganizations Only in organization mode all, absent when empty. The active organizations without an enablement, ordered by ID, which Core could not enable when they were created because the plugin host was off or the installation-wide grant's organization limit was reached. Setting mode all again enables them.
+	PendingOrganizations *[]string `json:"pending_organizations,omitempty"`
+	PluginId             string    `json:"plugin_id"`
 
 	// Revision The Plugin Manager revision this response reflects.
 	Revision      *int64                  `json:"revision,omitempty"`
@@ -2450,12 +2556,24 @@ type PluginInstallationDiagnostic struct {
 // PluginInstallationDiagnosticCode defines model for PluginInstallationDiagnostic.Code.
 type PluginInstallationDiagnosticCode string
 
+// PluginInstallationEntitlement Only when the served package requires a licence. Each enablement shows the grant that covers its organization.
+type PluginInstallationEntitlement struct {
+	// EnabledOrganizations The enabled enablements of the installation, which the installation-wide grant's organization_limit caps.
+	EnabledOrganizations int `json:"enabled_organizations"`
+
+	// InstallationGrant An imported grant as an operator sees it. Core decides with the grant that covers an organization; plugins see only the non-secret feature projection.
+	InstallationGrant *PluginEntitlementGrant `json:"installation_grant,omitempty"`
+}
+
 // PluginInstallationIdentity defines model for PluginInstallationIdentity.
 type PluginInstallationIdentity struct {
+	// AdmissionCheckerId The Data Plane admission checker, a platform principal with a static token.
 	AdmissionCheckerId openapi_types.UUID `json:"admission_checker_id"`
 	ExpectedRevision   int64              `json:"expected_revision"`
 	Reason             string             `json:"reason"`
-	ServiceUserId      openapi_types.UUID `json:"service_user_id"`
+
+	// ServiceUserId The platform principal IAM binds to the plugin workload of this installation.
+	ServiceUserId openapi_types.UUID `json:"service_user_id"`
 }
 
 // PluginInstallationPage defines model for PluginInstallationPage.
@@ -2610,6 +2728,29 @@ type PluginOperationIntent struct {
 	TargetVersions map[string]openapi_types.UUID `json:"target_versions"`
 }
 
+// PluginOrganizationDefaults The timezone and approval policies of every enablement Core creates on its own. Changing them changes no existing enablement.
+type PluginOrganizationDefaults struct {
+	ApprovalPolicies map[string]string `json:"approval_policies"`
+	Timezone         string            `json:"timezone"`
+}
+
+// PluginOrganizationMode selected while the operator enables each organization; all while Core enables every organization, existing and created later, except those whose enablement is disabled.
+type PluginOrganizationMode string
+
+// PluginOrganizationModePut defines model for PluginOrganizationModePut.
+type PluginOrganizationModePut struct {
+	// DefaultApprovalPolicies Deployment approval scope (environment or project) to an authorization policy the package owns, for every enablement Core creates. Omitted means none.
+	DefaultApprovalPolicies *map[string]string `json:"default_approval_policies,omitempty"`
+
+	// DefaultTimezone IANA timezone of every enablement Core creates. Omitted means UTC.
+	DefaultTimezone  *string `json:"default_timezone,omitempty"`
+	ExpectedRevision int64   `json:"expected_revision"`
+
+	// Mode selected while the operator enables each organization; all while Core enables every organization, existing and created later, except those whose enablement is disabled.
+	Mode   PluginOrganizationMode `json:"mode"`
+	Reason string                 `json:"reason"`
+}
+
 // PluginPackage defines model for PluginPackage.
 type PluginPackage struct {
 	CreatedAt      time.Time          `json:"created_at"`
@@ -2633,7 +2774,7 @@ type PluginPackagePage struct {
 type PluginPackagePush struct {
 	ExpectedRevision int64 `json:"expected_revision"`
 
-	// Manifest The registration manifest of the package (identity, migration generation, operations, UI contribution, service grants, authorization policies, entitlement declaration). Unknown fields are rejected. migration_generation is the plugin-owned schema generation the package runs on, 0 or absent while the plugin owns no schema.
+	// Manifest The registration manifest of the package (identity, migration generation, capabilities, operations, UI contribution, service grants, authorization policies, entitlement declaration). Unknown fields are rejected. migration_generation is the plugin-owned schema generation the package runs on, 0 or absent while the plugin owns no schema. Each capability is declared once and in the plugin's own namespace, as an object with id (plugin.<plugin ID>.<name> with a one-segment name of lowercase letters, digits and inner hyphens, at most 255 characters in all), display_name, description, category, level (read, write or manage) and scopes (organization, project, environment); each operation is declared once and none in Core's host namespace (core., iam.); the UI route_prefix is a slash followed by lowercase segments without a trailing slash, its only spelling.
 	Manifest json.RawMessage `json:"manifest"`
 
 	// ManifestSha256 SHA-256 of the package manifest the plugin runtime verifies.
@@ -3712,6 +3853,12 @@ type SetPluginInstallationIdentityParams struct {
 	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
 }
 
+// SetPluginOrganizationModeParams defines parameters for SetPluginOrganizationMode.
+type SetPluginOrganizationModeParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // RemovePluginEnablementParams defines parameters for RemovePluginEnablement.
 type RemovePluginEnablementParams struct {
 	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
@@ -3918,6 +4065,9 @@ type TransitionPluginInstallationJSONRequestBody = PluginManagerCommand
 
 // SetPluginInstallationIdentityJSONRequestBody defines body for SetPluginInstallationIdentity for application/json ContentType.
 type SetPluginInstallationIdentityJSONRequestBody = PluginInstallationIdentity
+
+// SetPluginOrganizationModeJSONRequestBody defines body for SetPluginOrganizationMode for application/json ContentType.
+type SetPluginOrganizationModeJSONRequestBody = PluginOrganizationModePut
 
 // RemovePluginEnablementJSONRequestBody defines body for RemovePluginEnablement for application/json ContentType.
 type RemovePluginEnablementJSONRequestBody = PluginManagerCommand
@@ -5013,6 +5163,11 @@ type ClientInterface interface {
 	SetPluginInstallationIdentityWithBody(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginInstallationIdentityParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	SetPluginInstallationIdentity(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginInstallationIdentityParams, body SetPluginInstallationIdentityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetPluginOrganizationModeWithBody request with any body
+	SetPluginOrganizationModeWithBody(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SetPluginOrganizationMode(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, body SetPluginOrganizationModeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RemovePluginEnablementWithBody request with any body
 	RemovePluginEnablementWithBody(ctx context.Context, installationId InstallationIdPathParam, orgId OrgIdPathParam, params *RemovePluginEnablementParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7284,6 +7439,30 @@ func (c *Client) SetPluginInstallationIdentityWithBody(ctx context.Context, inst
 
 func (c *Client) SetPluginInstallationIdentity(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginInstallationIdentityParams, body SetPluginInstallationIdentityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetPluginInstallationIdentityRequest(c.Server, installationId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SetPluginOrganizationModeWithBody(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetPluginOrganizationModeRequestWithBody(c.Server, installationId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SetPluginOrganizationMode(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, body SetPluginOrganizationModeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetPluginOrganizationModeRequest(c.Server, installationId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -14858,6 +15037,66 @@ func NewSetPluginInstallationIdentityRequestWithBody(server string, installation
 	return req, nil
 }
 
+// NewSetPluginOrganizationModeRequest calls the generic SetPluginOrganizationMode builder with application/json body
+func NewSetPluginOrganizationModeRequest(server string, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, body SetPluginOrganizationModeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetPluginOrganizationModeRequestWithBody(server, installationId, params, "application/json", bodyReader)
+}
+
+// NewSetPluginOrganizationModeRequestWithBody generates requests for SetPluginOrganizationMode with any type of body
+func NewSetPluginOrganizationModeRequestWithBody(server string, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "installationId", runtime.ParamLocationPath, installationId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/plugin-installations/%s/organization-mode", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, params.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewRemovePluginEnablementRequest calls the generic RemovePluginEnablement builder with application/json body
 func NewRemovePluginEnablementRequest(server string, installationId InstallationIdPathParam, orgId OrgIdPathParam, params *RemovePluginEnablementParams, body RemovePluginEnablementJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -15677,6 +15916,11 @@ type ClientWithResponsesInterface interface {
 	SetPluginInstallationIdentityWithBodyWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginInstallationIdentityParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetPluginInstallationIdentityResponse, error)
 
 	SetPluginInstallationIdentityWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginInstallationIdentityParams, body SetPluginInstallationIdentityJSONRequestBody, reqEditors ...RequestEditorFn) (*SetPluginInstallationIdentityResponse, error)
+
+	// SetPluginOrganizationModeWithBodyWithResponse request with any body
+	SetPluginOrganizationModeWithBodyWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetPluginOrganizationModeResponse, error)
+
+	SetPluginOrganizationModeWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, body SetPluginOrganizationModeJSONRequestBody, reqEditors ...RequestEditorFn) (*SetPluginOrganizationModeResponse, error)
 
 	// RemovePluginEnablementWithBodyWithResponse request with any body
 	RemovePluginEnablementWithBodyWithResponse(ctx context.Context, installationId InstallationIdPathParam, orgId OrgIdPathParam, params *RemovePluginEnablementParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemovePluginEnablementResponse, error)
@@ -18812,6 +19056,32 @@ func (r SetPluginInstallationIdentityResponse) StatusCode() int {
 	return 0
 }
 
+type SetPluginOrganizationModeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginInstallation
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r SetPluginOrganizationModeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetPluginOrganizationModeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type RemovePluginEnablementResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -20569,6 +20839,23 @@ func (c *ClientWithResponses) SetPluginInstallationIdentityWithResponse(ctx cont
 		return nil, err
 	}
 	return ParseSetPluginInstallationIdentityResponse(rsp)
+}
+
+// SetPluginOrganizationModeWithBodyWithResponse request with arbitrary body returning *SetPluginOrganizationModeResponse
+func (c *ClientWithResponses) SetPluginOrganizationModeWithBodyWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetPluginOrganizationModeResponse, error) {
+	rsp, err := c.SetPluginOrganizationModeWithBody(ctx, installationId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetPluginOrganizationModeResponse(rsp)
+}
+
+func (c *ClientWithResponses) SetPluginOrganizationModeWithResponse(ctx context.Context, installationId InstallationIdPathParam, params *SetPluginOrganizationModeParams, body SetPluginOrganizationModeJSONRequestBody, reqEditors ...RequestEditorFn) (*SetPluginOrganizationModeResponse, error) {
+	rsp, err := c.SetPluginOrganizationMode(ctx, installationId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetPluginOrganizationModeResponse(rsp)
 }
 
 // RemovePluginEnablementWithBodyWithResponse request with arbitrary body returning *RemovePluginEnablementResponse
@@ -26093,6 +26380,60 @@ func ParseSetPluginInstallationIdentityResponse(rsp *http.Response) (*SetPluginI
 	}
 
 	response := &SetPluginInstallationIdentityResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginInstallation
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetPluginOrganizationModeResponse parses an HTTP response from a SetPluginOrganizationModeWithResponse call
+func ParseSetPluginOrganizationModeResponse(rsp *http.Response) (*SetPluginOrganizationModeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetPluginOrganizationModeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -36,6 +36,52 @@ const (
 	Project      PermissionDefinitionScopes = "project"
 )
 
+// Defines values for PlatformPrincipalCredential.
+const (
+	PlatformPrincipalCredentialStaticToken PlatformPrincipalCredential = "static_token"
+	PlatformPrincipalCredentialWorkload    PlatformPrincipalCredential = "workload"
+)
+
+// Defines values for PluginCapabilityRegistrationLevel.
+const (
+	PluginCapabilityRegistrationLevelManage PluginCapabilityRegistrationLevel = "manage"
+	PluginCapabilityRegistrationLevelRead   PluginCapabilityRegistrationLevel = "read"
+	PluginCapabilityRegistrationLevelWrite  PluginCapabilityRegistrationLevel = "write"
+)
+
+// Defines values for PluginCapabilityRegistrationScopes.
+const (
+	PluginCapabilityRegistrationScopesEnvironment  PluginCapabilityRegistrationScopes = "environment"
+	PluginCapabilityRegistrationScopesOrganization PluginCapabilityRegistrationScopes = "organization"
+	PluginCapabilityRegistrationScopesProject      PluginCapabilityRegistrationScopes = "project"
+)
+
+// Defines values for PluginWorkloadBindingServiceUserScope.
+const (
+	ServiceUserScopeOrganization PluginWorkloadBindingServiceUserScope = "organization"
+	ServiceUserScopePlatform     PluginWorkloadBindingServiceUserScope = "platform"
+)
+
+// Defines values for PluginWorkloadTokenExchangeRequestGrantType.
+const (
+	PluginWorkloadTokenExchangeGrantType PluginWorkloadTokenExchangeRequestGrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
+)
+
+// Defines values for PluginWorkloadTokenExchangeRequestSubjectTokenType.
+const (
+	PluginWorkloadSubjectTokenTypeJWT PluginWorkloadTokenExchangeRequestSubjectTokenType = "urn:ietf:params:oauth:token-type:jwt"
+)
+
+// Defines values for PluginWorkloadTokenExchangeResponseIssuedTokenType.
+const (
+	PluginWorkloadIssuedTokenTypeAccessToken PluginWorkloadTokenExchangeResponseIssuedTokenType = "urn:ietf:params:oauth:token-type:access_token"
+)
+
+// Defines values for PluginWorkloadTokenExchangeResponseTokenType.
+const (
+	PluginWorkloadTokenTypeBearer PluginWorkloadTokenExchangeResponseTokenType = "Bearer"
+)
+
 // Defines values for SubjectType.
 const (
 	SubjectTypeRole         SubjectType = "role"
@@ -356,6 +402,169 @@ type PermissionDefinitionPage struct {
 	Items []PermissionDefinition `json:"items"`
 }
 
+// PlatformPrincipal A service user that belongs to no organization and holds no role. A static_token principal, such as the Data Plane admission checker, authenticates with a token from this API. A workload principal has no static token; it authenticates only with tokens exchanged through its plugin workload binding.
+type PlatformPrincipal struct {
+	// Credential How a platform principal authenticates.
+	Credential PlatformPrincipalCredential `json:"credential"`
+
+	// CurrentTokenExpiresAt The expiry of the static token; absent for a workload principal.
+	CurrentTokenExpiresAt *time.Time `json:"current_token_expires_at,omitempty"`
+	DisplayName           string     `json:"display_name"`
+
+	// GeneratedAt The time the principal was created or its static token last regenerated
+	GeneratedAt time.Time `json:"generated_at"`
+
+	// GeneratedBy The principal that created it or last regenerated its static token
+	GeneratedBy openapi_types.UUID `json:"generated_by"`
+	Id          openapi_types.UUID `json:"id"`
+
+	// WorkloadBindingId The plugin workload binding of a bound workload principal.
+	WorkloadBindingId *openapi_types.UUID `json:"workload_binding_id,omitempty"`
+}
+
+// PlatformPrincipalCreateBody Creates a platform principal that authenticates with a static token.
+type PlatformPrincipalCreateBody struct {
+	// DisplayName A display name of the platform principal
+	DisplayName string `json:"display_name"`
+
+	// ExpiryInDays The expiry time of the token in days from the time of creation
+	ExpiryInDays int `json:"expiry_in_days"`
+}
+
+// PlatformPrincipalCredential How a platform principal authenticates.
+type PlatformPrincipalCredential string
+
+// PlatformPrincipalList All platform principals, oldest first.
+type PlatformPrincipalList struct {
+	Items []PlatformPrincipal `json:"items"`
+}
+
+// PlatformPrincipalWithToken defines model for PlatformPrincipalWithToken.
+type PlatformPrincipalWithToken struct {
+	// Credential How a platform principal authenticates.
+	Credential PlatformPrincipalCredential `json:"credential"`
+
+	// CurrentTokenExpiresAt The expiry of the static token; absent for a workload principal.
+	CurrentTokenExpiresAt *time.Time `json:"current_token_expires_at,omitempty"`
+	DisplayName           string     `json:"display_name"`
+
+	// GeneratedAt The time the principal was created or its static token last regenerated
+	GeneratedAt time.Time `json:"generated_at"`
+
+	// GeneratedBy The principal that created it or last regenerated its static token
+	GeneratedBy openapi_types.UUID `json:"generated_by"`
+	Id          openapi_types.UUID `json:"id"`
+
+	// Token The static bearer token. It is returned only here.
+	Token string `json:"token"`
+
+	// WorkloadBindingId The plugin workload binding of a bound workload principal.
+	WorkloadBindingId *openapi_types.UUID `json:"workload_binding_id,omitempty"`
+}
+
+// PluginCapabilityRegistration A plugin-owned permission definition. The name is a flat slug local to the plugin namespace; dots are forbidden so the full identifier has one unambiguous plugin/local boundary.
+type PluginCapabilityRegistration struct {
+	Category    string                               `json:"category"`
+	Description string                               `json:"description"`
+	DisplayName string                               `json:"display_name"`
+	Level       PluginCapabilityRegistrationLevel    `json:"level"`
+	Name        string                               `json:"name"`
+	Scopes      []PluginCapabilityRegistrationScopes `json:"scopes"`
+}
+
+// PluginCapabilityRegistrationLevel defines model for PluginCapabilityRegistration.Level.
+type PluginCapabilityRegistrationLevel string
+
+// PluginCapabilityRegistrationScopes defines model for PluginCapabilityRegistration.Scopes.
+type PluginCapabilityRegistrationScopes string
+
+// PluginCapabilityRegistrationBody The complete human-role capability catalog for one installed plugin. An empty array unregisters every capability for the plugin.
+type PluginCapabilityRegistrationBody struct {
+	Capabilities []PluginCapabilityRegistration `json:"capabilities"`
+}
+
+// PluginWorkloadBinding A Kubernetes ServiceAccount bound to the service user of a plugin installation.
+type PluginWorkloadBinding struct {
+	Audience       string             `json:"audience"`
+	CreatedAt      time.Time          `json:"created_at"`
+	CreatedBy      openapi_types.UUID `json:"created_by"`
+	Id             openapi_types.UUID `json:"id"`
+	InstallationId openapi_types.UUID `json:"installation_id"`
+	Issuer         string             `json:"issuer"`
+	Namespace      string             `json:"namespace"`
+	PluginId       string             `json:"plugin_id"`
+	ServiceAccount string             `json:"service_account"`
+	ServiceUserId  openapi_types.UUID `json:"service_user_id"`
+
+	// ServiceUserScope platform for a platform principal, which belongs to no organization and holds no role; organization for a service user of one organization, bound before platform principals existed.
+	ServiceUserScope PluginWorkloadBindingServiceUserScope `json:"service_user_scope"`
+}
+
+// PluginWorkloadBindingServiceUserScope platform for a platform principal, which belongs to no organization and holds no role; organization for a service user of one organization, bound before platform principals existed.
+type PluginWorkloadBindingServiceUserScope string
+
+// PluginWorkloadBindingCreateBody Binds one Kubernetes ServiceAccount of one cluster issuer to the platform principal of a plugin installation. Exactly one of platform_principal and service_user_id is required.
+type PluginWorkloadBindingCreateBody struct {
+	// Audience The exact and only audience the projected ServiceAccount token must carry.
+	Audience       string             `json:"audience"`
+	InstallationId openapi_types.UUID `json:"installation_id"`
+
+	// Issuer The cluster's ServiceAccount token issuer. Must equal the issuer configured in IAM.
+	Issuer    string `json:"issuer"`
+	Namespace string `json:"namespace"`
+
+	// PlatformPrincipal Creates the platform principal of the plugin workload together with the binding. It belongs to no organization, can hold no role and has no static token.
+	PlatformPrincipal *PluginWorkloadPrincipalCreateBody `json:"platform_principal,omitempty"`
+	PluginId          string                             `json:"plugin_id"`
+	ServiceAccount    string                             `json:"service_account"`
+
+	// ServiceUserId An existing plugin workload principal without a binding, for example one whose binding was revoked. The plugin installation record names this principal.
+	ServiceUserId *openapi_types.UUID `json:"service_user_id,omitempty"`
+}
+
+// PluginWorkloadBindingList All plugin workload bindings, oldest first.
+type PluginWorkloadBindingList struct {
+	Items []PluginWorkloadBinding `json:"items"`
+}
+
+// PluginWorkloadPrincipalCreateBody Creates the platform principal of the plugin workload together with the binding. It belongs to no organization, can hold no role and has no static token.
+type PluginWorkloadPrincipalCreateBody struct {
+	// DisplayName A display name of the platform principal
+	DisplayName string `json:"display_name"`
+}
+
+// PluginWorkloadTokenExchangeRequest An RFC 8693 token exchange request. Only a Kubernetes ServiceAccount JWT is accepted as subject token.
+type PluginWorkloadTokenExchangeRequest struct {
+	GrantType PluginWorkloadTokenExchangeRequestGrantType `json:"grant_type"`
+
+	// SubjectToken The projected ServiceAccount token of the plugin workload.
+	SubjectToken     string                                             `json:"subject_token"`
+	SubjectTokenType PluginWorkloadTokenExchangeRequestSubjectTokenType `json:"subject_token_type"`
+}
+
+// PluginWorkloadTokenExchangeRequestGrantType defines model for PluginWorkloadTokenExchangeRequest.GrantType.
+type PluginWorkloadTokenExchangeRequestGrantType string
+
+// PluginWorkloadTokenExchangeRequestSubjectTokenType defines model for PluginWorkloadTokenExchangeRequest.SubjectTokenType.
+type PluginWorkloadTokenExchangeRequestSubjectTokenType string
+
+// PluginWorkloadTokenExchangeResponse An RFC 8693 token exchange response carrying an opaque plugin workload token.
+type PluginWorkloadTokenExchangeResponse struct {
+	// AccessToken The opaque plugin workload token. Present it as a Bearer token.
+	AccessToken string `json:"access_token"`
+
+	// ExpiresIn Lifetime of the issued token in seconds.
+	ExpiresIn       int                                                `json:"expires_in"`
+	IssuedTokenType PluginWorkloadTokenExchangeResponseIssuedTokenType `json:"issued_token_type"`
+	TokenType       PluginWorkloadTokenExchangeResponseTokenType       `json:"token_type"`
+}
+
+// PluginWorkloadTokenExchangeResponseIssuedTokenType defines model for PluginWorkloadTokenExchangeResponse.IssuedTokenType.
+type PluginWorkloadTokenExchangeResponseIssuedTokenType string
+
+// PluginWorkloadTokenExchangeResponseTokenType defines model for PluginWorkloadTokenExchangeResponse.TokenType.
+type PluginWorkloadTokenExchangeResponseTokenType string
+
 // RegisterUserBody A payload needed to register a user against an identity provider.
 type RegisterUserBody struct {
 	// Provider The login provider type.
@@ -403,10 +612,10 @@ type ReplaceUserMembershipsBody struct {
 
 // ResourcePermissionCheck defines model for ResourcePermissionCheck.
 type ResourcePermissionCheck struct {
-	// Permission The permission string.
+	// Permission The complete permission ID, including the namespace for a registered plugin capability. Accepting an ID does not grant it; current scope and registration are checked by the authorizer.
 	Permission string `json:"permission"`
 
-	// Resource The resource to check permissions on.
+	// Resource The resource to check permissions on; platform for a platform-level permission.
 	Resource string `json:"resource"`
 }
 
@@ -719,6 +928,12 @@ type PageTokenQueryParam = string
 // PerPageQueryParam defines model for perPageQueryParam.
 type PerPageQueryParam = int
 
+// PlatformPrincipalIdPathParam defines model for platformPrincipalIdPathParam.
+type PlatformPrincipalIdPathParam = openapi_types.UUID
+
+// PluginWorkloadBindingIdPathParam defines model for pluginWorkloadBindingIdPathParam.
+type PluginWorkloadBindingIdPathParam = openapi_types.UUID
+
 // ProjectIdPathParam defines model for projectIdPathParam.
 type ProjectIdPathParam = string
 
@@ -830,6 +1045,12 @@ type PollDeviceLoginRequestParams struct {
 type InternalAuthenticateParams struct {
 	Authorization *string `json:"Authorization,omitempty"`
 	SessionToken  *string `form:"session-token,omitempty" json:"session-token,omitempty"`
+}
+
+// InternalListPluginWorkloadBindingsParams defines parameters for InternalListPluginWorkloadBindings.
+type InternalListPluginWorkloadBindingsParams struct {
+	PluginId       string             `form:"plugin_id" json:"plugin_id"`
+	InstallationId openapi_types.UUID `form:"installation_id" json:"installation_id"`
 }
 
 // ListInvitationsParams defines parameters for ListInvitations.
@@ -958,6 +1179,9 @@ type RequestDeviceLoginJSONRequestBody = DeviceLoginCreateBody
 // LoginSessionJSONRequestBody defines body for LoginSession for application/json ContentType.
 type LoginSessionJSONRequestBody = LoginUserBody
 
+// ExchangePluginWorkloadTokenJSONRequestBody defines body for ExchangePluginWorkloadToken for application/json ContentType.
+type ExchangePluginWorkloadTokenJSONRequestBody = PluginWorkloadTokenExchangeRequest
+
 // RegisterUserJSONRequestBody defines body for RegisterUser for application/json ContentType.
 type RegisterUserJSONRequestBody = RegisterUserBody
 
@@ -975,6 +1199,9 @@ type InternalUpdateSsoConfigurationJSONRequestBody = SsoConfiguration
 
 // CreateInvitationJSONRequestBody defines body for CreateInvitation for application/json ContentType.
 type CreateInvitationJSONRequestBody = InvitationCreateBody
+
+// ReplacePluginCapabilitiesJSONRequestBody defines body for ReplacePluginCapabilities for application/json ContentType.
+type ReplacePluginCapabilitiesJSONRequestBody = PluginCapabilityRegistrationBody
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody = RoleWriteBody
@@ -996,6 +1223,15 @@ type RegenerateServiceUserJSONRequestBody = ServiceUserRegenerateBody
 
 // ReplaceOrgUserMembershipsJSONRequestBody defines body for ReplaceOrgUserMemberships for application/json ContentType.
 type ReplaceOrgUserMembershipsJSONRequestBody = ReplaceUserMembershipsBody
+
+// CreatePlatformPrincipalJSONRequestBody defines body for CreatePlatformPrincipal for application/json ContentType.
+type CreatePlatformPrincipalJSONRequestBody = PlatformPrincipalCreateBody
+
+// RegeneratePlatformPrincipalJSONRequestBody defines body for RegeneratePlatformPrincipal for application/json ContentType.
+type RegeneratePlatformPrincipalJSONRequestBody = ServiceUserRegenerateBody
+
+// CreatePluginWorkloadBindingJSONRequestBody defines body for CreatePluginWorkloadBinding for application/json ContentType.
+type CreatePluginWorkloadBindingJSONRequestBody = PluginWorkloadBindingCreateBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -1088,6 +1324,11 @@ type ClientInterface interface {
 	// LogoutSession request
 	LogoutSession(ctx context.Context, params *LogoutSessionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ExchangePluginWorkloadTokenWithBody request with any body
+	ExchangePluginWorkloadTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ExchangePluginWorkloadToken(ctx context.Context, body ExchangePluginWorkloadTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RegisterUserWithBody request with any body
 	RegisterUserWithBody(ctx context.Context, params *RegisterUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1143,6 +1384,9 @@ type ClientInterface interface {
 
 	InternalUpdateSsoConfiguration(ctx context.Context, orgId OrgIdPathParam, body InternalUpdateSsoConfigurationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// InternalListPluginWorkloadBindings request
+	InternalListPluginWorkloadBindings(ctx context.Context, params *InternalListPluginWorkloadBindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListInvitations request
 	ListInvitations(ctx context.Context, orgId OrgIdPathParam, params *ListInvitationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1171,6 +1415,11 @@ type ClientInterface interface {
 
 	// ListPermissions request
 	ListPermissions(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplacePluginCapabilitiesWithBody request with any body
+	ReplacePluginCapabilitiesWithBody(ctx context.Context, orgId OrgIdPathParam, pluginId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReplacePluginCapabilities(ctx context.Context, orgId OrgIdPathParam, pluginId string, body ReplacePluginCapabilitiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEnvironmentUsers request
 	ListEnvironmentUsers(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *ListEnvironmentUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1233,6 +1482,39 @@ type ClientInterface interface {
 	ReplaceOrgUserMembershipsWithBody(ctx context.Context, orgId OrgIdPathParam, userId UserIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	ReplaceOrgUserMemberships(ctx context.Context, orgId OrgIdPathParam, userId UserIdPathParam, body ReplaceOrgUserMembershipsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPlatformPrincipals request
+	ListPlatformPrincipals(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePlatformPrincipalWithBody request with any body
+	CreatePlatformPrincipalWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePlatformPrincipal(ctx context.Context, body CreatePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeletePlatformPrincipal request
+	DeletePlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPlatformPrincipal request
+	GetPlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RegeneratePlatformPrincipalWithBody request with any body
+	RegeneratePlatformPrincipalWithBody(ctx context.Context, principalId PlatformPrincipalIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RegeneratePlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, body RegeneratePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPluginWorkloadBindings request
+	ListPluginWorkloadBindings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePluginWorkloadBindingWithBody request with any body
+	CreatePluginWorkloadBindingWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreatePluginWorkloadBinding(ctx context.Context, body CreatePluginWorkloadBindingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeletePluginWorkloadBinding request
+	DeletePluginWorkloadBinding(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPluginWorkloadBinding request
+	GetPluginWorkloadBinding(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DismissPrompt request
 	DismissPrompt(ctx context.Context, userId UserIdPathParam, params *DismissPromptParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1321,6 +1603,30 @@ func (c *Client) LoginSession(ctx context.Context, params *LoginSessionParams, b
 
 func (c *Client) LogoutSession(ctx context.Context, params *LogoutSessionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewLogoutSessionRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExchangePluginWorkloadTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExchangePluginWorkloadTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExchangePluginWorkloadToken(ctx context.Context, body ExchangePluginWorkloadTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExchangePluginWorkloadTokenRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1571,6 +1877,18 @@ func (c *Client) InternalUpdateSsoConfiguration(ctx context.Context, orgId OrgId
 	return c.Client.Do(req)
 }
 
+func (c *Client) InternalListPluginWorkloadBindings(ctx context.Context, params *InternalListPluginWorkloadBindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInternalListPluginWorkloadBindingsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListInvitations(ctx context.Context, orgId OrgIdPathParam, params *ListInvitationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListInvitationsRequest(c.Server, orgId, params)
 	if err != nil {
@@ -1681,6 +1999,30 @@ func (c *Client) DeleteOrgMembership(ctx context.Context, orgId OrgIdPathParam, 
 
 func (c *Client) ListPermissions(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListPermissionsRequest(c.Server, orgId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplacePluginCapabilitiesWithBody(ctx context.Context, orgId OrgIdPathParam, pluginId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplacePluginCapabilitiesRequestWithBody(c.Server, orgId, pluginId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplacePluginCapabilities(ctx context.Context, orgId OrgIdPathParam, pluginId string, body ReplacePluginCapabilitiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplacePluginCapabilitiesRequest(c.Server, orgId, pluginId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1957,6 +2299,150 @@ func (c *Client) ReplaceOrgUserMembershipsWithBody(ctx context.Context, orgId Or
 
 func (c *Client) ReplaceOrgUserMemberships(ctx context.Context, orgId OrgIdPathParam, userId UserIdPathParam, body ReplaceOrgUserMembershipsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewReplaceOrgUserMembershipsRequest(c.Server, orgId, userId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListPlatformPrincipals(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPlatformPrincipalsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreatePlatformPrincipalWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePlatformPrincipalRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreatePlatformPrincipal(ctx context.Context, body CreatePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePlatformPrincipalRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeletePlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeletePlatformPrincipalRequest(c.Server, principalId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPlatformPrincipalRequest(c.Server, principalId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegeneratePlatformPrincipalWithBody(ctx context.Context, principalId PlatformPrincipalIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegeneratePlatformPrincipalRequestWithBody(c.Server, principalId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RegeneratePlatformPrincipal(ctx context.Context, principalId PlatformPrincipalIdPathParam, body RegeneratePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegeneratePlatformPrincipalRequest(c.Server, principalId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListPluginWorkloadBindings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPluginWorkloadBindingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreatePluginWorkloadBindingWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePluginWorkloadBindingRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreatePluginWorkloadBinding(ctx context.Context, body CreatePluginWorkloadBindingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePluginWorkloadBindingRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeletePluginWorkloadBinding(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeletePluginWorkloadBindingRequest(c.Server, bindingId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPluginWorkloadBinding(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPluginWorkloadBindingRequest(c.Server, bindingId)
 	if err != nil {
 		return nil, err
 	}
@@ -2258,6 +2744,46 @@ func NewLogoutSessionRequest(server string, params *LogoutSessionParams) (*http.
 		}
 
 	}
+
+	return req, nil
+}
+
+// NewExchangePluginWorkloadTokenRequest calls the generic ExchangePluginWorkloadToken builder with application/json body
+func NewExchangePluginWorkloadTokenRequest(server string, body ExchangePluginWorkloadTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewExchangePluginWorkloadTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewExchangePluginWorkloadTokenRequestWithBody generates requests for ExchangePluginWorkloadToken with any type of body
+func NewExchangePluginWorkloadTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/plugin-workload-token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -2973,6 +3499,63 @@ func NewInternalUpdateSsoConfigurationRequestWithBody(server string, orgId OrgId
 	return req, nil
 }
 
+// NewInternalListPluginWorkloadBindingsRequest generates requests for InternalListPluginWorkloadBindings
+func NewInternalListPluginWorkloadBindingsRequest(server string, params *InternalListPluginWorkloadBindingsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/plugin-workload-bindings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "plugin_id", runtime.ParamLocationQuery, params.PluginId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "installation_id", runtime.ParamLocationQuery, params.InstallationId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListInvitationsRequest generates requests for ListInvitations
 func NewListInvitationsRequest(server string, orgId OrgIdPathParam, params *ListInvitationsParams) (*http.Request, error) {
 	var err error
@@ -3502,6 +4085,60 @@ func NewListPermissionsRequest(server string, orgId OrgIdPathParam) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewReplacePluginCapabilitiesRequest calls the generic ReplacePluginCapabilities builder with application/json body
+func NewReplacePluginCapabilitiesRequest(server string, orgId OrgIdPathParam, pluginId string, body ReplacePluginCapabilitiesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReplacePluginCapabilitiesRequestWithBody(server, orgId, pluginId, "application/json", bodyReader)
+}
+
+// NewReplacePluginCapabilitiesRequestWithBody generates requests for ReplacePluginCapabilities with any type of body
+func NewReplacePluginCapabilitiesRequestWithBody(server string, orgId OrgIdPathParam, pluginId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pluginId", runtime.ParamLocationPath, pluginId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/plugins/%s/capabilities", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4409,6 +5046,323 @@ func NewReplaceOrgUserMembershipsRequestWithBody(server string, orgId OrgIdPathP
 	return req, nil
 }
 
+// NewListPlatformPrincipalsRequest generates requests for ListPlatformPrincipals
+func NewListPlatformPrincipalsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/platform-principals")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreatePlatformPrincipalRequest calls the generic CreatePlatformPrincipal builder with application/json body
+func NewCreatePlatformPrincipalRequest(server string, body CreatePlatformPrincipalJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePlatformPrincipalRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreatePlatformPrincipalRequestWithBody generates requests for CreatePlatformPrincipal with any type of body
+func NewCreatePlatformPrincipalRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/platform-principals")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeletePlatformPrincipalRequest generates requests for DeletePlatformPrincipal
+func NewDeletePlatformPrincipalRequest(server string, principalId PlatformPrincipalIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "principalId", runtime.ParamLocationPath, principalId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/platform-principals/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPlatformPrincipalRequest generates requests for GetPlatformPrincipal
+func NewGetPlatformPrincipalRequest(server string, principalId PlatformPrincipalIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "principalId", runtime.ParamLocationPath, principalId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/platform-principals/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRegeneratePlatformPrincipalRequest calls the generic RegeneratePlatformPrincipal builder with application/json body
+func NewRegeneratePlatformPrincipalRequest(server string, principalId PlatformPrincipalIdPathParam, body RegeneratePlatformPrincipalJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRegeneratePlatformPrincipalRequestWithBody(server, principalId, "application/json", bodyReader)
+}
+
+// NewRegeneratePlatformPrincipalRequestWithBody generates requests for RegeneratePlatformPrincipal with any type of body
+func NewRegeneratePlatformPrincipalRequestWithBody(server string, principalId PlatformPrincipalIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "principalId", runtime.ParamLocationPath, principalId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/platform-principals/%s/actions/regenerate", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPluginWorkloadBindingsRequest generates requests for ListPluginWorkloadBindings
+func NewListPluginWorkloadBindingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/plugin-workload-bindings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreatePluginWorkloadBindingRequest calls the generic CreatePluginWorkloadBinding builder with application/json body
+func NewCreatePluginWorkloadBindingRequest(server string, body CreatePluginWorkloadBindingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePluginWorkloadBindingRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreatePluginWorkloadBindingRequestWithBody generates requests for CreatePluginWorkloadBinding with any type of body
+func NewCreatePluginWorkloadBindingRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/plugin-workload-bindings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeletePluginWorkloadBindingRequest generates requests for DeletePluginWorkloadBinding
+func NewDeletePluginWorkloadBindingRequest(server string, bindingId PluginWorkloadBindingIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bindingId", runtime.ParamLocationPath, bindingId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/plugin-workload-bindings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPluginWorkloadBindingRequest generates requests for GetPluginWorkloadBinding
+func NewGetPluginWorkloadBindingRequest(server string, bindingId PluginWorkloadBindingIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "bindingId", runtime.ParamLocationPath, bindingId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/plugin-workload-bindings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDismissPromptRequest generates requests for DismissPrompt
 func NewDismissPromptRequest(server string, userId UserIdPathParam, params *DismissPromptParams) (*http.Request, error) {
 	var err error
@@ -4723,6 +5677,11 @@ type ClientWithResponsesInterface interface {
 	// LogoutSessionWithResponse request
 	LogoutSessionWithResponse(ctx context.Context, params *LogoutSessionParams, reqEditors ...RequestEditorFn) (*LogoutSessionResponse, error)
 
+	// ExchangePluginWorkloadTokenWithBodyWithResponse request with any body
+	ExchangePluginWorkloadTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExchangePluginWorkloadTokenResponse, error)
+
+	ExchangePluginWorkloadTokenWithResponse(ctx context.Context, body ExchangePluginWorkloadTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*ExchangePluginWorkloadTokenResponse, error)
+
 	// RegisterUserWithBodyWithResponse request with any body
 	RegisterUserWithBodyWithResponse(ctx context.Context, params *RegisterUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegisterUserResponse, error)
 
@@ -4778,6 +5737,9 @@ type ClientWithResponsesInterface interface {
 
 	InternalUpdateSsoConfigurationWithResponse(ctx context.Context, orgId OrgIdPathParam, body InternalUpdateSsoConfigurationJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalUpdateSsoConfigurationResponse, error)
 
+	// InternalListPluginWorkloadBindingsWithResponse request
+	InternalListPluginWorkloadBindingsWithResponse(ctx context.Context, params *InternalListPluginWorkloadBindingsParams, reqEditors ...RequestEditorFn) (*InternalListPluginWorkloadBindingsResponse, error)
+
 	// ListInvitationsWithResponse request
 	ListInvitationsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListInvitationsParams, reqEditors ...RequestEditorFn) (*ListInvitationsResponse, error)
 
@@ -4806,6 +5768,11 @@ type ClientWithResponsesInterface interface {
 
 	// ListPermissionsWithResponse request
 	ListPermissionsWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*ListPermissionsResponse, error)
+
+	// ReplacePluginCapabilitiesWithBodyWithResponse request with any body
+	ReplacePluginCapabilitiesWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplacePluginCapabilitiesResponse, error)
+
+	ReplacePluginCapabilitiesWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, body ReplacePluginCapabilitiesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplacePluginCapabilitiesResponse, error)
 
 	// ListEnvironmentUsersWithResponse request
 	ListEnvironmentUsersWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *ListEnvironmentUsersParams, reqEditors ...RequestEditorFn) (*ListEnvironmentUsersResponse, error)
@@ -4868,6 +5835,39 @@ type ClientWithResponsesInterface interface {
 	ReplaceOrgUserMembershipsWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, userId UserIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceOrgUserMembershipsResponse, error)
 
 	ReplaceOrgUserMembershipsWithResponse(ctx context.Context, orgId OrgIdPathParam, userId UserIdPathParam, body ReplaceOrgUserMembershipsJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceOrgUserMembershipsResponse, error)
+
+	// ListPlatformPrincipalsWithResponse request
+	ListPlatformPrincipalsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListPlatformPrincipalsResponse, error)
+
+	// CreatePlatformPrincipalWithBodyWithResponse request with any body
+	CreatePlatformPrincipalWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePlatformPrincipalResponse, error)
+
+	CreatePlatformPrincipalWithResponse(ctx context.Context, body CreatePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePlatformPrincipalResponse, error)
+
+	// DeletePlatformPrincipalWithResponse request
+	DeletePlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*DeletePlatformPrincipalResponse, error)
+
+	// GetPlatformPrincipalWithResponse request
+	GetPlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*GetPlatformPrincipalResponse, error)
+
+	// RegeneratePlatformPrincipalWithBodyWithResponse request with any body
+	RegeneratePlatformPrincipalWithBodyWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegeneratePlatformPrincipalResponse, error)
+
+	RegeneratePlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, body RegeneratePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*RegeneratePlatformPrincipalResponse, error)
+
+	// ListPluginWorkloadBindingsWithResponse request
+	ListPluginWorkloadBindingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListPluginWorkloadBindingsResponse, error)
+
+	// CreatePluginWorkloadBindingWithBodyWithResponse request with any body
+	CreatePluginWorkloadBindingWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePluginWorkloadBindingResponse, error)
+
+	CreatePluginWorkloadBindingWithResponse(ctx context.Context, body CreatePluginWorkloadBindingJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePluginWorkloadBindingResponse, error)
+
+	// DeletePluginWorkloadBindingWithResponse request
+	DeletePluginWorkloadBindingWithResponse(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*DeletePluginWorkloadBindingResponse, error)
+
+	// GetPluginWorkloadBindingWithResponse request
+	GetPluginWorkloadBindingWithResponse(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*GetPluginWorkloadBindingResponse, error)
 
 	// DismissPromptWithResponse request
 	DismissPromptWithResponse(ctx context.Context, userId UserIdPathParam, params *DismissPromptParams, reqEditors ...RequestEditorFn) (*DismissPromptResponse, error)
@@ -4969,6 +5969,31 @@ func (r LogoutSessionResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r LogoutSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ExchangePluginWorkloadTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginWorkloadTokenExchangeResponse
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+	JSON503      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ExchangePluginWorkloadTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExchangePluginWorkloadTokenResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5321,6 +6346,29 @@ func (r InternalUpdateSsoConfigurationResponse) StatusCode() int {
 	return 0
 }
 
+type InternalListPluginWorkloadBindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginWorkloadBindingList
+	JSON400      *N400BadRequest
+}
+
+// Status returns HTTPResponse.Status
+func (r InternalListPluginWorkloadBindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r InternalListPluginWorkloadBindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListInvitationsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5520,6 +6568,29 @@ func (r ListPermissionsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListPermissionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReplacePluginCapabilitiesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r ReplacePluginCapabilitiesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReplacePluginCapabilitiesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5859,6 +6930,7 @@ type RegenerateServiceUserResponse struct {
 	HTTPResponse *http.Response
 	JSON200      *ServiceUserWithToken
 	JSON404      *N404NotFound
+	JSON409      *N409Conflict
 }
 
 // Status returns HTTPResponse.Status
@@ -5896,6 +6968,221 @@ func (r ReplaceOrgUserMembershipsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ReplaceOrgUserMembershipsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListPlatformPrincipalsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PlatformPrincipalList
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPlatformPrincipalsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPlatformPrincipalsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePlatformPrincipalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *PlatformPrincipalWithToken
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePlatformPrincipalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePlatformPrincipalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeletePlatformPrincipalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r DeletePlatformPrincipalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeletePlatformPrincipalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPlatformPrincipalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PlatformPrincipal
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPlatformPrincipalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPlatformPrincipalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RegeneratePlatformPrincipalResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PlatformPrincipalWithToken
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r RegeneratePlatformPrincipalResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RegeneratePlatformPrincipalResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListPluginWorkloadBindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginWorkloadBindingList
+	JSON403      *N403Forbidden
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPluginWorkloadBindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPluginWorkloadBindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreatePluginWorkloadBindingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *PluginWorkloadBinding
+	JSON400      *N400BadRequest
+	JSON403      *N403Forbidden
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePluginWorkloadBindingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePluginWorkloadBindingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeletePluginWorkloadBindingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r DeletePluginWorkloadBindingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeletePluginWorkloadBindingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPluginWorkloadBindingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PluginWorkloadBinding
+	JSON403      *N403Forbidden
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPluginWorkloadBindingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPluginWorkloadBindingResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6050,6 +7337,23 @@ func (c *ClientWithResponses) LogoutSessionWithResponse(ctx context.Context, par
 		return nil, err
 	}
 	return ParseLogoutSessionResponse(rsp)
+}
+
+// ExchangePluginWorkloadTokenWithBodyWithResponse request with arbitrary body returning *ExchangePluginWorkloadTokenResponse
+func (c *ClientWithResponses) ExchangePluginWorkloadTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExchangePluginWorkloadTokenResponse, error) {
+	rsp, err := c.ExchangePluginWorkloadTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExchangePluginWorkloadTokenResponse(rsp)
+}
+
+func (c *ClientWithResponses) ExchangePluginWorkloadTokenWithResponse(ctx context.Context, body ExchangePluginWorkloadTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*ExchangePluginWorkloadTokenResponse, error) {
+	rsp, err := c.ExchangePluginWorkloadToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExchangePluginWorkloadTokenResponse(rsp)
 }
 
 // RegisterUserWithBodyWithResponse request with arbitrary body returning *RegisterUserResponse
@@ -6227,6 +7531,15 @@ func (c *ClientWithResponses) InternalUpdateSsoConfigurationWithResponse(ctx con
 	return ParseInternalUpdateSsoConfigurationResponse(rsp)
 }
 
+// InternalListPluginWorkloadBindingsWithResponse request returning *InternalListPluginWorkloadBindingsResponse
+func (c *ClientWithResponses) InternalListPluginWorkloadBindingsWithResponse(ctx context.Context, params *InternalListPluginWorkloadBindingsParams, reqEditors ...RequestEditorFn) (*InternalListPluginWorkloadBindingsResponse, error) {
+	rsp, err := c.InternalListPluginWorkloadBindings(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInternalListPluginWorkloadBindingsResponse(rsp)
+}
+
 // ListInvitationsWithResponse request returning *ListInvitationsResponse
 func (c *ClientWithResponses) ListInvitationsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListInvitationsParams, reqEditors ...RequestEditorFn) (*ListInvitationsResponse, error) {
 	rsp, err := c.ListInvitations(ctx, orgId, params, reqEditors...)
@@ -6314,6 +7627,23 @@ func (c *ClientWithResponses) ListPermissionsWithResponse(ctx context.Context, o
 		return nil, err
 	}
 	return ParseListPermissionsResponse(rsp)
+}
+
+// ReplacePluginCapabilitiesWithBodyWithResponse request with arbitrary body returning *ReplacePluginCapabilitiesResponse
+func (c *ClientWithResponses) ReplacePluginCapabilitiesWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplacePluginCapabilitiesResponse, error) {
+	rsp, err := c.ReplacePluginCapabilitiesWithBody(ctx, orgId, pluginId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplacePluginCapabilitiesResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReplacePluginCapabilitiesWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId string, body ReplacePluginCapabilitiesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplacePluginCapabilitiesResponse, error) {
+	rsp, err := c.ReplacePluginCapabilities(ctx, orgId, pluginId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplacePluginCapabilitiesResponse(rsp)
 }
 
 // ListEnvironmentUsersWithResponse request returning *ListEnvironmentUsersResponse
@@ -6516,6 +7846,111 @@ func (c *ClientWithResponses) ReplaceOrgUserMembershipsWithResponse(ctx context.
 	return ParseReplaceOrgUserMembershipsResponse(rsp)
 }
 
+// ListPlatformPrincipalsWithResponse request returning *ListPlatformPrincipalsResponse
+func (c *ClientWithResponses) ListPlatformPrincipalsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListPlatformPrincipalsResponse, error) {
+	rsp, err := c.ListPlatformPrincipals(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPlatformPrincipalsResponse(rsp)
+}
+
+// CreatePlatformPrincipalWithBodyWithResponse request with arbitrary body returning *CreatePlatformPrincipalResponse
+func (c *ClientWithResponses) CreatePlatformPrincipalWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePlatformPrincipalResponse, error) {
+	rsp, err := c.CreatePlatformPrincipalWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePlatformPrincipalResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePlatformPrincipalWithResponse(ctx context.Context, body CreatePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePlatformPrincipalResponse, error) {
+	rsp, err := c.CreatePlatformPrincipal(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePlatformPrincipalResponse(rsp)
+}
+
+// DeletePlatformPrincipalWithResponse request returning *DeletePlatformPrincipalResponse
+func (c *ClientWithResponses) DeletePlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*DeletePlatformPrincipalResponse, error) {
+	rsp, err := c.DeletePlatformPrincipal(ctx, principalId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeletePlatformPrincipalResponse(rsp)
+}
+
+// GetPlatformPrincipalWithResponse request returning *GetPlatformPrincipalResponse
+func (c *ClientWithResponses) GetPlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, reqEditors ...RequestEditorFn) (*GetPlatformPrincipalResponse, error) {
+	rsp, err := c.GetPlatformPrincipal(ctx, principalId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPlatformPrincipalResponse(rsp)
+}
+
+// RegeneratePlatformPrincipalWithBodyWithResponse request with arbitrary body returning *RegeneratePlatformPrincipalResponse
+func (c *ClientWithResponses) RegeneratePlatformPrincipalWithBodyWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegeneratePlatformPrincipalResponse, error) {
+	rsp, err := c.RegeneratePlatformPrincipalWithBody(ctx, principalId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegeneratePlatformPrincipalResponse(rsp)
+}
+
+func (c *ClientWithResponses) RegeneratePlatformPrincipalWithResponse(ctx context.Context, principalId PlatformPrincipalIdPathParam, body RegeneratePlatformPrincipalJSONRequestBody, reqEditors ...RequestEditorFn) (*RegeneratePlatformPrincipalResponse, error) {
+	rsp, err := c.RegeneratePlatformPrincipal(ctx, principalId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegeneratePlatformPrincipalResponse(rsp)
+}
+
+// ListPluginWorkloadBindingsWithResponse request returning *ListPluginWorkloadBindingsResponse
+func (c *ClientWithResponses) ListPluginWorkloadBindingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListPluginWorkloadBindingsResponse, error) {
+	rsp, err := c.ListPluginWorkloadBindings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPluginWorkloadBindingsResponse(rsp)
+}
+
+// CreatePluginWorkloadBindingWithBodyWithResponse request with arbitrary body returning *CreatePluginWorkloadBindingResponse
+func (c *ClientWithResponses) CreatePluginWorkloadBindingWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePluginWorkloadBindingResponse, error) {
+	rsp, err := c.CreatePluginWorkloadBindingWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePluginWorkloadBindingResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreatePluginWorkloadBindingWithResponse(ctx context.Context, body CreatePluginWorkloadBindingJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePluginWorkloadBindingResponse, error) {
+	rsp, err := c.CreatePluginWorkloadBinding(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePluginWorkloadBindingResponse(rsp)
+}
+
+// DeletePluginWorkloadBindingWithResponse request returning *DeletePluginWorkloadBindingResponse
+func (c *ClientWithResponses) DeletePluginWorkloadBindingWithResponse(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*DeletePluginWorkloadBindingResponse, error) {
+	rsp, err := c.DeletePluginWorkloadBinding(ctx, bindingId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeletePluginWorkloadBindingResponse(rsp)
+}
+
+// GetPluginWorkloadBindingWithResponse request returning *GetPluginWorkloadBindingResponse
+func (c *ClientWithResponses) GetPluginWorkloadBindingWithResponse(ctx context.Context, bindingId PluginWorkloadBindingIdPathParam, reqEditors ...RequestEditorFn) (*GetPluginWorkloadBindingResponse, error) {
+	rsp, err := c.GetPluginWorkloadBinding(ctx, bindingId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPluginWorkloadBindingResponse(rsp)
+}
+
 // DismissPromptWithResponse request returning *DismissPromptResponse
 func (c *ClientWithResponses) DismissPromptWithResponse(ctx context.Context, userId UserIdPathParam, params *DismissPromptParams, reqEditors ...RequestEditorFn) (*DismissPromptResponse, error) {
 	rsp, err := c.DismissPrompt(ctx, userId, params, reqEditors...)
@@ -6683,6 +8118,53 @@ func ParseLogoutSessionResponse(rsp *http.Response) (*LogoutSessionResponse, err
 	response := &LogoutSessionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseExchangePluginWorkloadTokenResponse parses an HTTP response from a ExchangePluginWorkloadTokenWithResponse call
+func ParseExchangePluginWorkloadTokenResponse(rsp *http.Response) (*ExchangePluginWorkloadTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExchangePluginWorkloadTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginWorkloadTokenExchangeResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
 	}
 
 	return response, nil
@@ -7187,6 +8669,39 @@ func ParseInternalUpdateSsoConfigurationResponse(rsp *http.Response) (*InternalU
 	return response, nil
 }
 
+// ParseInternalListPluginWorkloadBindingsResponse parses an HTTP response from a InternalListPluginWorkloadBindingsWithResponse call
+func ParseInternalListPluginWorkloadBindingsResponse(rsp *http.Response) (*InternalListPluginWorkloadBindingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InternalListPluginWorkloadBindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginWorkloadBindingList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListInvitationsResponse parses an HTTP response from a ListInvitationsWithResponse call
 func ParseListInvitationsResponse(rsp *http.Response) (*ListInvitationsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7464,6 +8979,39 @@ func ParseListPermissionsResponse(rsp *http.Response) (*ListPermissionsResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReplacePluginCapabilitiesResponse parses an HTTP response from a ReplacePluginCapabilitiesWithResponse call
+func ParseReplacePluginCapabilitiesResponse(rsp *http.Response) (*ReplacePluginCapabilitiesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReplacePluginCapabilitiesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	}
 
@@ -8002,6 +9550,13 @@ func ParseRegenerateServiceUserResponse(rsp *http.Response) (*RegenerateServiceU
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	}
 
 	return response, nil
@@ -8048,6 +9603,359 @@ func ParseReplaceOrgUserMembershipsResponse(rsp *http.Response) (*ReplaceOrgUser
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPlatformPrincipalsResponse parses an HTTP response from a ListPlatformPrincipalsWithResponse call
+func ParseListPlatformPrincipalsResponse(rsp *http.Response) (*ListPlatformPrincipalsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPlatformPrincipalsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PlatformPrincipalList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePlatformPrincipalResponse parses an HTTP response from a CreatePlatformPrincipalWithResponse call
+func ParseCreatePlatformPrincipalResponse(rsp *http.Response) (*CreatePlatformPrincipalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePlatformPrincipalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PlatformPrincipalWithToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeletePlatformPrincipalResponse parses an HTTP response from a DeletePlatformPrincipalWithResponse call
+func ParseDeletePlatformPrincipalResponse(rsp *http.Response) (*DeletePlatformPrincipalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeletePlatformPrincipalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPlatformPrincipalResponse parses an HTTP response from a GetPlatformPrincipalWithResponse call
+func ParseGetPlatformPrincipalResponse(rsp *http.Response) (*GetPlatformPrincipalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPlatformPrincipalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PlatformPrincipal
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRegeneratePlatformPrincipalResponse parses an HTTP response from a RegeneratePlatformPrincipalWithResponse call
+func ParseRegeneratePlatformPrincipalResponse(rsp *http.Response) (*RegeneratePlatformPrincipalResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RegeneratePlatformPrincipalResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PlatformPrincipalWithToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPluginWorkloadBindingsResponse parses an HTTP response from a ListPluginWorkloadBindingsWithResponse call
+func ParseListPluginWorkloadBindingsResponse(rsp *http.Response) (*ListPluginWorkloadBindingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPluginWorkloadBindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginWorkloadBindingList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePluginWorkloadBindingResponse parses an HTTP response from a CreatePluginWorkloadBindingWithResponse call
+func ParseCreatePluginWorkloadBindingResponse(rsp *http.Response) (*CreatePluginWorkloadBindingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePluginWorkloadBindingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PluginWorkloadBinding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeletePluginWorkloadBindingResponse parses an HTTP response from a DeletePluginWorkloadBindingWithResponse call
+func ParseDeletePluginWorkloadBindingResponse(rsp *http.Response) (*DeletePluginWorkloadBindingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeletePluginWorkloadBindingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPluginWorkloadBindingResponse parses an HTTP response from a GetPluginWorkloadBindingWithResponse call
+func ParseGetPluginWorkloadBindingResponse(rsp *http.Response) (*GetPluginWorkloadBindingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPluginWorkloadBindingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PluginWorkloadBinding
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
