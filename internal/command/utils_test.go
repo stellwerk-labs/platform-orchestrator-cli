@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -35,7 +36,7 @@ const (
 	skipLogsFlag = "--skip-logs"
 	noWaitFlag   = "--no-wait"
 	formatFlag   = "--format"
-	keyFlag      = "--key"
+	keyFileFlag  = "--key-file"
 )
 
 // Common test data constants
@@ -100,6 +101,15 @@ func resetFlags(fs *pflag.FlagSet) {
 		}
 		f.Changed = false
 	})
+}
+
+// writeTestFile writes content to a file named name in a fresh temporary
+// directory and returns its path.
+func writeTestFile(t *testing.T, name, content string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), name)
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
+	return path
 }
 
 // resetCommandFlags resets all flags on a single command. Use resetCommandTree

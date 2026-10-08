@@ -34,6 +34,19 @@ For a private API certificate authority, set `PO_CA_FILE` to a bounded PEM CA
 bundle. The CLI appends it to the operating-system trust roots and still
 requires normal hostname verification and TLS 1.2 or newer.
 
+## Deployment runner logs
+
+Runner logs are encrypted with a key created for each deployment. `octl deploy`,
+`octl rollback` and `octl score deploy` print that key only with
+`--print-logs-key`, after a warning. `octl logs` reads it from a file or from
+standard input, never from the command line, where it would end up in shell
+history and the process list:
+
+```bash
+octl logs <deployment-id> --key-file runner-logs.key
+printenv RUNNER_LOGS_KEY | octl logs <deployment-id> --key-file -
+```
+
 ## Install
 
 Install directly into your Go bin (your `$PATH` should include `$GOPATH/bin`):

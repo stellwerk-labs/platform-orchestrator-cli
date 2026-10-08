@@ -384,7 +384,7 @@ func commonDeployCmdDiff(newManifest dp.DeploymentManifest, lastDeploymentManife
 // deployment's runner logs. It is never printed by default: terminal output
 // ends up in CI logs and scrollback, and whoever reads it can read the logs.
 func addPrintLogsKeyFlag(cmd *cobra.Command) {
-	cmd.Flags().Bool(deployCmdPrintLogsKeyFlag, false, "Print the secret key that decrypts this deployment's runner logs, for 'octl logs --key'. Anyone who can read the output can read the logs.")
+	cmd.Flags().Bool(deployCmdPrintLogsKeyFlag, false, "Print the secret key that decrypts this deployment's runner logs, for 'octl logs --key-file'. Anyone who can read the output can read the logs.")
 	cmd.MarkFlagsMutuallyExclusive(deployCmdSkipLogsFlag, deployCmdPrintLogsKeyFlag)
 }
 
@@ -394,7 +394,7 @@ func announceLogsKey(cmd *cobra.Command, deploymentId uuid.UUID, key *age.X25519
 	if printKey, _ := cmd.Flags().GetBool(deployCmdPrintLogsKeyFlag); printKey {
 		changedMessageF("Warning: the key below decrypts the runner logs of deployment %s. Anyone who can read this output, including CI logs and terminal scrollback, can read those logs.", deploymentId)
 		infoMessageF("Runner logs key: %s", key)
-		infoMessageF("Once the deployment is complete, read its logs with 'octl logs %s --key <runner logs key>'.", deploymentId)
+		infoMessageF("Once the deployment is complete, save the key to a file and read the logs with 'octl logs %s --key-file <file>' ('--key-file -' reads the key from standard input).", deploymentId)
 		return
 	}
 	if show, _ := cmd.Flags().GetBool(deployCmdShowLogsFlag); !show {

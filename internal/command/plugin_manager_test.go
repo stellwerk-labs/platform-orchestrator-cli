@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -386,20 +384,13 @@ func (f *pluginManagerServer) mutate(r *http.Request, raw []byte) (int, any, boo
 	return http.StatusOK, item, string(before) != string(after)
 }
 
-func pmTestFile(t *testing.T, name, content string) string {
-	t.Helper()
-	path := filepath.Join(t.TempDir(), name)
-	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
-	return path
-}
-
 func pmRun(ctx context.Context, args ...string) (string, string, error) {
 	return executeAndResetCommand(ctx, RootCmd, args)
 }
 
 func pmRegister(t *testing.T, ctx context.Context, digest, version string) {
 	t.Helper()
-	manifest := pmTestFile(t, "registration.yaml", "pluginId: "+pmTestPlugin+"\nversion: "+version+"\n")
+	manifest := writeTestFile(t, "registration.yaml", "pluginId: "+pmTestPlugin+"\nversion: "+version+"\n")
 	_, stderr, err := pmRun(ctx, pmTestCmd, "register-package", manifest, "--manifest-sha256", digest, reasonArg, "register "+version)
 	require.NoError(t, err)
 	require.Contains(t, stderr, "Package "+pmTestPlugin+" "+version+" ("+digest+") registered, revision ")
@@ -658,7 +649,7 @@ func TestPluginManagerChangesRequireAReason(t *testing.T) {
 func TestPluginManagerEntitlementsAndAuditTrail(t *testing.T) {
 	fixture, ctx := newPluginManagerServer(t)
 	pmRegister(t, ctx, pmTestPackage, "1.0.0")
-	bundle := pmTestFile(t, "bundle.jws", "grant grant revocation forged")
+	bundle := writeTestFile(t, "bundle.jws", "grant grant revocation forged")
 	stdout, stderr, err := pmRun(ctx, pmTestCmd, "import-entitlements", bundle, reasonArg, "licence renewal", outFlag, jsonOutput)
 	require.NoError(t, err)
 	require.Contains(t, stderr, "Imported 2 grants and 1 revocations, revision 2.\nSkipped a document (plugin_entitlement_signature_invalid): document 2 does not verify\n")

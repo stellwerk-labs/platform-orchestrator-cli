@@ -52,7 +52,7 @@ func TestRunnerLogsKeyIsPrintedOnlyOnRequestWithAWarning(t *testing.T) {
 	require.NoError(t, err)
 	id := fixture.deployment.Id.String()
 	warning := "Warning: the key below decrypts the runner logs of deployment " + id + ". Anyone who can read this output, including CI logs and terminal scrollback, can read those logs."
-	require.Contains(t, output, warning+"\nRunner logs key: "+key+"\nOnce the deployment is complete, read its logs with 'octl logs "+id+" --key <runner logs key>'.\n")
+	require.Contains(t, output, warning+"\nRunner logs key: "+key+"\nOnce the deployment is complete, save the key to a file and read the logs with 'octl logs "+id+" --key-file <file>' ('--key-file -' reads the key from standard input).\n")
 	require.Equal(t, 1, strings.Count(output, ageSecretKeyPrefix), "the key is printed once")
 }
 
