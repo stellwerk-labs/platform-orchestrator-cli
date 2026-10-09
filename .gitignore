@@ -46,6 +46,7 @@ Desktop.ini
 cover.out
 coverage.*
 dist/
+licenses/
 build/
 tmp/
 temp/

@@ -1,6 +1,10 @@
 # Check the documentation at https://goreleaser.com
 version: 2
 
+before:
+  hooks:
+    - ./scripts/collect-licenses.sh --replace-generated licenses
+
 release:
   prerelease: auto
   make_latest: "{{ if .Prerelease }}false{{ else }}true{{ end }}"
@@ -10,6 +14,9 @@ builds:
   - id: octl
     binary: octl
     main: .
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
     ldflags:
       - -s -w
       - -X github.com/stellwerk-labs/platform-orchestrator-cli/internal.ModuleVersion={{ .Version }}
@@ -26,6 +33,25 @@ archives:
   - format_overrides:
       - goos: windows
         formats: ['zip']
+    builds_info:
+      owner: root
+      group: root
+      mtime: '{{ .CommitDate }}'
+    files:
+      - src: LICENSE
+        info: &archive_info
+          owner: root
+          group: root
+          mode: 0644
+          mtime: '{{ .CommitDate }}'
+      - src: README.md
+        info: *archive_info
+      - src: licenses/**/*
+        info: *archive_info
+      - src: licenses/modules.json
+        info: *archive_info
+      - src: licenses/notices.sha256.json
+        info: *archive_info
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -81,6 +107,8 @@ dockers_v2:
     ids:
       - octl
     dockerfile: goreleaser.Dockerfile
+    extra_files:
+      - licenses
     images:
       - ghcr.io/stellwerk-labs/octl
     tags:
@@ -97,3 +125,4 @@ dockers_v2:
       - linux/arm64
     flags:
       - "--pull"
+      - "--build-arg=SOURCE_DATE_EPOCH={{ .CommitTimestamp }}"

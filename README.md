@@ -6,6 +6,29 @@ The Stellwerk CLI for platform-orchestrator-cp, platform-orchestrator-dp and pla
 
 ## License
 
+Release archives and the CLI release image include `licenses/`: the application's EUPL
+text, Go's license/patent grants, and the union of dependency notices for every
+configured GoReleaser target. Collection uses checksum-verified go-licenses
+v2.0.1 and Go 1.26.2, without changing the module's minimum Go version. Unknown
+licenses and missing/empty legal notices fail the build. Reciprocal-license
+source files saved by go-licenses are preserved too. Generated notices are
+replaced only when their recorded checksums match and no untracked files exist.
+
+One mechanical classifier correction is restricted to the exact unreplaced
+`github.com/oapi-codegen/nullable@v1.2.0`, its module checksum and original LICENSE
+hash: the upstream file contains the Apache-2.0 copyright/header but not the full
+license, and go-licenses excludes header-only matches. Its original bytes are
+preserved alongside the hash-pinned full Apache license from the Apache Software
+Foundation and a provenance record. Any changed identity/content or colliding
+module prefix fails; other unknown licenses remain errors. This documents
+packaging behavior, not a legal or compatibility certification.
+
+Run `go test -count=1 ./scripts/licensecollector` for the real-classifier notice
+and failure-boundary tests. The test installs the same verified tool into its
+temporary directory if necessary. GoReleaser's before-hook generates notices;
+archive entry timestamps and binary mtimes use the source commit date, CLI
+binaries use `-trimpath`, and the release image base is digest-pinned.
+
 Licensed under the EUPL-1.2. See [LICENSE](./LICENSE).
 
 ## Configuration

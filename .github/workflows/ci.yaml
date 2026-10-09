@@ -21,6 +21,13 @@ on:
 permissions:
   contents: read
 
+env:
+  GOTOOLCHAIN: go1.26.2
+  GOWORK: 'off'
+  GOENV: 'off'
+  GOFLAGS: ''
+  GOEXPERIMENT: ''
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -128,7 +135,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version: '1.26.2'
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
@@ -186,10 +193,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version: '1.26.2'
 
       - name: Generate
         run: make generate
+
+      - name: Verify release notice collection and fail-closed boundaries
+        run: go test -count=1 -v ./scripts/licensecollector
 
       - name: Check vendored API specifications
         run: make check-api-specs
