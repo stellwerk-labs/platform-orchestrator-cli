@@ -128,3 +128,36 @@ in its `SOURCE.md` ([Core](clients/platform-orchestrator-cp/SOURCE.md),
 [Progressive Rollouts](clients/progressive-rollouts/SOURCE.md)) and then compares the
 Core, Data Plane and IAM documents with their recorded upstream revisions, which
 needs network access.
+
+## Release-content verification
+
+The pinned GoReleaser OSS SBOM hook inspects every configured archive after
+packaging and before checksums, signing or upload. It verifies the actual Go
+toolchain, architecture, compiled module graph and complete source-collected
+notice bytes, then generates per-archive SPDX 2.3 with digest-pinned Syft 1.54.1.
+Producer statements bind archive/SBOM hashes to the checked source tag, workflow
+revision and run identity. These are producer attestations, not a claimed SLSA
+level or legal compatibility certification.
+
+Gitleaks 8.30.1 and private-reference checks cover shipping paths, archive members,
+binary strings, release notes and generated metadata. Inline scanner exemptions
+and artifact-provided ignore files cannot weaken the gate. The only binary
+exception is the exact source-proven compiler boundary documented in
+[known-binary-strings.json](scripts/known-binary-strings.json), bound to Go 1.26.2,
+the compiled module checksum and every occurrence's complete surrounding bytes.
+Changed findings and additional secrets fail, including in the same executable.
+
+The image is built locally from those qualified Linux archive binaries. Every
+original OCI layer is scanned, including content hidden by later whiteouts.
+GoReleaser's image publisher is disabled. A separate guarded step re-inspects
+and copies the exact OCI index, preserves BuildKit SBOM/provenance, and verifies
+keyless index/platform signatures and subject/predicate-bound attestations.
+Stable channel aliases are updated only after the immutable version verifies.
+Platform manifests, layers, binaries and notices define the reproducibility
+comparison; time-bearing attestations and therefore the full index may differ.
+
+Release-boundary tests require the checksum-verified tools from
+`scripts/install-release-tools.sh`, Docker and the pinned Syft image in
+`scripts/release-tools.sh`. They perform no publication and skip no required
+scanner or cataloger behavior. Cross-platform archives, the actual multiarch
+image and public-consumer verification still require their own release run.

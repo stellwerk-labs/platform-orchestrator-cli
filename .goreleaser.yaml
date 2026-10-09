@@ -9,6 +9,10 @@ release:
   prerelease: auto
   make_latest: "{{ if .Prerelease }}false{{ else }}true{{ end }}"
   use_existing_draft: true
+  extra_files:
+    - glob: 'dist/*.provenance.json'
+    - glob: 'dist/release-content.json'
+    - glob: 'dist/octl-image-content.json'
 
 builds:
   - id: octl
@@ -54,20 +58,44 @@ archives:
         info: *archive_info
 checksum:
   name_template: 'checksums.txt'
+  extra_files:
+    - glob: 'dist/*.provenance.json'
+    - glob: 'dist/release-content.json'
+    - glob: 'dist/octl-image-content.json'
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
+sboms:
+  - id: qualified-release
+    artifacts: any
+    documents: ["*.spdx.json"]
+    cmd: qualify-release-content.sh
+    args: []
+    env:
+      - GOTOOLCHAIN=go1.26.2
+      - GOWORK=off
+      - GOENV=off
+      - QUALIFY_SOURCE_SHA={{ .FullCommit }}
+      - QUALIFY_VERSION={{ .Version }}
+      - QUALIFY_TAG={{ .Tag }}
+      - QUALIFY_REPOSITORY={{ .Env.GITHUB_REPOSITORY }}
+      - QUALIFY_WORKFLOW_REF={{ .Env.GITHUB_WORKFLOW_REF }}
+      - QUALIFY_WORKFLOW_SHA={{ .Env.GITHUB_WORKFLOW_SHA }}
+      - QUALIFY_RUN_ID={{ .Env.GITHUB_RUN_ID }}
+      - QUALIFY_RUN_ATTEMPT={{ .Env.GITHUB_RUN_ATTEMPT }}
+
 signs:
-  - cmd: cosign
+  - cmd: ./scripts/sign-qualified-artifact.py
     signature: "${artifact}.sig"
     certificate: "${artifact}.pem"
     args:
-      - sign-blob
-      - '--oidc-provider=github-actions'
-      - '--output-certificate=${certificate}'
-      - '--output-signature=${signature}'
+      - cosign
+      - '{{ .FullCommit }}'
+      - '{{ .Tag }}'
+      - '{{ .Version }}'
       - '${artifact}'
-      - --yes
+      - '${signature}'
+      - '${certificate}'
     artifacts: all
     output: true
 
@@ -104,6 +132,9 @@ scoops:
 
 dockers_v2:
   - id: octl
+    # Qualification builds a local OCI layout; the workflow copies those exact
+    # inspected bytes. GoReleaser must never rebuild-and-push another image.
+    disable: true
     ids:
       - octl
     dockerfile: goreleaser.Dockerfile

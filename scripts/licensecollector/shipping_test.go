@@ -82,6 +82,7 @@ func TestReleaseImageKeepsNoticesAndPinnedBase(t *testing.T) {
 	}
 	var config struct {
 		Dockers []struct {
+			Disable    bool
 			ExtraFiles []string `yaml:"extra_files"`
 			Flags      []string
 		} `yaml:"dockers_v2"`
@@ -93,6 +94,9 @@ func TestReleaseImageKeepsNoticesAndPinnedBase(t *testing.T) {
 		t.Fatal("release image configuration is missing")
 	}
 	for _, image := range config.Dockers {
+		if !image.Disable {
+			t.Fatal("GoReleaser must not rebuild or push an uninspected image")
+		}
 		notices, epoch := false, false
 		for _, file := range image.ExtraFiles {
 			notices = notices || file == "licenses"

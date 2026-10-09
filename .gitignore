@@ -47,6 +47,7 @@ cover.out
 coverage.*
 dist/
 licenses/
+scripts/__pycache__/
 build/
 tmp/
 temp/

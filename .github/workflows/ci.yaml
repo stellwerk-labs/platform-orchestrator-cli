@@ -145,6 +145,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.0.0
+        with:
+          driver-opts: image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea # v0.33.1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.0.0
@@ -153,7 +155,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      - name: Install verified release-content tools
+        run: |
+          ./scripts/install-release-tools.sh "$RUNNER_TEMP/release-tools"
+          ./scripts/install-oras.sh "$RUNNER_TEMP/release-tools"
+          echo "$RUNNER_TEMP/release-tools" >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/scripts" >> "$GITHUB_PATH"
+          source scripts/release-tools.sh
+          docker pull "$syft_image"
+
       - name: Publish signed candidate without stable package-manager updates
+        # The OSS SBOM pipe qualifies every archive and the local OCI layout
+        # before GoReleaser signs or uploads any release artifact.
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
           distribution: goreleaser
@@ -163,6 +176,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}
           GH_PAT: ${{ github.token }}
+
+      - name: Publish only the qualified candidate image bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/publish-qualified-image.py dist
 
       - name: Verify candidate artifacts and release channel
         env:
@@ -198,8 +216,22 @@ jobs:
       - name: Generate
         run: make generate
 
+      - name: Install checksum-verified content scanner
+        run: |
+          ./scripts/install-release-tools.sh "$RUNNER_TEMP/release-tools"
+          echo "$RUNNER_TEMP/release-tools" >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/scripts" >> "$GITHUB_PATH"
+          source scripts/release-tools.sh
+          docker pull "$syft_image"
+
       - name: Verify release notice collection and fail-closed boundaries
         run: go test -count=1 -v ./scripts/licensecollector
+
+      - name: Test release content and qualification boundaries
+        run: |
+          python3 scripts/release_content_test.py
+          python3 scripts/qualify_release_test.py
+          python3 scripts/client_oci_test.py
 
       - name: Check vendored API specifications
         run: make check-api-specs
@@ -330,6 +362,8 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.version.outputs.tag != ''
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.0.0
+        with:
+          driver-opts: image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea # v0.33.1
 
       - name: Login to GitHub Container Registry
         if: steps.version.outputs.tag != ''
@@ -338,6 +372,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
+
+      - name: Install verified release-content tools
+        if: steps.version.outputs.tag != ''
+        run: |
+          ./scripts/install-release-tools.sh "$RUNNER_TEMP/release-tools"
+          ./scripts/install-oras.sh "$RUNNER_TEMP/release-tools"
+          echo "$RUNNER_TEMP/release-tools" >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/scripts" >> "$GITHUB_PATH"
+          source scripts/release-tools.sh
+          docker pull "$syft_image"
 
       - name: Publish release
         if: steps.version.outputs.tag != ''
@@ -349,6 +393,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Publish only the qualified stable image bytes
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/publish-qualified-image.py dist
 
       - name: Verify release artifacts
         if: steps.version.outputs.tag != ''

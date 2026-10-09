@@ -117,9 +117,18 @@ func TestCandidateSkipsStablePackageManagersAndKeepsSigning(t *testing.T) {
 		}
 	}
 	signs := configSection(t, config, "signs")
-	for _, required := range []string{"cmd: cosign", "--oidc-provider=github-actions", "artifacts: all", "--output-signature", "--output-certificate"} {
+	for _, required := range []string{"cmd: ./scripts/sign-qualified-artifact.py", "- cosign", "artifacts: all", "${signature}", "${certificate}", "{{ .FullCommit }}"} {
 		if !strings.Contains(signs, required) {
 			t.Fatalf("existing release signing contract lost %q", required)
+		}
+	}
+	wrapper, err := os.ReadFile("sign-qualified-artifact.py")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{"release.recheck(", "--oidc-provider=github-actions", "--output-signature=", "--output-certificate=", "--certificate-identity", "--certificate-oidc-issuer"} {
+		if !strings.Contains(string(wrapper), required) {
+			t.Fatalf("qualified signer lost existing Cosign contract %q", required)
 		}
 	}
 }
