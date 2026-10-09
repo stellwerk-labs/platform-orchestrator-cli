@@ -110,6 +110,15 @@ class ReleaseContentTest(unittest.TestCase):
             archive.addfile(member, io.BytesIO(payload))
         self.assertNotEqual(self.scan().returncode, 0)
 
+    def test_archive_metadata_has_aggregate_byte_bound(self):
+        # Empty tar archives still carry 10 KiB of headers/padding each. Their
+        # metadata must share the extraction budget, despite having no bodies.
+        for name in ("first.tar", "second.tar"):
+            with tarfile.open(self.shipping / name, "w"):
+                pass
+        with self.assertRaisesRegex(ValueError, "archive metadata exceeds scan limit"):
+            content.unpack(self.shipping, self.root / "unpacked", self.root / "metadata", max_bytes=15000)
+
     def test_bounded_unpack_rejects_unsafe_members_and_size(self):
         for kind in ("traversal", "link", "duplicate"):
             path = self.shipping / "payload.tar"

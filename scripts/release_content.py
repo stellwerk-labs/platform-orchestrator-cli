@@ -424,7 +424,11 @@ def unpack(directory, output, metadata_output=None, max_members=20000, max_bytes
                     write(entry.name, entry.size, entry.isdir(), archive.extractfile(entry) if entry.isfile() else None)
             if metadata_output is not None:
                 metadata_chunks.append(raw[cursor:])
-                (metadata_output / str(metadata_count)).write_bytes(b"".join(metadata_chunks))
+                retained = b"".join(metadata_chunks)
+                remaining_bytes -= len(retained)
+                if remaining_bytes < 0:
+                    raise ValueError("archive metadata exceeds scan limit")
+                (metadata_output / str(metadata_count)).write_bytes(retained)
                 metadata_count += 1
         for number, nested in enumerate(sorted(destination.rglob("*"))):
             if nested.is_file() and archive_path(nested):
