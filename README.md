@@ -149,6 +149,8 @@ Changed findings and additional secrets fail, including in the same executable.
 
 The image is built locally from those qualified Linux archive binaries. Every
 original OCI layer is scanned, including content hidden by later whiteouts.
+Original OCI JSON bytes and their decoded representations are both scanned;
+duplicate object keys, including escaped or nested duplicates, are rejected.
 GoReleaser's image publisher is disabled. A separate guarded step re-inspects
 and copies the exact OCI index, preserves BuildKit SBOM/provenance, and verifies
 keyless index/platform signatures and subject/predicate-bound attestations.

@@ -13,6 +13,18 @@ def digest(data):
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+def strict_json(data):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate OCI JSON key")
+            result[key] = value
+        return result
+
+    return json.loads(data, object_pairs_hook=unique)
+
+
 def blob(layout, descriptor):
     value, size = descriptor.get("digest", ""), descriptor.get("size")
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", value) or type(size) is not int or not 0 <= size <= 512 * 1024 * 1024:
@@ -31,7 +43,7 @@ def oci_reference(directory, expected):
     index_file = layout / "index.json"
     if index_file.is_symlink() or not index_file.is_file():
         raise ValueError("missing or symlinked OCI index")
-    descriptors = json.loads(index_file.read_bytes()).get("manifests", [])
+    descriptors = strict_json(index_file.read_bytes()).get("manifests", [])
     if (len(descriptors) != 1 or descriptors[0].get("digest") != expected
             or descriptors[0].get("mediaType") != "application/vnd.oci.image.index.v1+json"):
         raise ValueError("OCI reference differs from inspected index")
@@ -47,11 +59,11 @@ def validate_sbom_layout(directory, expected):
     index_file = layout / "index.json"
     if index_file.is_symlink() or not index_file.is_file():
         raise ValueError("missing or symlinked SBOM OCI index")
-    descriptors = json.loads(index_file.read_bytes()).get("manifests", [])
+    descriptors = strict_json(index_file.read_bytes()).get("manifests", [])
     if (len(descriptors) != 1 or descriptors[0].get("digest") != expected
             or descriptors[0].get("mediaType") != "application/vnd.oci.image.manifest.v1+json"):
         raise ValueError("SBOM source differs from inspected platform manifest")
-    manifest = json.loads(blob(layout, descriptors[0]))
+    manifest = strict_json(blob(layout, descriptors[0]))
     for descriptor in [manifest["config"]] + manifest["layers"]:
         blob(layout, descriptor)
 
@@ -72,12 +84,12 @@ def notices(files, arch, own_module):
     for name in required:
         if not isinstance(bundle.get(name), bytes) or not bundle[name].strip():
             raise ValueError("missing required client license/graph notice")
-    manifest = json.loads(bundle["notices.sha256.json"])
+    manifest = strict_json(bundle["notices.sha256.json"])
     actual = {name: hashlib.sha256(data).hexdigest() for name, data in bundle.items()
               if name != "notices.sha256.json" and isinstance(data, bytes)}
     if manifest != actual or len(bundle) != len(actual) + 1:
         raise ValueError("client notice manifest does not cover all regular image files")
-    graphs = json.loads(bundle["modules.json"])
+    graphs = strict_json(bundle["modules.json"])
     if "linux/" + arch not in graphs:
         raise ValueError("client image has no matching dependency graph")
     for module in graphs["linux/" + arch]:
@@ -93,13 +105,16 @@ def export(layout, output, architectures, own_module, binaries):
         raise ValueError("inspection output must be new")
     if (layout / "oci-layout").is_symlink() or (layout / "index.json").is_symlink():
         raise ValueError("symlinked OCI metadata")
-    if json.loads((layout / "oci-layout").read_text()) != {"imageLayoutVersion": "1.0.0"}:
+    marker_bytes = (layout / "oci-layout").read_bytes()
+    if strict_json(marker_bytes) != {"imageLayoutVersion": "1.0.0"}:
         raise ValueError("unsupported OCI layout")
-    index = json.loads((layout / "index.json").read_text())
+    index_bytes = (layout / "index.json").read_bytes()
+    index = strict_json(index_bytes)
     if len(index["manifests"]) != 1:
         raise ValueError("layout must contain one release index")
     top = index["manifests"][0]
-    image_index = json.loads(blob(layout, top))
+    image_index_bytes = blob(layout, top)
+    image_index = strict_json(image_index_bytes)
     manifests = image_index.get("manifests")
     if image_index.get("schemaVersion") != 2 or not isinstance(manifests, list):
         raise ValueError("release must be an OCI image index")
@@ -108,13 +123,21 @@ def export(layout, output, architectures, own_module, binaries):
     output.mkdir()
     metadata = output / "metadata"
     metadata.mkdir()
-    (metadata / "index.json").write_text(json.dumps(image_index, sort_keys=True))
+    # Scan the exact transport and subject bytes, not a lossy JSON projection.
+    (metadata / "oci-layout.json").write_bytes(marker_bytes)
+    (metadata / "layout-index.json").write_bytes(index_bytes)
+    (metadata / "index.json").write_bytes(image_index_bytes)
+    (metadata / "layout-index-decoded.json").write_text(json.dumps(index, sort_keys=True))
+    (metadata / "index-decoded.json").write_text(json.dumps(image_index, sort_keys=True))
     for descriptor in manifests:
         platform = descriptor.get("platform", {})
-        manifest = json.loads(blob(layout, descriptor))
+        manifest_bytes = blob(layout, descriptor)
+        manifest = strict_json(manifest_bytes)
         config_bytes = blob(layout, manifest["config"])
-        config = json.loads(config_bytes)
+        config = strict_json(config_bytes)
         identity = descriptor["digest"][7:]
+        (metadata / (identity + "-manifest.json")).write_bytes(manifest_bytes)
+        (metadata / (manifest["config"]["digest"][7:] + "-config.json")).write_bytes(config_bytes)
         (metadata / (identity + ".json")).write_text(json.dumps({"descriptor": descriptor, "manifest": manifest, "config": config}, sort_keys=True))
         if platform.get("os") == "unknown" and platform.get("architecture") == "unknown":
             if descriptor.get("annotations", {}).get("vnd.docker.reference.type") != "attestation-manifest":
@@ -125,7 +148,7 @@ def export(layout, output, architectures, own_module, binaries):
                 data = blob(layout, layer)
                 if layer["mediaType"] != "application/vnd.in-toto+json":
                     raise ValueError("unexpected attestation layer")
-                statement = json.loads(data)
+                statement = strict_json(data)
                 if statement.get("_type") not in ("https://in-toto.io/Statement/v0.1", "https://in-toto.io/Statement/v1"):
                     raise ValueError("unsupported attestation statement")
                 predicates.add(statement.get("predicateType"))

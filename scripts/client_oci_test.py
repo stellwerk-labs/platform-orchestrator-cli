@@ -54,12 +54,12 @@ class OCITest(unittest.TestCase):
             return self.blob(self.compress(raw), "application/vnd.oci.image.layer.v1.tar+gzip"), oci.digest(raw)
         return self.blob(raw, "application/vnd.oci.image.layer.v1.tar"), oci.digest(raw)
 
-    def build(self, lower=None, extra=None, omit=None, user="65532", subject=None):
+    def build(self, lower=None, extra=None, omit=None, user="65532", subject=None, arch="amd64", own=OWN):
         binary = bytearray(64)
         binary[:6] = b"\x7fELF\x02\x01"
-        binary[18:20] = (62).to_bytes(2, "little")
-        notices = {OWN + "/LICENSE": b"Own legal notice", "go/LICENSE": b"Go legal notice",
-                   "go/PATENTS": b"Go patent grant", "modules.json": b'{"linux/amd64":{}}'}
+        binary[18:20] = (62 if arch == "amd64" else 183).to_bytes(2, "little")
+        notices = {own + "/LICENSE": b"Own legal notice", "go/LICENSE": b"Go legal notice",
+                   "go/PATENTS": b"Go patent grant", "modules.json": json.dumps({"linux/" + arch: {}}).encode()}
         notices["notices.sha256.json"] = json.dumps({
             name: hashlib.sha256(data).hexdigest() for name, data in notices.items()
         }).encode()
@@ -70,13 +70,13 @@ class OCITest(unittest.TestCase):
         if omit:
             del files[omit]
         layers = [self.layer(value) for value in ([lower, files] if lower else [files])]
-        config = self.blob({"os": "linux", "architecture": "amd64",
+        config = self.blob({"os": "linux", "architecture": arch,
                             "config": {"Entrypoint": ["/usr/local/bin/octl"], "User": user},
                             "rootfs": {"type": "layers", "diff_ids": [value[1] for value in layers]}},
                            "application/vnd.oci.image.config.v1+json")
         platform = self.blob({"schemaVersion": 2, "config": config, "layers": [value[0] for value in layers]},
                              "application/vnd.oci.image.manifest.v1+json")
-        platform["platform"] = {"os": "linux", "architecture": "amd64"}
+        platform["platform"] = {"os": "linux", "architecture": arch}
         attested = subject or platform["digest"][7:]
         attestations = [self.blob({"_type": "https://in-toto.io/Statement/v1",
                                   "subject": [{"name": "client", "digest": {"sha256": attested}}],
@@ -92,6 +92,49 @@ class OCITest(unittest.TestCase):
         top["annotations"] = {"org.opencontainers.image.ref.name": "qualified"}
         (self.layout / "index.json").write_text(json.dumps({"schemaVersion": 2, "manifests": [top]}))
         return top
+
+    def multiarch(self):
+        manifests = []
+        for arch in ("amd64", "arm64"):
+            top = self.build(arch=arch, own=client_image.release.module_path())
+            manifests.extend(json.loads(oci.blob(self.layout, top))["manifests"])
+        top = self.blob({"schemaVersion": 2, "manifests": manifests}, top["mediaType"])
+        top["annotations"] = {"org.opencontainers.image.ref.name": "qualified"}
+        (self.layout / "index.json").write_text(json.dumps({"schemaVersion": 2, "manifests": [top]}))
+
+    def rewrite_metadata(self, kind, transform):
+        """Rehash the real fixture graph, including original attestation subjects."""
+        media = "application/vnd.oci.image." + kind + ".v1+json"
+        rewritten, replacements = [], {}
+
+        def rewrite(descriptor):
+            value = json.loads(oci.blob(self.layout, descriptor))
+            if "manifests" in value:
+                value["manifests"] = [rewrite(item) for item in value["manifests"]]
+            if descriptor["mediaType"] == "application/vnd.oci.image.manifest.v1+json":
+                value["config"] = rewrite(value["config"])
+                value["layers"] = [rewrite(item) if item["mediaType"].endswith("+json") else item
+                                   for item in value["layers"]]
+            raw = json.dumps(value, sort_keys=True).encode()
+            for old, new in replacements.items():
+                raw = raw.replace(old.encode(), new.encode())
+            if descriptor["mediaType"] == media and not rewritten:
+                raw = transform(raw)
+                rewritten.append(raw)
+            result = {**descriptor, **self.blob(raw, descriptor["mediaType"])}
+            if "annotations" in result:
+                result["annotations"] = {key: "sha256:" + replacements.get(value[7:], value[7:])
+                                         if value.startswith("sha256:") else value
+                                         for key, value in result["annotations"].items()}
+            replacements[descriptor["digest"][7:]] = result["digest"][7:]
+            return result
+
+        index_path = self.layout / "index.json"
+        index = json.loads(index_path.read_bytes())
+        index["manifests"] = [rewrite(item) for item in index["manifests"]]
+        index_path.write_text(json.dumps(index))
+        self.assertEqual(len(rewritten), 1)
+        return rewritten[0]
 
     def export(self):
         return oci.export(self.layout, self.root / "inspection", ("amd64",), OWN, ("usr/local/bin/octl",))
@@ -121,6 +164,72 @@ class OCITest(unittest.TestCase):
         publisher = (ROOT / "scripts/publish-qualified-image.py").read_text()
         self.assertNotIn('"buildx", "build"', publisher)
         self.assertIn("client_image.reinspect", publisher)
+
+    def test_original_json_bytes_are_retained_and_scanned(self):
+        for kind in ("index", "manifest", "config"):
+            for value in (b"private-owner-fixture", b"private-owner-fixtur\\u0065"):
+                with self.subTest(kind=kind, escaped=b"\\u" in value):
+                    self.build()
+                    raw = self.rewrite_metadata(kind, lambda data: b'{ "audit":"' + value + b'",\n' + data[1:])
+                    try:
+                        self.export()
+                        metadata = self.root / "inspection/metadata"
+                        self.assertTrue(any(path.read_bytes() == raw for path in metadata.iterdir()))
+                        result = self.scan()
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertNotIn(b"private-owner-fixture", result.stdout + result.stderr)
+                    finally:
+                        if (self.root / "inspection").exists():
+                            shutil.rmtree(self.root / "inspection")
+
+    def test_duplicate_json_keys_fail_at_producer_and_publisher_boundaries(self):
+        for kind in ("index", "manifest", "config"):
+            for prefix in (b'{"audit":"private-owner-fixture","audit":"public",',
+                           b'{"nested":{"audit":"private-owner-fixture","aud\\u0069t":"public"},'):
+                with self.subTest(kind=kind, prefix=prefix[:12]):
+                    self.multiarch()
+                    self.rewrite_metadata(kind, lambda data: prefix + data[1:])
+                    producer = self.root / "producer"
+                    with self.assertRaisesRegex(ValueError, "duplicate OCI JSON key"):
+                        client_image.inspect(self.layout, producer, ("amd64", "arm64"), client_image.release.module_path())
+                    dist, receipt = self.publisher_fixture()
+                    with self.assertRaisesRegex(ValueError, "duplicate OCI JSON key"):
+                        client_image.reinspect(dist, receipt, self.root / "publisher")
+                    for path in (producer, dist, self.root / "publisher"):
+                        if path.exists():
+                            shutil.rmtree(path)
+
+    def publisher_fixture(self, report=None):
+        dist = self.root / "dist"
+        layout = dist / "qualified-content/image-layout"
+        layout.parent.mkdir(parents=True)
+        shutil.copytree(self.layout, layout)
+        source = {"sourceSHA": "1" * 40}
+        (dist / "octl-image-content.json").write_text(json.dumps({"sourceSHA": source["sourceSHA"],
+            "image": client_image.IMAGE, "buildTools": client_image.image_tools(), **(report or {})}))
+        top = json.loads((layout / "index.json").read_bytes())["manifests"][0]
+        return dist, {"source": source, "image": {"layout": "qualified-content/image-layout",
+                                                 "report": "octl-image-content.json", "digest": top["digest"]}}
+
+    def test_actual_producer_and_publisher_inspection_scan_metadata(self):
+        self.multiarch()
+        report = client_image.inspect(self.layout, self.root / "producer", ("amd64", "arm64"), client_image.release.module_path())
+        dist, receipt = self.publisher_fixture(report)
+        self.assertEqual(client_image.reinspect(dist, receipt, self.root / "publisher"), report)
+        for path in (self.root / "producer", dist, self.root / "publisher"):
+            shutil.rmtree(path)
+        token = ("gh" + "p_" + "4Ax9eC2mF7qR5uT8vW3zB6dH1jK0nP9sY2aL").encode()
+        for kind in ("index", "manifest", "config"):
+            with self.subTest(kind=kind):
+                self.multiarch()
+                self.rewrite_metadata(kind, lambda data: b'{"audit":"' + token + b' # gitleaks:allow",' + data[1:])
+                with self.assertRaisesRegex(ValueError, "release inspection tool failed"):
+                    client_image.inspect(self.layout, self.root / "producer", ("amd64", "arm64"), client_image.release.module_path())
+                dist, receipt = self.publisher_fixture()
+                with self.assertRaisesRegex(ValueError, "release inspection tool failed"):
+                    client_image.reinspect(dist, receipt, self.root / "publisher")
+                for path in (self.root / "producer", dist, self.root / "publisher"):
+                    shutil.rmtree(path)
 
     def test_deleted_lower_layer_secret_is_still_scanned(self):
         token = ("gh" + "p_" + "4Ax9eC2mF7qR5uT8vW3zB6dH1jK0nP9sY2aL").encode()

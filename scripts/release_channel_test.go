@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+
+	"gopkg.in/yaml.v3"
 )
 
 func releaseConfig(t *testing.T) string {
@@ -130,6 +132,39 @@ func TestCandidateSkipsStablePackageManagersAndKeepsSigning(t *testing.T) {
 		if !strings.Contains(string(wrapper), required) {
 			t.Fatalf("qualified signer lost existing Cosign contract %q", required)
 		}
+	}
+}
+
+func TestReleaseWorkflowsPinTheVerifiedCosignV2Contract(t *testing.T) {
+	data, err := os.ReadFile("../.github/workflows/ci.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var workflow struct {
+		Jobs map[string]struct {
+			Steps []struct {
+				Name, Uses string
+				With       map[string]string
+			}
+		}
+	}
+	if err := yaml.Unmarshal(data, &workflow); err != nil {
+		t.Fatal(err)
+	}
+	installers := 0
+	for _, job := range workflow.Jobs {
+		for _, step := range job.Steps {
+			if !strings.HasPrefix(step.Uses, "sigstore/cosign-installer@") {
+				continue
+			}
+			installers++
+			if step.Uses != "sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5" || step.With["cosign-release"] != "v2.6.1" {
+				t.Fatal("release signer must use the verified immutable installer and explicit Cosign v2 version")
+			}
+		}
+	}
+	if installers != 2 {
+		t.Fatal("both candidate and stable releases must install the pinned signer")
 	}
 }
 

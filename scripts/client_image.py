@@ -26,6 +26,12 @@ def image_tools():
     return tools
 
 
+def inspect(layout, output, architectures, own_module):
+    report = client_oci.export(layout, output, architectures, own_module, ("usr/local/bin/octl",))
+    release.checked([str(release.ROOT / "scripts/scan-release-content.sh"), str(output), "jayonthenet"])
+    return report
+
+
 def build(dist, stage, inspections, producer):
     tools = image_tools()
     context = stage / "image-context"
@@ -63,11 +69,10 @@ def build(dist, stage, inspections, producer):
     layout = stage / "image-layout"
     shutil.move(roots[0], layout)
     inspection = stage / "image-inspection"
-    report = client_oci.export(layout, inspection, ("amd64", "arm64"), release.module_path(), ("usr/local/bin/octl",))
+    report = inspect(layout, inspection, ("amd64", "arm64"), release.module_path())
     for arch, payload in report["payloads"].items():
         if payload["binaries"]["usr/local/bin/octl"] != "sha256:" + inspections["linux/" + arch]["binarySHA256"]:
             raise ValueError("image bytes differ from qualified archive binary")
-    release.checked([str(release.ROOT / "scripts/scan-release-content.sh"), str(inspection), "jayonthenet"])
     files = []
     for arch, payload in report["payloads"].items():
         selected = stage / ("sbom-image-" + arch)
@@ -116,10 +121,8 @@ def reinspect(dist, receipt, output):
     if image.get("layout") != "qualified-content/image-layout" or image.get("report") != "octl-image-content.json":
         raise ValueError("unexpected qualified image location")
     expected = json.loads((dist / image["report"]).read_text())
-    report = client_oci.export(dist / image["layout"], output, ("amd64", "arm64"),
-                               release.module_path(), ("usr/local/bin/octl",))
+    report = inspect(dist / image["layout"], output, ("amd64", "arm64"), release.module_path())
     if report["index"] != image["digest"] or expected != {"sourceSHA": receipt["source"]["sourceSHA"], "image": IMAGE,
                                                        "buildTools": image_tools(), **report}:
         raise ValueError("OCI content changed after qualification")
-    release.checked([str(release.ROOT / "scripts/scan-release-content.sh"), str(output), "jayonthenet"])
     return report
