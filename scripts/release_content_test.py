@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Real scanner and bounded archive regressions, no skipped required behavior."""
+import base64
 import io
 import gzip
 import json
@@ -64,6 +65,74 @@ class ReleaseContentTest(unittest.TestCase):
     def test_real_scanner_rejects_binary_secret_and_inline_bypass(self):
         path = self.shipping / "application"
         path.write_bytes(b"\x7fELF\x02\x01\0" + self.token() + b" # gitleaks:allow\0")
+        result = self.scan()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn(self.token(), result.stdout + result.stderr)
+
+    def test_pinned_distroless_runtime_home_metadata_only(self):
+        # Actual retained distroless nonroot tar metadata, compressed solely to
+        # keep the binary fixture small and byte-for-byte reproducible.
+        raw = zlib.decompress(base64.b64decode(
+            "eNqT7+ZgAANmnom2agxcDAx6+kX5+SX6DLQEBkBgbmAApg0waSxscwNDYwYFUwY6gNLiksQiBQWGEQr09DPyc1PpEP+mpiTEv5m5udFo/NMx/vPy82hXDsDzv6E5EJggaFzxb2hgamYwGv+jYBSMglFASwAAzdEwIg=="
+        ))
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         "8ff6d9a354da91f11b000495230313dfe9f6c75911c24afd5e8cff14229c6f54")
+        entries = [
+            {"link": "", "mode": 448, "name": "root", "type": "5"},
+            {"link": "", "mode": 493, "name": "home", "type": "5"},
+            {"link": "", "mode": 448, "name": "home/nonroot", "type": "5"},
+        ]
+        digest = "sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4"
+        report = self.shipping / "report.json"
+        report.write_text(json.dumps({
+            "payloads": {arch: {"layers": ["sha256:" + "0" * 64] * 7 + [digest]}
+                         for arch in ("amd64", "arm64")},
+        }))
+        for arch in ("amd64", "arm64"):
+            layer = self.shipping / "layers" / arch / "7"
+            layer.mkdir(parents=True)
+            (layer / "metadata-bytes.bin").write_bytes(raw)
+            (layer / "entries.json").write_text(json.dumps(entries))
+        self.assertEqual(self.scan().returncode, 0)
+        metadata = self.shipping / "layers/amd64/7/metadata-bytes.bin"
+        metadata.write_bytes(raw + b"x")
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        metadata.write_bytes(raw)
+        entries_path = metadata.with_name("entries.json")
+        entries_path.write_text(json.dumps(entries + [{"name": "extra"}]))
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        entries_path.write_text(json.dumps(entries))
+        report.write_text(json.dumps({"payloads": {
+            arch: {"layers": ["sha256:" + "0" * 64] * 8} for arch in ("amd64", "arm64")}}))
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        report.write_text(json.dumps({"payloads": {
+            arch: {"layers": ["sha256:" + "0" * 64] * 7 + [digest]}
+            for arch in ("amd64", "arm64")}}))
+        misplaced = self.shipping / "metadata-bytes.bin"
+        misplaced.write_bytes(raw)
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        misplaced.unlink()
+        wrong_layer = self.shipping / "layers/amd64/8/metadata-bytes.bin"
+        wrong_layer.parent.mkdir()
+        wrong_layer.write_bytes(raw)
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        wrong_layer.unlink()
+        metadata.write_bytes(raw + b"/home/nonroot/.ssh/secret")
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        metadata.write_bytes(raw)
+        host = self.shipping / "host-path.txt"
+        host.write_text("/Users/private-person/work")
+        with self.assertRaisesRegex(ValueError, "private reference scan"):
+            content.scan(self.shipping)
+        host.unlink()
+        secret = self.shipping / "secret.bin"
+        secret.write_bytes(b"\0" + self.token() + b"\0")
         result = self.scan()
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn(self.token(), result.stdout + result.stderr)

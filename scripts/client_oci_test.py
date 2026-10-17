@@ -152,6 +152,24 @@ class OCITest(unittest.TestCase):
         self.assertEqual(oci.oci_reference(self.layout, top["digest"]), "qualified")
         self.assertEqual(self.scan().returncode, 0)
 
+    def test_oras_platform_copy_preserves_manifest_media_type(self):
+        if shutil.which("oras") is None:
+            raise RuntimeError("pinned ORAS 1.3.4 is required, run scripts/install-oras.sh")
+        self.build()
+        report = self.export()
+        manifest = report["payloads"]["amd64"]["manifest"]
+        selected = self.root / "selected-platform"
+        client_image.copy_platform_manifest(self.layout, selected, "amd64", report)
+        descriptor = oci.strict_json((selected / "index.json").read_bytes())["manifests"][0]
+        self.assertEqual(descriptor["digest"], manifest)
+        self.assertEqual(descriptor["mediaType"], "application/vnd.oci.image.manifest.v1+json")
+        legacy = self.root / "digest-selected"
+        subprocess.run(["oras", "cp", "--no-tty", "--from-oci-layout", "--to-oci-layout",
+                        str(self.layout) + "@" + manifest, str(legacy) + ":qualified"],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        with self.assertRaisesRegex(ValueError, "SBOM source differs"):
+            oci.validate_sbom_layout(legacy, manifest)
+
     def test_builtin_sbom_and_daemon_use_verified_multiarch_index_pins(self):
         tools = client_image.image_tools()
         self.assertEqual(tools["buildkit"]["version"], "v0.33.1")

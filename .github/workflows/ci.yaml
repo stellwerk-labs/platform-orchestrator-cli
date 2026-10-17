@@ -221,6 +221,7 @@ jobs:
       - name: Install checksum-verified content scanner
         run: |
           ./scripts/install-release-tools.sh "$RUNNER_TEMP/release-tools"
+          ./scripts/install-oras.sh "$RUNNER_TEMP/release-tools"
           echo "$RUNNER_TEMP/release-tools" >> "$GITHUB_PATH"
           echo "$GITHUB_WORKSPACE/scripts" >> "$GITHUB_PATH"
           source scripts/release-tools.sh

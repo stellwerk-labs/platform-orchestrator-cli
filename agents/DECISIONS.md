@@ -1,5 +1,17 @@
 # Release inspection decisions
 
+## 2026-10-17: keep client image corrections generic
+
+Scope Buildx Git discovery suppression to the precompiled image build subprocess;
+do not change ambient release tooling or the producer statement. Select a
+platform manifest through the tagged OCI index when copying for image SBOMs,
+and validate that ORAS retained the exact manifest descriptor and media type.
+The runtime-home scanner allowance applies only to the byte-identical pinned
+Distroless nonroot layer metadata on either target architecture. All other
+paths, bytes, and scanner checks remain mandatory. The public CI test job must
+install the already-pinned ORAS binary before running the real regression.
+
+
 ## 2026-10-12: inspect exact OCI JSON without ambiguity
 
 Retain original layout marker, transport index, image index, manifests and

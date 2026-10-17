@@ -41,3 +41,32 @@ Commands and results:
 These are local control/fixture checks, not full multiarch artifact production,
 hosted qualification, real keyless signing or public-consumer verification.
 See [LEARNINGS.md](LEARNINGS.md) for the source of the corrected boundaries.
+
+## 2026-10-17: generic client image export correction
+
+Prepared an isolated source change for the Buildx invocation,
+platform-selected ORAS copy, and narrowly pinned Distroless metadata scan.
+Added real ORAS, byte-bound scanner, and subprocess-environment regressions,
+and installed ORAS in the public CI test job. No client Go code, API inputs,
+publisher semantics, tags, signing or publication were changed. Local test
+results: complete OCI (15), content scanner (15), release qualification (11),
+candidate release (11), and stable preflight (4) Python helper suites passed.
+Python compilation and workflow YAML parsing passed. The preliminary PyYAML
+check could not run because that optional module was absent; the available
+`yq` parser passed without adding a dependency.
+
+Standard gates also passed with `GOTOOLCHAIN=go1.26.2 GOWORK=off GOENV=off
+GOFLAGS='' GOEXPERIMENT='' GOMAXPROCS=2`, the original PATH retained and
+golangci-lint2.11.4 prefixed: `make generate` (no generated drift), `make test`
+(74.7% total coverage), and `make lint` (zero issues). Each completed under
+270seconds. No exact Go test count was collected for this run. Full helper
+commands were `python3 scripts/client_oci_test.py`,
+`python3 scripts/release_content_test.py`, `python3 scripts/qualify_release_test.py`,
+`python3 scripts/candidate-release_test.py`, and
+`python3 scripts/stable-release-preflight_test.py` with the pinned content tools
+and Go toolchain. `git diff --check` passed.
+
+Root reviewed all nine changed paths. Application/Go/API/generator inputs and
+release publication semantics are unchanged. The metadata allowance fails
+closed on absent, malformed or mismatched evidence. This is a local source
+correction, not a shipping artifact, public contract consumer or release claim.

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -175,6 +176,17 @@ class QualificationTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing compiled dependency"):
             release.generate_spdx(filesystem, self.root / "missing.spdx.json", release.sha(self.binary), producer,
                                   dependencies={"example.com/not-compiled": "v1.0.0"})
+
+    def test_buildx_git_discovery_is_subprocess_scoped(self):
+        import client_image
+        parent = {"PATH": "/retained/tool/path", "BUILDX_GIT_INFO": "1"}
+        environment = client_image.build_environment(parent)
+        self.assertEqual(parent["BUILDX_GIT_INFO"], "1")
+        self.assertEqual(environment, {"PATH": "/retained/tool/path", "BUILDX_GIT_INFO": "0"})
+        self.assertEqual(client_image.build_environment({}), {"BUILDX_GIT_INFO": "0"})
+        actual = release.checked([sys.executable, "-c", "import os; print(os.environ['BUILDX_GIT_INFO']); "
+                                  "print(os.environ['PATH'])"], env=environment)
+        self.assertEqual(actual.decode(), "0\n/retained/tool/path\n")
 
 
 if __name__ == "__main__":

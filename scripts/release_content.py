@@ -309,6 +309,31 @@ def scan(directory, forbidden=()):
         rb"\bhttps?://[a-z0-9.-]+\.(?:internal|localdomain)\b",
     ] + [re.escape(value.encode()) for value in forbidden if value]
     text_patterns = [rb"\bWX[0-9]+\b", rb"\b(?:S1\.[0-9]+|PM[0-9]{2}|MO[0-9]{2}|[QCD][0-9]{2})\b"]
+
+    def pinned_nonroot_metadata(path, data):
+        parts = path.relative_to(directory).parts
+        if (len(parts) != 4 or parts[0] != "layers" or parts[1] not in ("amd64", "arm64")
+                or parts[2:] != ("7", "metadata-bytes.bin")
+                or hashlib.sha256(data).hexdigest() != "8ff6d9a354da91f11b000495230313dfe9f6c75911c24afd5e8cff14229c6f54"):
+            return False
+        entries = path.with_name("entries.json")
+        report = directory / "report.json"
+        if entries.is_symlink() or not entries.is_file() or report.is_symlink() or not report.is_file():
+            return False
+        try:
+            # This is layer 7 of both platform manifests in the pinned
+            # gcr.io/distroless/static:nonroot base image, not a host home.
+            layers = json.loads(report.read_text())["payloads"][parts[1]]["layers"]
+            if layers[7] != "sha256:3214acf345c0cc6bbdb56b698a41ccdefc624a09d6beb0d38b5de0b2303ecaf4":
+                return False
+        except (KeyError, IndexError, TypeError, ValueError):
+            return False
+        return json.loads(entries.read_text()) == [
+            {"link": "", "mode": 448, "name": "root", "type": "5"},
+            {"link": "", "mode": 493, "name": "home", "type": "5"},
+            {"link": "", "mode": 448, "name": "home/nonroot", "type": "5"},
+        ]
+
     for path in directory.rglob("*"):
         if path.name == ".gitleaksignore":
             raise ValueError("shipping content cannot supply scanner exemptions")
@@ -321,6 +346,10 @@ def scan(directory, forbidden=()):
             raise ValueError("private reference scan found prohibited content")
         if path.is_file():
             data = path.read_bytes()
+            # Inspect a view of only these byte-bound base-image metadata
+            # records; retain original OCI bytes and every other path check.
+            if pinned_nonroot_metadata(path, data):
+                data = data.replace(b"/home/nonroot/", b"/runtime/nonroot/")
             # Three-character planning identifiers collide with ELF machine
             # instructions. Apply them to text; binary content still gets the
             # complete secret scan and all concrete path/owner/URL patterns.

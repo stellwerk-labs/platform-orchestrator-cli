@@ -2,6 +2,7 @@
 """Build locally, inspect every original layer, and retain the exact OCI bytes."""
 import datetime
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -12,6 +13,12 @@ import release_content
 
 
 IMAGE = "ghcr.io/stellwerk-labs/octl"
+
+
+def build_environment(environment):
+    # The context contains precompiled inputs, not a Git source checkout. Its
+    # enclosing worktree is incidental; the producer statement binds the source.
+    return {**environment, "BUILDX_GIT_INFO": "0"}
 
 
 def image_tools():
@@ -30,6 +37,14 @@ def inspect(layout, output, architectures, own_module):
     report = client_oci.export(layout, output, architectures, own_module, ("usr/local/bin/octl",))
     release.checked([str(release.ROOT / "scripts/scan-release-content.sh"), str(output), "jayonthenet"])
     return report
+
+
+def copy_platform_manifest(layout, output, arch, report):
+    source_tag = client_oci.oci_reference(layout, report["index"])
+    release.checked(["oras", "cp", "--no-tty", "--platform", "linux/" + arch,
+                     "--from-oci-layout", "--to-oci-layout",
+                     str(layout) + ":" + source_tag, str(output) + ":qualified"])
+    client_oci.validate_sbom_layout(output, report["payloads"][arch]["manifest"])
 
 
 def build(dist, stage, inspections, producer):
@@ -57,7 +72,7 @@ def build(dist, stage, inspections, producer):
         "--label", "org.opencontainers.image.revision=" + producer["sourceSHA"],
         "--provenance=mode=max", "--attest", "type=sbom,generator=" + tools["sbomGenerator"]["image"],
         "--output", "type=oci,dest=" + str(archive.resolve()) + ",rewrite-timestamp=true", ".",
-    ], cwd=context)
+    ], cwd=context, env=build_environment(os.environ))
     source = stage / "image-archive"
     source.mkdir()
     shutil.move(archive, source / archive.name)
@@ -76,9 +91,7 @@ def build(dist, stage, inspections, producer):
     files = []
     for arch, payload in report["payloads"].items():
         selected = stage / ("sbom-image-" + arch)
-        release.checked(["oras", "cp", "--no-tty", "--from-oci-layout", "--to-oci-layout",
-                         str(layout) + "@" + payload["manifest"], str(selected) + ":qualified"])
-        client_oci.validate_sbom_layout(selected, payload["manifest"])
+        copy_platform_manifest(layout, selected, arch, report)
         spdx = dist / ("octl-image-linux-" + arch + ".spdx.json")
         release.generate_spdx(selected, spdx, payload["manifest"].removeprefix("sha256:"), producer, "oci-dir",
                               inspections["linux/" + arch]["dependencies"])
