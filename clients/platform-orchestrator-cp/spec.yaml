@@ -349,7 +349,7 @@ paths:
     post:
       operationId: authorizeDeploymentAdmission
       summary: Protect one ordinary Data Plane admission against concurrent Pin changes.
-      description: Restricted to the operator-bound authenticated Data Plane service, an IAM platform principal with a static token that Core looks up in IAM on every call; another identity is refused with 403 deployment_admission_service_forbidden, and 503 authorization_unavailable means IAM could not answer. Rechecks the original actor's deployment permission and exact immutable scope. Persists a guard before DP commits a Deployment. No plugin capability grants access. A settled identity can never authorize another Deployment.
+      description: Restricted to the Data Plane's admission identity, one IAM platform principal with a static token for every organization, which Core looks up in IAM on every call; another identity is refused with 403 deployment_admission_service_forbidden, and 503 authorization_unavailable means IAM could not answer. Rechecks the original actor's deployment permission and exact immutable scope. Persists a guard before DP commits a Deployment. No plugin capability grants access. A settled identity can never authorize another Deployment.
       tags: [Deployment admissions]
       security: [{userIdHeader: []}]
       parameters:
@@ -375,7 +375,7 @@ paths:
     post:
       operationId: sealDeploymentAdmissionAbsence
       summary: Permanently close an uncommitted admission, including a delayed authorize request.
-      description: Restricted to the operator-bound Data Plane service. DP must first persist exact intent and an absent tombstone under its admission-key lock, proving no Deployment committed. Core stores an immutable absent receipt even if authorize has not arrived, or settles the exact existing active guard. A late authorize can never reopen this identity. Recovery does not recheck the original actor's permission or require a live Environment. Changed intent or a different terminal outcome conflicts. Timeout or a not-found read alone is never absence evidence.
+      description: Restricted to the Data Plane's admission identity. DP must first persist exact intent and an absent tombstone under its admission-key lock, proving no Deployment committed. Core stores an immutable absent receipt even if authorize has not arrived, or settles the exact existing active guard. A late authorize can never reopen this identity. Recovery does not recheck the original actor's permission or require a live Environment. Changed intent or a different terminal outcome conflicts. Timeout or a not-found read alone is never absence evidence.
       tags: [Deployment admissions]
       security: [{userIdHeader: []}]
       parameters:
@@ -400,7 +400,7 @@ paths:
     post:
       operationId: settleDeploymentAdmission
       summary: Settle an exact ordinary admission from the authenticated Data Plane's durable outcome.
-      description: Only the operator-bound DP service can report authoritative terminal receipt evidence. An absent outcome requires a sealed DP tombstone under the admission-key lock after transaction rollback; timeout is never evidence. The original actor need not retain permissions for safety reconciliation. Scope, request digest and completion are immutable.
+      description: Only the Data Plane's admission identity can report authoritative terminal receipt evidence. An absent outcome requires a sealed DP tombstone under the admission-key lock after transaction rollback; timeout is never evidence. The original actor need not retain permissions for safety reconciliation. Scope, request digest and completion are immutable.
       tags: [Deployment admissions]
       security: [{userIdHeader: []}]
       parameters:

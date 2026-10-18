@@ -4,16 +4,17 @@
 the only input of the generated `cp` client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-cp`
-- Commit: `301e2448ae8913e61dcc27d4ab75fc1d1046bcae`
+- Commit: `fc8059255bd16ff61b0e4d3db122efd34912d068`
 - File: `openapi/spec.yaml`
-- Git blob: `cf62f4e2fbdbb2218edc261d495598b788e73159`
-- File SHA-256: `6c1c61a0382e9714b12dc0c12bffb47faa39a95a2e10776cfee208cdc706dfbb`
+- Git blob: `b8ddf111b54f363169798121e0ce1526f627cfe0`
+- File SHA-256: `903b836a6acd02aa24aa0f9adb41093a65df7e1be8358d9f11baf1b2de906022`
 
-The commit is the Control Plane plugin foundation export (platform principals
-as identities, several organizations per installation, organization mode,
-installation-wide licence grants, schema 48) and is not published yet.
-Repin to the published commit at release: copy `openapi/spec.yaml` from that
-commit unchanged, update commit, blob and SHA-256 here, then run
+The public source commit contains the Control Plane plugin contracts: platform
+principals as identities, several organizations per installation, organization
+mode, installation-wide licence grants and schema 48. This records the API
+source, not an application image release. To update this snapshot, copy
+`openapi/spec.yaml` from the selected public commit unchanged. Update the commit,
+blob and SHA-256 here, then run
 `make generate` and `make check-api-specs`.
 
 Never edit `spec.yaml` or the generated client by hand, and never add schemas
