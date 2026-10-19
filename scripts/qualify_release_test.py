@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise real Go archives and exact legal/provenance inspection boundaries."""
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -187,6 +188,104 @@ class QualificationTest(unittest.TestCase):
         actual = release.checked([sys.executable, "-c", "import os; print(os.environ['BUILDX_GIT_INFO']); "
                                   "print(os.environ['PATH'])"], env=environment)
         self.assertEqual(actual.decode(), "0\n/retained/tool/path\n")
+
+
+class DiagnosticTest(unittest.TestCase):
+    SENTINEL = "credential-value-must-never-appear"
+
+    def test_real_child_exit_and_all_output_are_closed(self):
+        command = [sys.executable, "-c", "import sys; print(sys.argv[1]); print(sys.argv[1],file=sys.stderr); sys.exit(37)", self.SENTINEL]
+        with self.assertRaises(release.CheckedToolFailure) as direct:
+            release.checked(command)
+        self.assertEqual(direct.exception.returncode, 37)
+        self.assertEqual(direct.exception.tool, "other")
+        self.assertEqual(direct.exception.args, ("release inspection tool failed",))
+        self.assertNotIn(self.SENTINEL, str(direct.exception) + repr(direct.exception))
+        with self.assertRaises(release.QualificationStageFailure) as staged:
+            release.at_stage("archive-spdx:2/5", release.checked, command)
+        self.assertEqual((staged.exception.category, staged.exception.tool, staged.exception.returncode), ("checked-tool", "other", 37))
+        self.assertIsNone(staged.exception.rule_id)
+        self.assertNotIn(self.SENTINEL, str(staged.exception) + repr(staged.exception))
+
+    def test_dual_loaded_checked_retains_original_exit(self):
+        spec = importlib.util.spec_from_file_location("qualification_entry_point", release.__file__)
+        entry_point = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(entry_point)
+        self.assertIsNot(entry_point.CheckedToolFailure, release.CheckedToolFailure)
+        with self.assertRaises(release.QualificationStageFailure) as caught:
+            release.at_stage("oci-image", entry_point.checked,
+                             [sys.executable, "-c", "import sys; sys.exit(37)", self.SENTINEL])
+        self.assertEqual((caught.exception.category, caught.exception.returncode), ("checked-tool", 37))
+        self.assertNotIn(self.SENTINEL, str(caught.exception))
+
+    def test_dynamic_exception_and_os_path_are_never_rules_or_output(self):
+        def invalid():
+            raise ValueError(self.SENTINEL)
+        with self.assertRaises(release.QualificationStageFailure) as dynamic:
+            release.at_stage("source-notices", invalid)
+        self.assertEqual(dynamic.exception.category, "ValueError")
+        self.assertIsNone(dynamic.exception.rule_id)
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaises(release.QualificationStageFailure) as path:
+                release.at_stage("archive-inspection", (Path(temporary) / self.SENTINEL).read_bytes)
+        self.assertEqual(path.exception.category, "OSError")
+        self.assertIsNone(path.exception.rule_id)
+        self.assertNotIn(self.SENTINEL, str(dynamic.exception) + str(path.exception))
+
+    def test_only_actual_source_literal_is_hashed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            legal = Path(temporary)
+            (legal / "notices.sha256.json").write_text("{}")
+            with self.assertRaises(release.QualificationStageFailure) as caught:
+                release.at_stage("source-notices", release.notices, legal, "example/client")
+        self.assertEqual(caught.exception.category, "source-literal")
+        self.assertEqual(caught.exception.rule_id, "qualify_release.py:sha256:" + hashlib.sha256(
+            b"notice checksum manifest does not cover exact shipped content").hexdigest())
+
+    def test_diagnostic_fields_refuse_unbounded_or_arbitrary_values(self):
+        for kwargs in ({"stage": self.SENTINEL}, {"category": self.SENTINEL}, {"tool": self.SENTINEL},
+                       {"rule_id": self.SENTINEL}, {"returncode": self.SENTINEL}, {"returncode": 10 ** 100},
+                       {"stage": "archive-spdx:100000/5"}):
+            values = {"stage": "qualify", **kwargs}
+            with self.subTest(field=next(iter(kwargs))), self.assertRaises(ValueError) as caught:
+                release.QualificationStageFailure(**values)
+            self.assertNotIn(self.SENTINEL, str(caught.exception))
+
+    def test_imported_run_and_real_main_emit_closed_nonzero_diagnostics(self):
+        cases = ([sys.executable, "-B", str(release.ROOT / "scripts/qualify_release.py"), "qualify", self.SENTINEL],
+                 [sys.executable, "-B", "-c", "import qualify_release as q,sys; sys.argv=['qualify_release.py',sys.argv[1]]; sys.exit(q.run())", self.SENTINEL])
+        for command in cases:
+            with self.subTest(entrypoint=command[2]):
+                result = subprocess.run(command, env={**os.environ, "QUALIFY_SOURCE_SHA": "0" * 40,
+                    "PYTHONPATH": str(release.ROOT / "scripts")}, capture_output=True, text=True, timeout=20)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "")
+                self.assertRegex(result.stderr, r"^client release qualification failed at (source-identity|entrypoint) class=source-literal rule=qualify_release.py:sha256:[0-9a-f]{64}\n$")
+                self.assertNotIn(self.SENTINEL, result.stderr)
+
+    def test_actual_entrypoints_report_real_git128_without_repo_or_path_leak(self):
+        with tempfile.TemporaryDirectory(prefix="client-diagnostic-no-git-") as temporary:
+            source = Path(temporary) / self.SENTINEL / "source"
+            scripts = source / "scripts"
+            scripts.mkdir(parents=True)
+            for name in ("qualify_release.py", "release_content.py"):
+                shutil.copyfile(release.ROOT / "scripts" / name, scripts / name)
+            environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+            environment.update(GIT_CEILING_DIRECTORIES=str(Path(temporary).resolve()),
+                               GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
+                               PYTHONPATH=str(scripts), PYTHONDONTWRITEBYTECODE="1")
+            commands = ([sys.executable, "-B", str(scripts / "qualify_release.py"), "qualify", self.SENTINEL],
+                        [sys.executable, "-B", "-c", "import qualify_release as q,sys; sys.argv=['qualify_release.py','qualify',sys.argv[1]]; sys.exit(q.run())", self.SENTINEL])
+            for command in commands:
+                with self.subTest(entrypoint=command[2]):
+                    result = subprocess.run(command, cwd=source, env=environment,
+                                            capture_output=True, text=True, timeout=20)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertEqual(result.stdout, "")
+                    self.assertEqual(result.stderr, "client release qualification failed at source-identity class=checked-tool tool=git exit=128\n")
+                    self.assertNotIn(self.SENTINEL, result.stderr)
+                    self.assertNotIn(str(source), result.stderr)
+                    self.assertNotIn("not a git repository", result.stderr)
 
 
 if __name__ == "__main__":

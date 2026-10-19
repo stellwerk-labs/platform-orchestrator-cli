@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate SPDX/producer evidence from exact GoReleaser archive bytes."""
+import ast
 import datetime
 import hashlib
 import json
@@ -19,6 +20,89 @@ SYFT = "ghcr.io/anchore/syft@sha256:3eb5379ba7b409c3f4069b686110527af0c47df993fa
 PROVENANCE = "https://slsa.dev/provenance/v1"
 
 
+QUALIFICATION_ERRORS = (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError)
+RULE_SOURCES = ("qualify_release.py", "client_image.py", "client_oci.py", "release_content.py")
+TOOLS = {"git", "go", "docker", "oras", "content-scan", "other"}
+
+
+class CheckedToolFailure(ValueError):
+    def __init__(self, tool, returncode):
+        super().__init__("release inspection tool failed")
+        self.tool, self.returncode = tool, returncode
+
+
+class QualificationStageFailure(ValueError):
+    def __init__(self, stage, category="unclassified", rule_id=None, tool=None, returncode=None):
+        if not re.fullmatch(r"(?:entrypoint|source-identity|module-identity|source-notices|notice-manifest|qualify|recheck|release-notes|receipt-write|shipping-scan|archive-(?:set|inspection|target|spdx|provenance|target-set)|oci-image)(?::[0-9]{1,5}/[0-9]{1,5})?", stage):
+            raise ValueError("invalid diagnostic stage")
+        if category not in {"unclassified", "checked-tool", "source-literal", "ValueError", "OSError", "KeyError", "TypeError", "SubprocessError"}:
+            raise ValueError("invalid diagnostic category")
+        if rule_id is not None and not re.fullmatch(r"(?:qualify_release|client_image|client_oci|release_content)\.py:sha256:[0-9a-f]{64}", rule_id):
+            raise ValueError("invalid diagnostic rule")
+        if tool is not None and tool not in TOOLS:
+            raise ValueError("invalid diagnostic tool")
+        if returncode is not None and (type(returncode) is not int or not -4294967295 <= returncode <= 4294967295):
+            raise ValueError("invalid diagnostic exit")
+        super().__init__(stage)
+        self.category, self.rule_id, self.tool, self.returncode = category, rule_id, tool, returncode
+
+
+def literal_rule(error):
+    if type(error) is not ValueError or len(error.args) != 1 or type(error.args[0]) is not str:
+        return None
+    traceback = error.__traceback__
+    while traceback and traceback.tb_next:
+        traceback = traceback.tb_next
+    if traceback is None:
+        return None
+    source = Path(traceback.tb_frame.f_code.co_filename).resolve()
+    if source.parent != ROOT / "scripts" or source.name not in RULE_SOURCES:
+        return None
+    try:
+        tree = ast.parse(source.read_bytes(), filename=str(source))
+    except (OSError, SyntaxError):
+        return None
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Raise) and node.lineno == traceback.tb_lineno
+                and isinstance(node.exc, ast.Call) and isinstance(node.exc.func, ast.Name)
+                and node.exc.func.id == "ValueError" and len(node.exc.args) == 1
+                and not node.exc.keywords and isinstance(node.exc.args[0], ast.Constant)
+                and type(node.exc.args[0].value) is str and node.exc.args[0].value == error.args[0]):
+            return source.name + ":sha256:" + hashlib.sha256(error.args[0].encode()).hexdigest()
+    return None
+
+
+def closed_failure(error):
+    traceback = error.__traceback__
+    while traceback and traceback.tb_next:
+        traceback = traceback.tb_next
+    # Source-bound recognition survives __main__ importing client_image, which
+    # loads qualify_release again with a distinct exception class identity.
+    if (error.args == ("release inspection tool failed",) and traceback is not None
+            and traceback.tb_frame.f_code.co_name == "checked"
+            and Path(traceback.tb_frame.f_code.co_filename).resolve() == ROOT / "scripts/qualify_release.py"):
+        code, tool = getattr(error, "returncode", None), getattr(error, "tool", None)
+        if type(code) is int and -4294967295 <= code <= 4294967295 and tool in TOOLS:
+            return "checked-tool", None, tool, code
+    rule = literal_rule(error)
+    if rule:
+        return "source-literal", rule, None, None
+    for kind, label in ((ValueError, "ValueError"), (OSError, "OSError"), (KeyError, "KeyError"),
+                        (TypeError, "TypeError"), (subprocess.SubprocessError, "SubprocessError")):
+        if isinstance(error, kind):
+            return label, None, None, None
+    return "unclassified", None, None, None
+
+
+def at_stage(stage, action, *args):
+    try:
+        return action(*args)
+    except QualificationStageFailure:
+        raise
+    except QUALIFICATION_ERRORS as error:
+        raise QualificationStageFailure(stage, *closed_failure(error)) from None
+
+
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -31,7 +115,9 @@ def write_json(path, value):
 def checked(args, **options):
     result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, **options)
     if result.returncode:
-        raise ValueError("release inspection tool failed")
+        tool = {"git": "git", "go": "go", "docker": "docker", "oras": "oras",
+                "scan-release-content.sh": "content-scan"}.get(Path(args[0]).name, "other")
+        raise CheckedToolFailure(tool, result.returncode)
     return result.stdout
 
 
@@ -213,37 +299,38 @@ def archive_paths(dist):
 
 def qualify(dist):
     dist = Path(dist).resolve()
-    producer = identity()
+    producer = at_stage("source-identity", identity)
     stage = dist / "qualified-content"
     stage.mkdir()
     shipping = stage / "shipping"
     shipping.mkdir()
     extracts = stage / "extracted"
     extracts.mkdir()
-    own = module_path()
-    expected = notices(ROOT / "licenses", own)
-    expected_notices = json.loads((ROOT / "licenses/notices.sha256.json").read_text())
+    own = at_stage("module-identity", module_path)
+    expected = at_stage("source-notices", notices, ROOT / "licenses", own)
+    expected_notices = at_stage("notice-manifest", lambda: json.loads((ROOT / "licenses/notices.sha256.json").read_text()))
     archives = archive_paths(dist)
     if len(archives) != len(expected):
         raise ValueError("archive set does not cover every configured release target")
     payloads, targets, inspections = {}, set(), {}
     for number, archive in enumerate(archives):
-        inspection = inspect_archive(archive, extracts / str(number), own, expected_notices)
+        progress = f"{number + 1}/{len(archives)}"
+        inspection = at_stage("archive-inspection:" + progress, inspect_archive, archive, extracts / str(number), own, expected_notices)
         if inspection["target"] in targets or inspection["graphs"] != expected:
             raise ValueError("duplicate target or archive contains a different notice graph")
         targets.add(inspection["target"])
         inspections[inspection["target"]] = inspection
         spdx = dist / (archive.name + ".spdx.json")
-        generate_spdx(inspection["filesystem"], spdx, sha(archive), producer, dependencies=inspection["dependencies"])
+        at_stage("archive-spdx:" + progress, lambda: generate_spdx(inspection["filesystem"], spdx, sha(archive), producer, dependencies=inspection["dependencies"]))
         provenance = dist / (archive.name + ".provenance.json")
-        write_json(provenance, producer_statement(archive, spdx, inspection, producer))
+        at_stage("archive-provenance:" + progress, lambda: write_json(provenance, producer_statement(archive, spdx, inspection, producer)))
         for path in (archive, spdx, provenance):
             payloads[path.name] = sha(path)
             shutil.copyfile(path, shipping / path.name)
     if targets != set(expected):
         raise ValueError("missing configured target archive")
     import client_image
-    image_files, image_receipt = client_image.build(dist, stage, inspections, producer)
+    image_files, image_receipt = at_stage("oci-image", client_image.build, dist, stage, inspections, producer)
     for path in image_files:
         payloads[path.name] = sha(path)
         shutil.copyfile(path, shipping / path.name)
@@ -256,11 +343,11 @@ def qualify(dist):
         payloads["terraform-registry-manifest.json"] = sha(registry)
         shutil.copyfile(registry, shipping / registry.name)
     receipt = {"source": producer, "files": payloads, "releaseNotesSHA256": sha(notes), "image": image_receipt}
-    write_json(dist / "release-content.json", receipt)
+    at_stage("receipt-write", write_json, dist / "release-content.json", receipt)
     (stage / "receipt.sha256").write_text(sha(dist / "release-content.json") + "\n")
     shutil.copyfile(dist / "release-content.json", shipping / "release-content.json")
     # Generated metadata and original compressed archives are all in scope.
-    checked([str(ROOT / "scripts/scan-release-content.sh"), str(shipping), "jayonthenet"])
+    at_stage("shipping-scan", checked, [str(ROOT / "scripts/scan-release-content.sh"), str(shipping), "jayonthenet"])
     return receipt
 
 
@@ -314,16 +401,26 @@ def verify_checksums(path, receipt, dist):
 def main():
     command, *args = sys.argv[1:]
     if command == "qualify":
-        qualify(*args)
+        at_stage("qualify", qualify, *args)
     elif command == "recheck":
-        recheck(*args)
+        at_stage("recheck", recheck, *args)
     else:
         raise ValueError("unknown client qualification command")
 
 
-if __name__ == "__main__":
+def run():
     try:
-        main()
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError):
-        print("client release qualification failed; inspect locally without exposing findings", file=sys.stderr)
-        sys.exit(1)
+        at_stage("entrypoint", main)
+    except QualificationStageFailure as error:
+        detail = " class=" + error.category
+        if error.rule_id:
+            detail += " rule=" + error.rule_id
+        if error.tool:
+            detail += " tool=" + error.tool + " exit=" + str(error.returncode)
+        print("client release qualification failed at " + str(error) + detail, file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(run())
