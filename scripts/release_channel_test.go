@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -165,6 +166,78 @@ func TestReleaseWorkflowsPinTheVerifiedCosignV2Contract(t *testing.T) {
 	}
 	if installers != 2 {
 		t.Fatal("both candidate and stable releases must install the pinned signer")
+	}
+}
+
+func releaseBuilderPolicy(data []byte) error {
+	var workflow struct {
+		Jobs map[string]struct {
+			Steps []struct {
+				Uses string
+				With map[string]string
+			}
+		}
+	}
+	if err := yaml.Unmarshal(data, &workflow); err != nil {
+		return err
+	}
+	for _, name := range []string{"candidate-release", "release"} {
+		job, exists := workflow.Jobs[name]
+		if !exists {
+			return fmt.Errorf("missing release job %s", name)
+		}
+		builders := 0
+		for _, step := range job.Steps {
+			if !strings.HasPrefix(step.Uses, "docker/setup-buildx-action@") {
+				continue
+			}
+			builders++
+			if step.Uses != "docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e" ||
+				step.With["version"] != "v0.38.0" {
+				return fmt.Errorf("%s must pin the verified Buildx installer and version", name)
+			}
+			want := []string{
+				"image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+				"provenance-add-gha=false",
+			}
+			if !reflect.DeepEqual(strings.Fields(step.With["driver-opts"]), want) {
+				return fmt.Errorf("%s must preserve pinned BuildKit and omit only auxiliary GitHub context", name)
+			}
+		}
+		if builders != 1 {
+			return fmt.Errorf("%s must configure exactly one release builder", name)
+		}
+	}
+	return nil
+}
+
+func TestReleaseBuildersPinVersionAndOmitAuxiliaryGitHubContext(t *testing.T) {
+	data, err := os.ReadFile("../.github/workflows/ci.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := releaseBuilderPolicy(data); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"candidate-release", "release"} {
+		for _, mutation := range []struct{ name, old, replacement string }{
+			{"floating-version", "          version: v0.38.0\n", ""},
+			{"different-version", "version: v0.38.0", "version: v0.37.2"},
+			{"missing-opt-out", "            provenance-add-gha=false\n", ""},
+			{"enabled-context", "provenance-add-gha=false", "provenance-add-gha=true"},
+			{"unpinned-buildkit", "image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea", "image=moby/buildkit:latest"},
+		} {
+			t.Run(name+"/"+mutation.name, func(t *testing.T) {
+				prefix, section, found := strings.Cut(string(data), "\n  "+name+":\n")
+				if !found || !strings.Contains(section, mutation.old) {
+					t.Fatal("mutation must apply to the actual release job")
+				}
+				mutated := prefix + "\n  " + name + ":\n" + strings.Replace(section, mutation.old, mutation.replacement, 1)
+				if err := releaseBuilderPolicy([]byte(mutated)); err == nil {
+					t.Fatal("unsafe release builder mutation accepted")
+				}
+			})
+		}
 	}
 }
 

@@ -176,7 +176,7 @@ class OCITest(unittest.TestCase):
         self.assertEqual(tools["sbomGenerator"]["version"], "v1.12.0")
         self.assertEqual(tools["sbomGenerator"]["embeddedSyftModuleVersion"], "v1.51.0")
         workflow = (ROOT / ".github/workflows/ci.yaml").read_text()
-        self.assertEqual(workflow.count("driver-opts: image=" + tools["buildkit"]["image"]), 2)
+        self.assertEqual(workflow.count("            image=" + tools["buildkit"]["image"]), 2)
         builder = (ROOT / "scripts/client_image.py").read_text()
         self.assertIn('"type=sbom,generator=" + tools["sbomGenerator"]["image"]', builder)
         publisher = (ROOT / "scripts/publish-qualified-image.py").read_text()
