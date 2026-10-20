@@ -4,9 +4,11 @@ import hashlib
 import ast
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -189,7 +191,7 @@ class OCITest(unittest.TestCase):
         source = path.read_text()
         tree = ast.parse(source)
         main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
-        publish_block = next(node for node in main.body if isinstance(node, ast.With))
+        publish_block = next(node for node in ast.walk(main) if isinstance(node, ast.With))
         body = publish_block.body
 
         def call_name(call):
@@ -212,7 +214,7 @@ class OCITest(unittest.TestCase):
         ]
         self.assertEqual(len(statements), 1)
         self.assertEqual(len(copy_statements), 1)
-        self.assertEqual(copy_statements[0], statements[0] + 1)
+        self.assertEqual(copy_statements[0], statements[0] + 2)
 
         calls = sorted((node for node in ast.walk(main) if isinstance(node, ast.Call)), key=lambda node: node.lineno)
         guard_line = next(node.lineno for node in calls if call_name(node) == "candidate.assert_image_absent")
@@ -236,10 +238,42 @@ class OCITest(unittest.TestCase):
         self.assertNotIn('"buildx", "build"', source)
         for required in (
             "client_image.reinspect", "client_oci.oci_reference", "--from-oci-layout",
-            '"cosign", "sign"', '"cosign", "verify"', '"slsaprovenance1"', '"spdxjson"',
+            '"cosign", "sign"', '"cosign", "verify"', '"spdxjson"',
             "verify_attestation",
         ):
             self.assertIn(required, source)
+
+    def test_publisher_uses_canonical_slsa_type_for_attest_and_verify(self):
+        source = (ROOT / "scripts/publish-qualified-image.py").read_text()
+        tree = ast.parse(source)
+        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+        slsa_attest = [node for node in calls if ast.unparse(node.func) == "release.checked"
+                       and node.args and isinstance(node.args[0], ast.List)
+                       and any(isinstance(item, ast.Name) and item.id == "SLSA_PREDICATE_TYPE"
+                               for item in ast.walk(node.args[0]))]
+        self.assertEqual(len(slsa_attest), 1)
+        verify = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                      and node.name == "verify_attestation")
+        slsa_verify = [node for node in ast.walk(verify) if isinstance(node, ast.Call)
+                       and ast.unparse(node.func) == "release.checked"
+                       and node.args and isinstance(node.args[0], ast.List)]
+        self.assertEqual(len(slsa_verify), 1)
+        main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+        self.assertTrue(any(isinstance(node, ast.Call) and ast.unparse(node.func) == "verify_attestation"
+                            and len(node.args) > 1 and isinstance(node.args[1], ast.Name)
+                            and node.args[1].id == "SLSA_PREDICATE_TYPE" for node in ast.walk(main)))
+        self.assertIn('SLSA_PREDICATE_TYPE = "https://slsa.dev/provenance/v1"', source)
+        self.assertNotIn("slsaprovenance1", source)
+
+    def test_publisher_failure_diagnostic_is_closed_and_non_disclosing(self):
+        path = ROOT / "scripts/publish-qualified-image.py"
+        result = subprocess.run([sys.executable, str(path)], env={**os.environ, "SENTINEL_SECRET": "fixture-secret"},
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("phase=source-receipt", result.stderr)
+        self.assertIn("category=unclassified", result.stderr)
+        self.assertNotIn("fixture-secret", result.stdout + result.stderr)
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
 
     def test_original_json_bytes_are_retained_and_scanned(self):
         for kind in ("index", "manifest", "config"):
