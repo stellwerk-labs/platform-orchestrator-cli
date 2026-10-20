@@ -164,8 +164,8 @@ func TestReleaseWorkflowsPinTheVerifiedCosignV2Contract(t *testing.T) {
 			}
 		}
 	}
-	if installers != 2 {
-		t.Fatal("both candidate and stable releases must install the pinned signer")
+	if installers != 3 {
+		t.Fatal("candidate controls, candidate publication and stable publication must install the pinned signer")
 	}
 }
 

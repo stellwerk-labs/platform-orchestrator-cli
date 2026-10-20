@@ -123,15 +123,6 @@ jobs:
             --environment-json "$RUNNER_TEMP/candidate-environment.json" \
             --check-image-absent stellwerk-labs/octl
 
-      - name: Reserve candidate draft before signed assets are uploaded
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CANDIDATE_TAG: ${{ inputs.release_tag }}
-        run: |
-          set -euo pipefail
-          gh release create "$CANDIDATE_TAG" --verify-tag --prerelease --latest=false --draft \
-            --title "$CANDIDATE_TAG" --notes-file "docs/releases/$CANDIDATE_TAG.md"
-
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -176,28 +167,60 @@ jobs:
         with:
           distribution: goreleaser
           version: 'v2.18.1'
-          args: release --clean --release-notes=docs/releases/${{ inputs.release_tag }}.md
+          args: release --clean --skip=publish --release-notes=docs/releases/${{ inputs.release_tag }}.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GORELEASER_CURRENT_TAG: ${{ inputs.release_tag }}
           GH_PAT: ${{ github.token }}
+
+      - name: Reserve candidate draft after local build and signing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_TAG: ${{ inputs.release_tag }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/candidate-release-metadata.py snapshot-assets "$CANDIDATE_TAG" dist \
+            "$RUNNER_TEMP/candidate-local-assets.json"
+          python3 scripts/candidate-release-metadata.py reserve "$CANDIDATE_TAG" "$CANDIDATE_SHA" \
+            "docs/releases/$CANDIDATE_TAG.md" "$RUNNER_TEMP/candidate-reservation.json"
+
+      - name: Upload and bind the exact signed candidate assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_TAG: ${{ inputs.release_tag }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/candidate-release-metadata.py upload "$CANDIDATE_TAG" "$CANDIDATE_SHA" \
+            "docs/releases/$CANDIDATE_TAG.md" "$RUNNER_TEMP/candidate-reservation.json" dist \
+            "$RUNNER_TEMP/candidate-local-assets.json" \
+            "$RUNNER_TEMP/candidate-assets.json"
 
       - name: Publish only the qualified candidate image bytes
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/publish-qualified-image.py dist
 
-      - name: Verify candidate artifacts and release channel
+      - name: Verify candidate image index and native CLI smoke
         env:
-          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
-          gh release view "$RELEASE_TAG" --json tagName,isPrerelease,isDraft,assets > "$RUNNER_TEMP/candidate-release.json"
-          python3 scripts/candidate-release-metadata.py "$RELEASE_TAG" "$RUNNER_TEMP/candidate-release.json"
           image_tag="${RELEASE_TAG#v}"
           docker buildx imagetools inspect "ghcr.io/stellwerk-labs/octl:${image_tag}"
           docker run --rm "ghcr.io/stellwerk-labs/octl:${image_tag}" --version | grep -F "$image_tag"
+
+      - name: Revalidate and publish the same fully qualified candidate release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_TAG: ${{ inputs.release_tag }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/candidate-release-metadata.py publish "$CANDIDATE_TAG" "$CANDIDATE_SHA" \
+            "docs/releases/$CANDIDATE_TAG.md" "$RUNNER_TEMP/candidate-reservation.json" \
+            dist "$RUNNER_TEMP/candidate-assets.json"
 
   test:
     runs-on: ubuntu-latest
@@ -208,10 +231,19 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && contains(inputs.release_tag, '-rc.') && inputs.candidate_sha || github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
 
+      - name: Install pinned Cosign for offline producer contract
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+        with:
+          cosign-release: 'v2.6.1'
+
+      - name: Acquire pinned Cosign offline runtime
+        run: docker pull ghcr.io/sigstore/cosign/cosign@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
+
       - name: Test candidate publication contract
         run: |
           python3 scripts/candidate-release_test.py
           python3 scripts/stable-release-preflight_test.py
+          python3 scripts/cosign-offline-attestation_test.py
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
