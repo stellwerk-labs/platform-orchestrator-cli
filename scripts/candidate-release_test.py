@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import importlib.util
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
 from pathlib import Path
 import re
+import subprocess
+import sys
+import threading
 import unittest
 
 
@@ -15,6 +20,29 @@ def load(name, filename):
 candidate = load("candidate", "candidate-release.py")
 metadata = load("metadata", "candidate-release-metadata.py")
 SHA = "a" * 40
+
+
+class RegistryStatusHandler(BaseHTTPRequestHandler):
+    manifest_status = 404
+    requests = []
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        self.__class__.requests.append(("GET", self.path, self.headers.get("Authorization")))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        body = json.dumps({"token": "synthetic-registry-fixture-token"}).encode()
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_HEAD(self):
+        self.__class__.requests.append(("HEAD", self.path, self.headers.get("Authorization"),
+                                        self.headers.get("Accept")))
+        self.send_response(self.__class__.manifest_status)
+        self.end_headers()
 
 
 class CandidateReleaseTests(unittest.TestCase):
@@ -51,6 +79,57 @@ class CandidateReleaseTests(unittest.TestCase):
         for status in (200, 401, 403, 429, 500, 503):
             with self.subTest(status=status), self.assertRaises(ValueError):
                 candidate.validate_absence_status(status)
+
+    def test_real_http_fixture_fails_closed_before_post_guard_work(self):
+        RegistryStatusHandler.requests = []
+        server = ThreadingHTTPServer(("127.0.0.1", 0), RegistryStatusHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        def stop_server():
+            server.shutdown()
+            thread.join(timeout=5)
+            server.server_close()
+        self.addCleanup(stop_server)
+        origin = f"http://127.0.0.1:{server.server_port}"
+        candidate_path = Path(__file__).with_name("candidate-release.py")
+        probe = (
+            "import importlib.util,sys; "
+            "spec=importlib.util.spec_from_file_location('candidate',sys.argv[1]); "
+            "module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module); "
+            "module._REGISTRY_ORIGIN=sys.argv[2]; "
+            "module.assert_image_absent(sys.argv[3],sys.argv[4]); "
+            "print('POST_ABSENCE_GUARD')"
+        )
+
+        for status in (404, 200, 401, 403, 500, 503):
+            with self.subTest(status=status):
+                RegistryStatusHandler.manifest_status = status
+                result = subprocess.run(
+                    [sys.executable, "-c", probe, str(candidate_path), origin,
+                     "stellwerk-labs/octl", "protocol-fixture"],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10, check=False,
+                )
+                if status == 404:
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn("POST_ABSENCE_GUARD", result.stdout)
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertNotIn("POST_ABSENCE_GUARD", result.stdout)
+                    self.assertIn(f"HTTP {status}", result.stderr)
+
+        self.assertEqual(len(RegistryStatusHandler.requests), 12)
+        for index in range(0, len(RegistryStatusHandler.requests), 2):
+            token_request, manifest_request = RegistryStatusHandler.requests[index:index + 2]
+            self.assertEqual(token_request[0], "GET")
+            self.assertTrue(token_request[1].startswith("/token?service=ghcr.io&scope=repository%3Astellwerk-labs%2Foctl%3Apull"))
+            self.assertIsNone(token_request[2])
+            self.assertEqual(manifest_request[0], "HEAD")
+            self.assertEqual(manifest_request[1], "/v2/stellwerk-labs/octl/manifests/protocol-fixture")
+            self.assertEqual(manifest_request[2], "Bearer synthetic-registry-fixture-token")
+            self.assertIn("application/vnd.oci.image.index.v1+json", manifest_request[3])
+
+    def test_registry_origin_is_fixed_to_ghcr_in_production(self):
+        self.assertEqual(candidate._REGISTRY_ORIGIN, "https://ghcr.io")
 
     def test_empty_or_other_release_page(self):
         candidate.validate_release_page("v2.0.0-rc.1", [])

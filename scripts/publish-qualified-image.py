@@ -38,15 +38,6 @@ def verify_attestation(reference, kind, predicate, producer):
     raise ValueError("verified attestation does not bind the qualified predicate and subject")
 
 
-def authenticated_absence(reference):
-    result = subprocess.run(["oras", "manifest", "fetch", "--descriptor", reference],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-    if result.returncode == 0:
-        raise ValueError("immutable image version already exists; never overwrite or retry blindly")
-    if not re.search(rb"(?:\b404\b|MANIFEST_UNKNOWN|NAME_UNKNOWN)", result.stderr):
-        raise ValueError("authenticated image absence is not proven")
-
-
 def main():
     dist = Path(sys.argv[1]).resolve()
     receipt = json.loads((dist / "release-content.json").read_text())
@@ -65,14 +56,13 @@ def main():
     spec = importlib.util.spec_from_file_location("candidate", release.ROOT / "scripts/candidate-release.py")
     candidate = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(candidate)
-    candidate.assert_image_absent("stellwerk-labs/octl", tag)
     reference = client_image.IMAGE + ":" + tag
-    authenticated_absence(reference)
     with tempfile.TemporaryDirectory(prefix="client-image-publish-") as temporary:
         temporary = Path(temporary)
         report = client_image.reinspect(dist, receipt, temporary / "inspection")
         layout = dist / receipt["image"]["layout"]
         source_tag = client_oci.oci_reference(layout, report["index"])
+        candidate.assert_image_absent("stellwerk-labs/octl", tag)
         # No build command exists in this publisher. Copy the inspected index,
         # including its original platform manifests and BuildKit attestations.
         release.checked(["oras", "cp", "--no-tty", "--from-oci-layout",

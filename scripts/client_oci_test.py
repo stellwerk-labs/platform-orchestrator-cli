@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real OCI descriptor/layer fixtures, including secrets hidden by whiteouts."""
 import hashlib
+import ast
 import io
 import json
 from pathlib import Path
@@ -182,6 +183,63 @@ class OCITest(unittest.TestCase):
         publisher = (ROOT / "scripts/publish-qualified-image.py").read_text()
         self.assertNotIn('"buildx", "build"', publisher)
         self.assertIn("client_image.reinspect", publisher)
+
+    def test_publisher_rechecks_status_before_copy_and_retains_signing(self):
+        path = ROOT / "scripts/publish-qualified-image.py"
+        source = path.read_text()
+        tree = ast.parse(source)
+        main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+        publish_block = next(node for node in main.body if isinstance(node, ast.With))
+        body = publish_block.body
+
+        def call_name(call):
+            return ast.unparse(call.func)
+
+        def command_call(call, command, action):
+            return (call_name(call) == "release.checked" and call.args and isinstance(call.args[0], ast.List)
+                    and [item.value for item in call.args[0].elts[:2]
+                         if isinstance(item, ast.Constant)] == [command, action])
+
+        statements = [
+            index for index, statement in enumerate(body)
+            if any(isinstance(node, ast.Call) and call_name(node) == "candidate.assert_image_absent"
+                   for node in ast.walk(statement))
+        ]
+        copy_statements = [
+            index for index, statement in enumerate(body)
+            if any(isinstance(node, ast.Call) and command_call(node, "oras", "cp")
+                   for node in ast.walk(statement))
+        ]
+        self.assertEqual(len(statements), 1)
+        self.assertEqual(len(copy_statements), 1)
+        self.assertEqual(copy_statements[0], statements[0] + 1)
+
+        calls = sorted((node for node in ast.walk(main) if isinstance(node, ast.Call)), key=lambda node: node.lineno)
+        guard_line = next(node.lineno for node in calls if call_name(node) == "candidate.assert_image_absent")
+        reinspection_line = next(node.lineno for node in calls if call_name(node) == "client_image.reinspect")
+        source_reference_line = next(node.lineno for node in calls if call_name(node) == "client_oci.oci_reference")
+        copy_line = next(node.lineno for node in calls if command_call(node, "oras", "cp"))
+        sign_line = next(node.lineno for node in calls if command_call(node, "cosign", "sign"))
+        attest_line = next(node.lineno for node in calls if command_call(node, "cosign", "attest"))
+        verify_descriptor_line = next(
+            node.lineno for node in calls if call_name(node) == "release.checked"
+            and any(isinstance(item, ast.Constant) and item.value == "fetch" for item in ast.walk(node.args[0]))
+        )
+        self.assertLess(reinspection_line, source_reference_line)
+        self.assertLess(source_reference_line, guard_line)
+        self.assertLess(guard_line, copy_line)
+        self.assertLess(copy_line, verify_descriptor_line)
+        self.assertLess(verify_descriptor_line, sign_line)
+        self.assertLess(sign_line, attest_line)
+        self.assertNotIn("authenticated_absence", source)
+        self.assertNotIn("MANIFEST_UNKNOWN", source)
+        self.assertNotIn('"buildx", "build"', source)
+        for required in (
+            "client_image.reinspect", "client_oci.oci_reference", "--from-oci-layout",
+            '"cosign", "sign"', '"cosign", "verify"', '"slsaprovenance1"', '"spdxjson"',
+            "verify_attestation",
+        ):
+            self.assertIn(required, source)
 
     def test_original_json_bytes_are_retained_and_scanned(self):
         for kind in ("index", "manifest", "config"):
