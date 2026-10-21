@@ -1,0 +1,294 @@
+name: Check package channel grants
+
+on:
+  push:
+    branches:
+      - verification/cli-channel-grants-20261021
+
+permissions:
+  contents: read
+
+jobs:
+  check-package-channel-grants:
+    if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && github.event_name == 'push' && github.ref == 'refs/heads/verification/cli-channel-grants-20261021'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact channel validator source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: b4b0fffb2a02f8b17202033f68bf9d798a76d513
+          persist-credentials: false
+      - name: Prove grant with existing public Git blobs
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64
+          import binascii
+          import hashlib
+          import http.client
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import runpy
+          import signal
+          import ssl
+          import subprocess
+          import sys
+
+          SOURCE = "b4b0fffb2a02f8b17202033f68bf9d798a76d513"
+          REPOSITORY = "stellwerk-labs/platform-orchestrator-cli"
+          REF = "refs/heads/verification/cli-channel-grants-20261021"
+          WORKFLOW = ".github/workflows/check-package-channel-grants.yaml"
+          CHANNELS = {
+              "stellwerk-labs/homebrew-tap": {"id": 1294382484, "main": "a0189bcbfc9487e4f2d1a530df148496063fb5f8",
+                  "blob": "5be515e51d4744eae83e56d38a5eb0bea865b08b", "size": 143,
+                  "sha256": "90fe27770407f39e6becce5e464e896a5aa55b859599f3bc6bfd058e8b74996f"},
+              "stellwerk-labs/scoop-bucket": {"id": 1294382491, "main": "dbb5a77f5c99f90775eec7d13da616bbb3e3c519",
+                  "blob": "ca640414e21d830d2decd7311d70545b771092bd", "size": 131,
+                  "sha256": "58a8bd87735804262561408048e09c86d7f5a7d9aae930ae5ae67160899cd982"},
+          }
+          PINS = {
+              "scripts/stable-release-preflight.py": "51bf897ca829f47ef63e50ee96e9e535f60bfa38ff48d2aa3cbe66a9ffd7e207",
+              "scripts/candidate-release.py": "1c77b1a852d74b54a37802197282446361c984265b27e519f37448cae7db2f2c",
+              ".goreleaser.yaml": "ee908da0cbba0240f06b5dd9e6e9e5f2547688cb80239875038742cc9f86023a",
+              ".github/workflows/ci.yaml": "fbd2f27cce62fda8f864a758433304d9876e28ab2df68aef1b5582940c3baa12",
+          }
+          SUFFIXES = ("", "/git/ref/heads/main", "/branches/main",
+                      "/rules/branches/main?per_page=100", "/branches/main/protection")
+          GET_PATHS = {"/repos/" + repo + suffix for repo in CHANNELS for suffix in SUFFIXES}
+          GET_PATHS.update("/repos/" + repo + "/contents/README.md?ref=" + pin["main"]
+                           for repo, pin in CHANNELS.items())
+          POST_PATHS = {"/repos/" + repo + "/git/blobs": repo for repo in CHANNELS}
+          ATTEMPTED = set()
+
+
+          class Refusal(Exception):
+              pass
+
+
+          def require(condition, category):
+              if not condition:
+                  raise Refusal(category)
+
+
+          def pairs(items):
+              result = {}
+              for key, value in items:
+                  require(key not in result, "DUPLICATE_JSON_KEY")
+                  result[key] = value
+              return result
+
+
+          def decode_json(raw):
+              try:
+                  return json.loads(raw, object_pairs_hook=pairs)
+              except (ValueError, UnicodeError):
+                  raise Refusal("RESPONSE_SCHEMA_REFUSED") from None
+
+
+          def deadline(signum, frame):
+              raise Refusal("REQUEST_TIMEOUT_UNCERTAIN_NO_REPLAY")
+
+
+          def blob_bytes(repository, document):
+              pin = CHANNELS[repository]
+              require(isinstance(document, dict) and document.get("type") == "file"
+                      and document.get("path") == "README.md" and document.get("name") == "README.md"
+                      and document.get("encoding") == "base64" and document.get("sha") == pin["blob"]
+                      and document.get("size") == pin["size"] and isinstance(document.get("content"), str),
+                      "PUBLIC_BLOB_SCHEMA_REFUSED")
+              try:
+                  content = base64.b64decode(document["content"].replace("\n", ""), validate=True)
+              except (ValueError, binascii.Error):
+                  raise Refusal("PUBLIC_BLOB_BASE64_REFUSED") from None
+              require(len(content) == pin["size"] and hashlib.sha256(content).hexdigest() == pin["sha256"]
+                      and hashlib.sha1(b"blob " + str(len(content)).encode("ascii") + b"\0" + content).hexdigest() == pin["blob"],
+                      "PUBLIC_BLOB_BYTES_REFUSED")
+              return content
+
+
+          def post_body(repository, content):
+              pin = CHANNELS[repository]
+              require(type(content) is bytes and len(content) == pin["size"]
+                      and hashlib.sha256(content).hexdigest() == pin["sha256"]
+                      and hashlib.sha1(b"blob " + str(len(content)).encode("ascii") + b"\0" + content).hexdigest() == pin["blob"],
+                      "POST_BODY_REFUSED")
+              return json.dumps({"content": base64.b64encode(content).decode("ascii"), "encoding": "base64"},
+                                sort_keys=True, separators=(",", ":")).encode("ascii")
+
+
+          def request(method, path, token, body=None, optional=False):
+              if method == "GET":
+                  require(path in GET_PATHS and body is None, "ENDPOINT_REFUSED")
+              elif method == "POST":
+                  require(path in POST_PATHS and not optional, "ENDPOINT_REFUSED")
+                  repository = POST_PATHS[path]
+                  document = decode_json(body) if type(body) is bytes else None
+                  require(isinstance(document, dict) and set(document) == {"content", "encoding"}
+                          and document.get("encoding") == "base64" and isinstance(document.get("content"), str), "POST_BODY_REFUSED")
+                  try:
+                      content = base64.b64decode(document["content"], validate=True)
+                  except (ValueError, binascii.Error):
+                      raise Refusal("POST_BODY_REFUSED") from None
+                  require(body == post_body(repository, content), "POST_BODY_REFUSED")
+                  require(path not in ATTEMPTED, "DUPLICATE_POST_REFUSED")
+                  ATTEMPTED.add(path)
+              else:
+                  raise Refusal("METHOD_REFUSED")
+              connection = http.client.HTTPSConnection("api.github.com", timeout=20, context=ssl.create_default_context())
+              signal.signal(signal.SIGALRM, deadline)
+              signal.alarm(20)
+              try:
+                  connection.request(method, path, body=body, headers={
+                      "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
+                      "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "cli-package-channel-grants",
+                  })
+                  response = connection.getresponse()
+                  status = response.status
+                  if method == "POST":
+                      emit({"observation": "EXISTING_PUBLIC_BLOB_POST_STATUS", "repository": POST_PATHS[path], "status": status,
+                            "expected_existing_blob_sha": CHANNELS[POST_PATHS[path]]["blob"]})
+                  require(not 300 <= status < 400, "REDIRECT_REFUSED_NO_REPLAY")
+                  if optional and status in (403, 404):
+                      return status, None, None, False
+                  require(status == (201 if method == "POST" else 200),
+                          "AUTH_REFUSED" if status in (401, 403) else "HTTP_REFUSED_NO_REPLAY")
+                  raw = response.read(1048577)
+                  require(len(raw) <= 1048576, "RESPONSE_SIZE_REFUSED")
+                  return status, decode_json(raw), response.getheader("X-OAuth-Scopes"), bool(response.getheader("Link"))
+              except (OSError, http.client.HTTPException):
+                  raise Refusal("TRANSPORT_REFUSED_UNCERTAIN_NO_REPLAY") from None
+              finally:
+                  signal.alarm(0)
+                  connection.close()
+
+
+          def ref_sha(document):
+              require(isinstance(document, dict), "REF_SCHEMA_REFUSED")
+              obj = document.get("object")
+              require(document.get("ref") == "refs/heads/main" and isinstance(obj, dict), "REF_SCHEMA_REFUSED")
+              require(obj.get("type") == "commit" and isinstance(obj.get("sha"), str)
+                      and re.fullmatch("[a-f0-9]{40}", obj["sha"]), "REF_SCHEMA_REFUSED")
+              return obj["sha"]
+
+
+          def repository_access(repository, document, validate):
+              require(isinstance(document, dict), "REPOSITORY_SCHEMA_REFUSED")
+              try:
+                  validate(repository, document)
+              except (ValueError, AttributeError):
+                  raise Refusal("PRODUCER_CHANNEL_PREDICATE_REFUSED") from None
+              owner = document.get("owner")
+              require(document.get("id") == CHANNELS[repository]["id"]
+                      and isinstance(owner, dict) and owner.get("id") == 288887095
+                      and owner.get("login") == "stellwerk-labs"
+                      and document.get("private") is False and document.get("visibility") == "public"
+                      and document.get("disabled") is False and document.get("default_branch") == "main",
+                      "CHANNEL_IDENTITY_REFUSED")
+
+
+          def public_rules(repository, token):
+              base = "/repos/" + repository
+              branch = request("GET", base + "/branches/main", token)[1]
+              unused, rules, unused_scope, paginated = request("GET", base + "/rules/branches/main?per_page=100", token)
+              protection = request("GET", base + "/branches/main/protection", token, optional=True)[0]
+              require(isinstance(branch, dict) and branch.get("name") == "main"
+                      and isinstance(branch.get("commit"), dict) and branch["commit"].get("sha") == CHANNELS[repository]["main"]
+                      and branch.get("protected") is False and isinstance(rules, list) and not rules
+                      and not paginated and protection in (403, 404), "PUBLIC_RULES_REFUSED")
+
+
+          def source_guard():
+              require(sys.version_info >= (3, 12), "PYTHON_VERSION_REFUSED")
+              for name, expected in (("GITHUB_REPOSITORY", REPOSITORY), ("GITHUB_EVENT_NAME", "push"),
+                                     ("GITHUB_REF", REF), ("GITHUB_WORKFLOW_REF", REPOSITORY + "/" + WORKFLOW + "@" + REF)):
+                  require(os.environ.get(name) == expected, "EVENT_BOUNDARY_REFUSED")
+              for name in ("GITHUB_SHA", "GITHUB_WORKFLOW_SHA"):
+                  require(re.fullmatch("[a-f0-9]{40}", os.environ.get(name, "")), "RUN_IDENTITY_REFUSED")
+              require(os.environ["GITHUB_SHA"] == os.environ["GITHUB_WORKFLOW_SHA"], "WORKFLOW_IDENTITY_REFUSED")
+              for name in ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT"):
+                  require(re.fullmatch("[1-9][0-9]*", os.environ.get(name, "")), "RUN_IDENTITY_REFUSED")
+              require(os.environ["GITHUB_RUN_ATTEMPT"] == "1", "WORKFLOW_REPLAY_REFUSED")
+              def git(*args):
+                  return subprocess.check_output(["git", *args], text=True, stderr=subprocess.DEVNULL, timeout=20).strip()
+              require(git("rev-parse", "HEAD") == SOURCE and not git("status", "--porcelain=v1", "--untracked-files=all"), "CHECKOUT_REFUSED")
+              for path, expected in PINS.items():
+                  require(hashlib.sha256(Path(path).read_bytes()).hexdigest() == expected, "SOURCE_BYTES_REFUSED")
+              return runpy.run_path("scripts/stable-release-preflight.py")["validate_channel_access"]
+
+
+          def emit(report):
+              summary = json.dumps(report, sort_keys=True)
+              print(summary, flush=True)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+                  stream.write(summary + "\n")
+
+
+          def main():
+              report = {"source": SOURCE, "result": "REFUSED", "category": "INTERNAL_REFUSAL",
+                        "refs_and_rules_unchanged": False, "channels": {}, "write_endpoint_probe": True,
+                        "limits": "Endpoint access now only; future publication success is unproven. Only already-existing public blobs are submitted; no refs, trees, commits or channel files change."}
+              baseline = {}
+              token = os.environ.get("GH_PAT", "")
+              try:
+                  validate = source_guard()
+                  report.update({key.lower(): os.environ[key] for key in
+                                 ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_SHA", "GITHUB_WORKFLOW_SHA")})
+                  require(bool(token) and token.strip() == token, "CREDENTIAL_MISSING_OR_INVALID")
+                  bodies = {}
+                  for repository, pin in CHANNELS.items():
+                      base = "/repos/" + repository
+                      baseline[repository] = ref_sha(request("GET", base + "/git/ref/heads/main", token)[1])
+                      require(baseline[repository] == pin["main"], "FROZEN_MAIN_DRIFT")
+                      unused, metadata, scope, unused_page = request("GET", base, token)
+                      repository_access(repository, metadata, validate)
+                      require(scope is None or bool({item.strip() for item in scope.split(",")} & {"repo", "public_repo"}), "EXPLICIT_SCOPE_REFUSED")
+                      public_rules(repository, token)
+                      document = request("GET", base + "/contents/README.md?ref=" + pin["main"], token)[1]
+                      bodies[repository] = post_body(repository, blob_bytes(repository, document))
+                      report["channels"][repository] = {"id": pin["id"], "main_sha": pin["main"], "expected_existing_blob_sha": pin["blob"],
+                          "public_blob_sha256": pin["sha256"], "producer_predicate": True, "public_rules_clear": True,
+                          "oauth_scope_before_probe": "ABSENT_UNPROVEN" if scope is None else "APPLICABLE_SCOPE_OBSERVED",
+                          "post_attempted": False, "contents_write_endpoint_observed": False}
+                  for repository, pin in CHANNELS.items():
+                      require(ref_sha(request("GET", "/repos/" + repository + "/git/ref/heads/main", token)[1]) == pin["main"], "PRE_WRITE_REF_DRIFT")
+                      public_rules(repository, token)
+                  for repository, pin in CHANNELS.items():
+                      item = report["channels"][repository]
+                      item["post_attempted"] = True
+                      emit({"intent": "ONE_EXISTING_PUBLIC_BLOB_POST", "repository": repository,
+                            "expected_existing_blob_sha": pin["blob"], "no_replay": True})
+                      status, document, unused_scope, unused_page = request("POST", "/repos/" + repository + "/git/blobs", token, bodies[repository])
+                      item["post_status"] = status
+                      require(isinstance(document, dict) and document.get("sha") == pin["blob"], "EXISTING_BLOB_PROOF_REFUSED")
+                      item["contents_write_endpoint_observed"] = True
+                  report.update(result="CONTENTS_WRITE_ENDPOINT_OBSERVED", category="BOTH_EXISTING_BLOB_POSTS_201_EXACT_SHA")
+              except Refusal as error:
+                  report["category"] = error.args[0]
+              except Exception:
+                  report["category"] = "INTERNAL_REFUSAL"
+              finally:
+                  if baseline:
+                      unchanged = len(baseline) == len(CHANNELS)
+                      for repository, sha in baseline.items():
+                          try:
+                              require(ref_sha(request("GET", "/repos/" + repository + "/git/ref/heads/main", token)[1]) == sha, "REF_READBACK_REFUSED")
+                              public_rules(repository, token)
+                          except Exception:
+                              unchanged = False
+                      report["refs_and_rules_unchanged"] = unchanged
+                      if not unchanged:
+                          report.update(result="REFUSED", category="REF_OR_RULE_READBACK_REFUSED")
+              emit(report)
+              return 0 if report["result"] == "CONTENTS_WRITE_ENDPOINT_OBSERVED" and report["refs_and_rules_unchanged"] else 1
+
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PY
