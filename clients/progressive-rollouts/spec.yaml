@@ -1,0 +1,1125 @@
+openapi: 3.0.3
+
+info:
+  title: Stellwerk Progressive Rollouts plugin API
+  version: v1alpha
+  description: |
+    Client contract of the Stellwerk Enterprise plugin Progressive Rollouts
+    (`dev.stellwerk.progressive-rollouts`) at contract level `v1alpha`. The level
+    covers first-party Stellwerk plugins only and is not a stable partner
+    contract.
+
+    The plugin publishes no client routes, so `paths` is empty. Each operation in
+    `x-stellwerk-operations` is invoked by its `operationId` through the Core
+    operation `invokePluginOperation`
+    (`POST /orgs/{orgId}/plugins/dev.stellwerk.progressive-rollouts/invoke`) after
+    Core plugin discovery (`listPluginContributions`) advertises it for the
+    organization. Discovery, the invocation envelope (`PluginInvocation`,
+    `PluginInvocationResult`), the availability errors `plugin_not_installed`,
+    `plugin_not_enabled`, `plugin_not_entitled`, `plugin_incompatible` and
+    `plugin_unavailable`, and the protected Deployment logs and outputs route are
+    Core-owned. They are defined only by the Core API and are not repeated here.
+
+    Envelope mapping:
+
+    - Path parameters of an operation go into `path_parameters`. The organization
+      always comes from the Core route and is never a path parameter.
+    - Query parameters go into `query`, one array of string values per name.
+    - The request body goes into `body`. Operations without `requestBody` send none.
+    - Every operation with `x-mutating: true` requires `idempotency_key`. A retry
+      of the same mutation reuses its key.
+    - `PluginInvocationResult.status` is the plugin's HTTP status and
+      `PluginInvocationResult.body` its JSON response, `null` for 204. Every
+      status other than the documented success status carries
+      `ProgressiveRolloutError`.
+
+    Operation metadata: `x-method` and `x-mutating` equal the metadata that
+    discovery advertises for the operation. `x-required-feature` is the licence
+    feature the operation requires. `x-safety-path-values` lists the path values
+    that make an invocation a safety action, which the host keeps available
+    while forward mutations are blocked, as far as the licence grants safety
+    access.
+
+    `ModuleVersionSemanticStatus` and `ModuleVersionPinStatus` are Core value
+    sets, marked with `x-stellwerk-core-schema`. They are mirrored so that this
+    document is self-contained. Core's definition is authoritative.
+
+x-stellwerk-plugin-id: dev.stellwerk.progressive-rollouts
+x-stellwerk-plugin-display-name: Progressive Rollouts
+
+x-stellwerk-operations:
+
+  - operationId: listProgressiveRolloutTargetEnvironments
+    summary: List authorised Environment targets and canonical facet counts for Rollout design
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/perPageQueryParam'
+      - $ref: '#/components/parameters/pageTokenQueryParam'
+      - name: query
+        in: query
+        schema: {type: string}
+      - name: project
+        in: query
+        schema: {type: array, items: {type: string}}
+      - name: environment_type
+        in: query
+        schema: {type: array, items: {type: string}}
+      - name: environment_id
+        in: query
+        schema: {type: array, items: {type: string, format: uuid}}
+      - name: is_production
+        in: query
+        schema: {type: boolean}
+      - name: label_key
+        in: query
+        schema: {type: string}
+      - name: label_value
+        in: query
+        schema: {type: string}
+    responses:
+      '200':
+        description: Authorised matching Environments and counts. Every result is an explicit immutable UUID.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutTargetEnvironmentPage'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: listProgressiveRollouts
+    summary: List Progressive Rollouts
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/perPageQueryParam'
+      - $ref: '#/components/parameters/pageTokenQueryParam'
+      - name: state
+        in: query
+        schema:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutState'}
+      - name: project
+        in: query
+        schema: {type: string}
+      - name: module
+        in: query
+        schema: {type: string}
+      - name: conflicts
+        in: query
+        schema: {type: boolean}
+      - name: view
+        in: query
+        description: Server-owned lifecycle view. State filters must belong to the selected view.
+        schema: {type: string, enum: [running, plan, history]}
+      - name: history_visibility
+        in: query
+        description: Retention subset for the History view. Omitted means recent.
+        schema: {type: string, enum: [recent, archived, all]}
+      - name: include_view_counts
+        in: query
+        description: Include authorised total counts for the Running, Plan and History lifecycle views.
+        schema: {type: boolean, default: false}
+    responses:
+      '200':
+        description: Progressive Rollouts in latest-activity order.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutPage'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: createProgressiveRollout
+    summary: Create a Progressive Rollout Draft
+    x-method: POST
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutSpec'}
+    responses:
+      '201':
+        description: Draft created.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRollout'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: previewProgressiveRollout
+    summary: Resolve selectors and preview an exact candidate plan
+    x-method: POST
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutSpec'}
+    responses:
+      '200':
+        description: Deterministic candidate plan preview.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutPlan'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: getProgressiveRollout
+    summary: Get a Progressive Rollout with its plan, executions and audit history
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+    responses:
+      '200':
+        description: Rollout detail.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutDetail'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: updateProgressiveRolloutDraft
+    summary: Update a Progressive Rollout Draft
+    x-method: PATCH
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutDraftUpdate'}
+    responses:
+      '200':
+        description: Draft updated.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRollout'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: prepareProgressiveRollout
+    summary: Freeze the reviewed candidate as an immutable plan revision
+    x-method: POST
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutPrepareBody'}
+    responses:
+      '200':
+        description: Immutable plan revision created and Rollout made Ready.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutDetail'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: commandProgressiveRollout
+    summary: Run a lifecycle command on a Progressive Rollout
+    x-method: POST
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    x-safety-path-values:
+      rolloutCommand: [pause, cancel, cancel-and-rollback, rollback, rollback-environment]
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - name: rolloutCommand
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [return-to-draft, start, start-wave, retry-environment, rollback-environment, bypass-bake, override-pins, continue-unpinned, pause, resume, fail, cancel, cancel-and-rollback, rollback, archive]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutCommandBody'}
+    responses:
+      '200':
+        description: Command applied or its idempotent result returned.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutDetail'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: getProgressiveRolloutPlan
+    summary: Get an immutable Rollout plan revision
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - $ref: '#/components/parameters/planRevisionPathParam'
+    responses:
+      '200':
+        description: Immutable rollout plan revision.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutPlan'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: listProgressiveRolloutApprovals
+    summary: List the approvals of a plan revision
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - $ref: '#/components/parameters/planRevisionQueryParam'
+    responses:
+      '200':
+        description: Approvals for the immutable plan revision.
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {$ref: '#/components/schemas/ProgressiveRolloutApproval'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: approveProgressiveRolloutScope
+    summary: Approve one Environment or bulk-approve a Project's eligible Environments
+    x-method: POST
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutApprovalBody'}
+    responses:
+      '201':
+        description: Approval granted.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutApproval'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: revokeProgressiveRolloutApproval
+    summary: Revoke an approval before an affected deployment starts
+    x-method: DELETE
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - name: approvalId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - $ref: '#/components/parameters/planRevisionQueryParam'
+    responses:
+      '204':
+        description: Approval revoked before deployment start.
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: listProgressiveRolloutEvents
+    summary: List append-only Rollout audit events
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - name: after
+        in: query
+        description: Return only events with a greater sequence. A response holds at most 1000 events in sequence order; continue with the last returned sequence.
+        schema: {type: integer, format: int64, minimum: 0}
+    responses:
+      '200':
+        description: Append-only rollout audit history.
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {$ref: '#/components/schemas/ProgressiveRolloutEvent'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: listProgressiveRolloutConflicts
+    summary: List the conflicts of a plan revision
+    x-method: GET
+    x-mutating: false
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - $ref: '#/components/parameters/planRevisionQueryParam'
+    responses:
+      '200':
+        description: Persisted conflicts for the plan revision.
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {$ref: '#/components/schemas/ProgressiveRolloutConflict'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+  - operationId: resolveProgressiveRolloutConflict
+    summary: Resolve an exact observed Rollout conflict
+    x-method: POST
+    x-mutating: true
+    x-required-feature: progressive-rollouts
+    parameters:
+      - $ref: '#/components/parameters/rolloutIdPathParam'
+      - name: conflictId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: resolution
+        in: path
+        required: true
+        schema: {type: string, enum: [retry, approve, abort]}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutConflictResolutionBody'}
+    responses:
+      '200':
+        description: Conflict resolution recorded.
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProgressiveRolloutDetail'}
+      default: {$ref: '#/components/responses/ProgressiveRolloutError'}
+
+paths: {}
+
+components:
+  parameters:
+    rolloutIdPathParam:
+      name: rolloutId
+      in: path
+      description: Progressive Rollout UUID.
+      required: true
+      schema: {type: string, format: uuid}
+    planRevisionPathParam:
+      name: planRevision
+      in: path
+      description: Immutable numbered plan revision.
+      required: true
+      schema: {type: integer, minimum: 1}
+    planRevisionQueryParam:
+      name: plan_revision
+      in: query
+      description: Immutable numbered plan revision.
+      required: true
+      schema: {type: integer, minimum: 1}
+    perPageQueryParam:
+      name: per_page
+      in: query
+      description: The maximum number of items to return in a page of results.
+      required: false
+      example: 50
+      schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+    pageTokenQueryParam:
+      name: page
+      in: query
+      description: Opaque token from the previous page's next_page_token.
+      required: false
+      schema: {type: string}
+
+  responses:
+    ProgressiveRolloutError:
+      description: The plugin rejected or could not complete the operation. The original HTTP status is preserved.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ProgressiveRolloutError'}
+
+  schemas:
+    ProgressiveRolloutError:
+      type: object
+      required: [code]
+      properties:
+        code: {type: string, description: 'Machine-readable error code, for example invalid_request, forbidden, not_found, conflict, plugin_not_entitled or plugin_unavailable.'}
+        message: {type: string, description: Human-readable detail when available.}
+
+    ProgressiveRolloutState:
+      type: string
+      enum: [Draft, Ready, Running, Paused, AwaitingPinnedEnvironments, Succeeded, Failed, Cancelling, Cancelled, RollingBack, RolledBack, Superseded]
+
+    ProgressiveRolloutEnvironmentState:
+      type: string
+      enum: [Pending, Pinned, UnpinnedPending, EnvironmentRemoved, AlreadyCompliant, NotApplicable, Busy, Unreconciled, AwaitingApproval, Blocked, Conflict, Running, Succeeded, Failed, RollingBack, RolledBack]
+
+    ProgressiveRolloutClassification:
+      type: string
+      enum: [Pending, Pinned, AlreadyCompliant, NotApplicable, Conflict]
+
+    ProgressiveRolloutModuleChange:
+      type: object
+      required: [module_id, from, target_version, target_digest, target_status]
+      properties:
+        module_id: {type: string, minLength: 1}
+        from: {type: string, minLength: 1}
+        target_version: {type: string, minLength: 5}
+        target_digest: {type: string, description: Exact immutable external artifact digest. Empty for inline source.}
+        target_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+
+    ProgressiveRolloutPlanModuleChange:
+      type: object
+      required: [module_id, from, target_version, target_digest, target_status]
+      properties:
+        module_id: {type: string}
+        from: {type: string}
+        target_version: {type: string}
+        target_version_uuid:
+          type: string
+          format: uuid
+          description: Exact immutable Core Module Version identity frozen by the Plan.
+        target_digest: {type: string}
+        target_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+
+    ProgressiveRolloutSelector:
+      type: object
+      properties:
+        environment_ids:
+          type: array
+          items: {type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'}
+          x-go-type-skip-optional-pointer: true
+        project_ids:
+          type: array
+          items: {type: string}
+          x-go-type-skip-optional-pointer: true
+        environment_types:
+          type: array
+          items: {type: string}
+          x-go-type-skip-optional-pointer: true
+        labels:
+          type: object
+          additionalProperties: {type: string}
+          x-go-type-skip-optional-pointer: true
+
+    ProgressiveRolloutRetryPolicy:
+      type: object
+      required: [max_attempts, initial_delay_seconds, maximum_delay_seconds, maximum_duration_seconds]
+      properties:
+        max_attempts: {type: integer, minimum: 1, maximum: 20}
+        initial_delay_seconds: {type: integer, minimum: 1}
+        maximum_delay_seconds: {type: integer, minimum: 1}
+        maximum_duration_seconds: {type: integer, minimum: 1}
+
+    ProgressiveRolloutConcurrency:
+      type: object
+      properties:
+        absolute: {type: integer, minimum: 1}
+        percentage: {type: number, format: double, exclusiveMinimum: true, minimum: 0, maximum: 100}
+
+    ProgressiveRolloutWaveSpec:
+      type: object
+      required: [id, name, environment_ids, approval, progression, bake_time_seconds, retry, max_concurrency]
+      properties:
+        id: {type: string, minLength: 1}
+        name: {type: string, minLength: 1}
+        environment_ids:
+          type: array
+          minItems: 1
+          items: {type: string, pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'}
+        approval: {type: string, enum: [none, environment]}
+        progression: {type: string, enum: [manual, automatic]}
+        bake_time_seconds: {type: integer, minimum: 0}
+        retry: {$ref: '#/components/schemas/ProgressiveRolloutRetryPolicy'}
+        max_concurrency: {$ref: '#/components/schemas/ProgressiveRolloutConcurrency'}
+
+    ProgressiveRolloutSpec:
+      type: object
+      required: [name, changes, selector, waves, default_promotion]
+      properties:
+        name: {type: string, minLength: 2, maxLength: 120}
+        changes:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/ProgressiveRolloutModuleChange'}
+        selector: {$ref: '#/components/schemas/ProgressiveRolloutSelector'}
+        waves:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/ProgressiveRolloutWaveSpec'}
+        default_promotion: {type: string, enum: [none, atStart, onSuccess]}
+
+    ProgressiveRolloutStatus:
+      type: object
+      required: [total, completed, already_compliant, not_applicable, running, blocked, failed, conflicts]
+      properties:
+        current_wave_id: {type: string}
+        total: {type: integer}
+        completed: {type: integer}
+        already_compliant: {type: integer}
+        not_applicable: {type: integer}
+        running: {type: integer}
+        blocked: {type: integer}
+        failed: {type: integer}
+        conflicts: {type: integer}
+        started_at: {type: string, format: date-time}
+        completed_at: {type: string, format: date-time}
+        message: {type: string}
+        authorized_wave_ids:
+          type: array
+          items: {type: string}
+        completed_wave_ids:
+          type: array
+          items: {type: string}
+        defaults_promoted: {type: boolean}
+        rollback_environment_ids:
+          type: array
+          items: {type: string, format: uuid}
+        rollback_count: {type: integer, minimum: 0}
+        confirmed_defective_rollback: {type: boolean}
+        baking_wave_id: {type: string}
+        bake_started_at: {type: string, format: date-time}
+        bake_due_at: {type: string, format: date-time}
+        bake_bypassed_at: {type: string, format: date-time}
+        bake_bypassed_by: {type: string, format: uuid}
+        bake_bypass_reason: {type: string}
+        bake_bypass_count: {type: integer, minimum: 0}
+        pinned: {type: integer, minimum: 0}
+        unpinned_pending: {type: integer, minimum: 0}
+        environment_removed: {type: integer, minimum: 0}
+        terminal_result: {$ref: '#/components/schemas/ProgressiveRolloutTerminalResult'}
+        entitlement_warning: {$ref: '#/components/schemas/ProgressiveRolloutEntitlementWarning'}
+        entitlement_suspension: {$ref: '#/components/schemas/ProgressiveRolloutEntitlementSuspension'}
+
+    ProgressiveRolloutEntitlementWarning:
+      type: object
+      description: Present only while the Rollout is Running and Core reports the signed licence in its grace period. Forward work continues until grace_until; after it the Rollout is suspended for the licence.
+      required: [state, grace_until]
+      properties:
+        state:
+          type: string
+          enum: [grace]
+          x-enum-varnames: [ProgressiveRolloutEntitlementWarningStateGrace]
+        grace_until: {type: string, format: date-time}
+
+    ProgressiveRolloutEntitlementSuspension:
+      type: object
+      description: Present only while the Rollout is Paused because Core stopped allowing forward work, which distinguishes it from a pause by a person. Renewal never resumes the Rollout; resume_available says that an explicit Resume by someone with rollout control is licensed again. Any command that moves the Rollout out of Paused ends the suspension.
+      required: [state, suspended_at, resume_available]
+      properties:
+        state: {type: string, description: 'Core licence state that denied forward work, for example expired, revoked, untrusted, not_entitled or unavailable.'}
+        suspended_at: {type: string, format: date-time}
+        resume_available: {type: boolean}
+        resume_available_at: {type: string, format: date-time}
+
+    ProgressiveRolloutTerminalOutcomeCounts:
+      type: object
+      required: [updated, already_compliant, not_applicable, pinned, unpinned_pending, environment_removed, failed, unresolved]
+      properties:
+        updated: {type: integer, minimum: 0}
+        already_compliant: {type: integer, minimum: 0}
+        not_applicable: {type: integer, minimum: 0}
+        pinned: {type: integer, minimum: 0}
+        unpinned_pending: {type: integer, minimum: 0}
+        environment_removed: {type: integer, minimum: 0}
+        failed: {type: integer, minimum: 0}
+        unresolved: {type: integer, minimum: 0}
+
+    ProgressiveRolloutSupersessionCause:
+      type: object
+      required: [module_id, target_version, source_event]
+      properties:
+        module_id: {type: string}
+        target_version: {type: string}
+        module_status: {type: string}
+        version_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+        source_event_id: {type: string, format: uuid}
+        source_event: {type: string}
+        source_actor: {type: string, format: uuid}
+        source_reason: {type: string}
+        source_created_at: {type: string, format: date-time}
+
+    ProgressiveRolloutEnvironmentTombstone:
+      type: object
+      required: [environment_id, environment_slug, project_id, project_uuid, wave_id]
+      properties:
+        environment_id: {type: string, format: uuid}
+        environment_slug: {type: string}
+        environment_display_name: {type: string}
+        project_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        wave_id: {type: string}
+        deleted_at: {type: string, format: date-time}
+        deleted_by: {type: string, format: uuid}
+        deletion_reason: {type: string}
+        deletion_operation_id: {type: string, format: uuid}
+
+    ProgressiveRolloutTerminalResult:
+      type: object
+      required: [outcome, environment_removed_count, environment_tombstones]
+      properties:
+        outcome:
+          type: string
+          enum: [Succeeded, Failed, Cancelled, RolledBack, Superseded]
+        environment_removed_count: {type: integer, minimum: 0}
+        environment_tombstones:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutEnvironmentTombstone'}
+        superseded_causes:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutSupersessionCause'}
+        frozen_outcome_counts: {$ref: '#/components/schemas/ProgressiveRolloutTerminalOutcomeCounts'}
+
+    ProgressiveRolloutTargetEnvironment:
+      type: object
+      required: [uuid, id, project_id, project_uuid, environment_type_id, environment_type_uuid, is_production, labels, status]
+      properties:
+        uuid: {type: string, format: uuid}
+        id: {type: string}
+        display_name: {type: string}
+        project_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_type_id: {type: string}
+        environment_type_uuid: {type: string, format: uuid}
+        is_production: {type: boolean}
+        labels: {type: object, additionalProperties: {type: string}}
+        status: {type: string}
+
+    ProgressiveRolloutTargetFacet:
+      type: object
+      required: [kind, value, count]
+      properties:
+        kind: {type: string, enum: [project, environment_type, is_production, label]}
+        key: {type: string}
+        value: {type: string}
+        count: {type: integer, minimum: 1}
+
+    ProgressiveRolloutTargetEnvironmentPage:
+      type: object
+      required: [items, total, facets]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutTargetEnvironment'}
+        total: {type: integer, minimum: 0}
+        facets:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutTargetFacet'}
+        next_page_token: {type: string}
+
+    ProgressiveRollout:
+      type: object
+      required: [id, org_id, spec, state, status, resource_version, execution_started, created_by, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        org_id: {type: string}
+        spec: {$ref: '#/components/schemas/ProgressiveRolloutSpec'}
+        state: {$ref: '#/components/schemas/ProgressiveRolloutState'}
+        status: {$ref: '#/components/schemas/ProgressiveRolloutStatus'}
+        current_plan_revision: {type: integer, minimum: 1}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        execution_started: {type: boolean}
+        created_by: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        archived_at: {type: string, format: date-time}
+
+    ProgressiveRolloutModuleSnapshot:
+      type: object
+      required: [version, digest]
+      properties:
+        version: {type: string}
+        digest: {type: string}
+        status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+
+    ProgressiveRolloutPinSnapshot:
+      type: object
+      required: [id, module_id, version, activation_event_id, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        module_id: {type: string}
+        version: {type: string}
+        activation_event_id: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ModuleVersionPinStatus'}
+        scope_type: {type: string, enum: [environment]}
+        scope_id: {type: string, format: uuid}
+        created_by: {type: string, format: uuid}
+        created_by_type: {type: string}
+        creation_reason: {type: string}
+        created_at: {type: string, format: date-time}
+        notes:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPinNoteSnapshot'}
+        override_operation_id: {type: string, format: uuid}
+        override_actor: {type: string, format: uuid}
+        override_reason: {type: string}
+        override_deployment_id: {type: string, format: uuid}
+    ProgressiveRolloutPinNoteSnapshot:
+      type: object
+      required: [id, actor, actor_type, note, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        actor: {type: string, format: uuid}
+        actor_type: {type: string}
+        note: {type: string}
+        created_at: {type: string, format: date-time}
+    ProgressiveRolloutPlannedChange:
+      type: object
+      required: [module_id, target_version, target_digest, classification]
+      properties:
+        module_id: {type: string}
+        starting_version: {type: string}
+        starting_digest: {type: string}
+        target_version: {type: string}
+        target_digest: {type: string}
+        classification: {$ref: '#/components/schemas/ProgressiveRolloutClassification'}
+        reason: {type: string}
+        observed_fingerprint: {type: string}
+
+    ProgressiveRolloutEnvironmentExecution:
+      type: object
+      required: [environment_id, project_id, wave_id, state, attempts, pre_deployment_attempts, changed, actual_versions, resource_version]
+      properties:
+        environment_id: {type: string, format: uuid}
+        project_id: {type: string}
+        wave_id: {type: string}
+        state: {$ref: '#/components/schemas/ProgressiveRolloutEnvironmentState'}
+        deployment_id: {type: string, format: uuid}
+        effective_base_deployment_id:
+          type: string
+          format: uuid
+          description: Immutable first successful state-changing Deployment captured before this Rollout's first forward admission. This is the rollback base, not a later forward retry's admission base.
+        first_forward_deployment_id:
+          type: string
+          format: uuid
+          description: Data Plane-owned first forward Deployment identity for this operation and Environment.
+        admission_base_deployment_id:
+          type: string
+          format: uuid
+          description: Latest admitted attempt's actual predecessor. Forward retry planning may use a later base without changing the rollback base.
+        execution_fingerprint:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+        execution_manifest:
+          type: object
+          additionalProperties: true
+        execution_graph:
+          type: object
+          additionalProperties: true
+        execution_diff:
+          type: object
+          additionalProperties: true
+        rollback_deployment_id: {type: string, format: uuid}
+        rollback_available:
+          type: boolean
+          description: Factual current-state eligibility to roll back this Environment to the Rollout's captured base. Authorization and authoritative Data Plane admission are still required.
+        rollback_retry_available:
+          type: boolean
+          description: Factual current-state eligibility for an explicit retry of the latest failed rollback. Authorization and authoritative Data Plane admission are still required.
+        rollback_retry_pending:
+          type: boolean
+          description: An explicit rollback retry command is durably recorded but its new Deployment has not been admitted.
+        attempts: {type: integer, minimum: 0}
+        pre_deployment_attempts: {type: integer, minimum: 0}
+        retry_started_at: {type: string, format: date-time}
+        retry_at: {type: string, format: date-time}
+        started_at: {type: string, format: date-time}
+        completed_at: {type: string, format: date-time}
+        changed: {type: boolean}
+        actual_versions:
+          type: object
+          additionalProperties: {type: string}
+        last_error: {type: string}
+        removal: {$ref: '#/components/schemas/ProgressiveRolloutEnvironmentRemoval'}
+        resource_version: {type: integer, format: int64, minimum: 1}
+
+    ProgressiveRolloutEnvironmentRemoval:
+      type: object
+      required: [actor, reason, operation_id, deleted_at]
+      properties:
+        actor: {type: string, format: uuid}
+        reason: {type: string}
+        operation_id: {type: string, format: uuid}
+        deleted_at: {type: string, format: date-time}
+
+    ProgressiveRolloutPlannedEnvironment:
+      type: object
+      required: [id, uuid, project_id, project_uuid, environment_type, is_production, labels, modules, wave_id, state, changes, resolved_concurrency]
+      properties:
+        id: {type: string}
+        uuid: {type: string, format: uuid}
+        display_name: {type: string}
+        project_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_type: {type: string}
+        is_production: {type: boolean}
+        labels:
+          type: object
+          additionalProperties: {type: string}
+        modules:
+          type: object
+          additionalProperties: {$ref: '#/components/schemas/ProgressiveRolloutModuleSnapshot'}
+        readiness:
+          $ref: '#/components/schemas/ProgressiveRolloutEnvironmentState'
+        latest_deployment_id: {type: string, format: uuid}
+        effective_base_deployment_id: {type: string, format: uuid}
+        pins:
+          type: object
+          additionalProperties:
+            type: array
+            items: {$ref: '#/components/schemas/ProgressiveRolloutPinSnapshot'}
+        wave_id: {type: string}
+        state: {$ref: '#/components/schemas/ProgressiveRolloutEnvironmentState'}
+        changes:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPlannedChange'}
+        resolved_concurrency: {type: integer, minimum: 1}
+        planning_base_deployment_id: {type: string, format: uuid}
+        planning_fingerprint: {type: string, pattern: '^sha256:[a-f0-9]{64}$'}
+        desired_manifest: {type: object, additionalProperties: true}
+        desired_graph: {type: object, additionalProperties: true}
+        desired_diff: {type: object, additionalProperties: true}
+
+    ProgressiveRolloutPlannedWave:
+      type: object
+      allOf:
+        - {$ref: '#/components/schemas/ProgressiveRolloutWaveSpec'}
+        - type: object
+          required: [order, resolved_concurrency]
+          properties:
+            order: {type: integer, minimum: 1}
+            resolved_concurrency: {type: integer, minimum: 1}
+
+    ProgressiveRolloutPromotion:
+      type: object
+      required: [module_id, target_version, target_digest]
+      properties:
+        module_id: {type: string}
+        target_version: {type: string}
+        target_digest: {type: string}
+        previous_default_version: {type: string}
+        previous_default_digest: {type: string}
+        previous_default_status: {$ref: '#/components/schemas/ModuleVersionSemanticStatus'}
+
+    ProgressiveRolloutPlan:
+      type: object
+      required: [revision, fingerprint, created_at, changes, waves, environments, default_promotion, promotions]
+      properties:
+        revision: {type: integer, minimum: 0}
+        fingerprint: {type: string}
+        created_at: {type: string, format: date-time}
+        changes:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPlanModuleChange'}
+        waves:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPlannedWave'}
+        environments:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPlannedEnvironment'}
+        default_promotion: {type: string, enum: [none, atStart, onSuccess]}
+        promotions:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutPromotion'}
+
+    ProgressiveRolloutDetail:
+      type: object
+      required: [rollout, executions, approvals, conflicts, events, metrics]
+      properties:
+        rollout: {$ref: '#/components/schemas/ProgressiveRollout'}
+        plan: {$ref: '#/components/schemas/ProgressiveRolloutPlan'}
+        executions:
+          type: array
+          description: Environment executions for the Rollout's current Plan revision, or an empty array when no current Plan exists. Historical Plans and audit events remain available through their dedicated endpoints and retained storage export.
+          items: {$ref: '#/components/schemas/ProgressiveRolloutEnvironmentExecution'}
+        approvals:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutApproval'}
+        conflicts:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutConflict'}
+        events:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutEvent'}
+        metrics: {$ref: '#/components/schemas/ProgressiveRolloutMetrics'}
+
+    ProgressiveRolloutWaveMetrics:
+      type: object
+      required: [wave_id, duration_seconds, total, completed, succeeded, failed, blocked, success_rate, failure_rate]
+      properties:
+        wave_id: {type: string}
+        duration_seconds: {type: integer, format: int64, minimum: 0}
+        total: {type: integer, minimum: 0}
+        completed: {type: integer, minimum: 0}
+        succeeded: {type: integer, minimum: 0}
+        failed: {type: integer, minimum: 0}
+        blocked: {type: integer, minimum: 0}
+        success_rate: {type: number, format: double, minimum: 0, maximum: 1}
+        failure_rate: {type: number, format: double, minimum: 0, maximum: 1}
+
+    ProgressiveRolloutMetrics:
+      type: object
+      required: [duration_seconds, success_rate, failure_rate, blocked_environments, pinned_environments, unpinned_pending_environments, environment_removed_count, approval_wait_seconds, bake_duration_seconds, bake_bypass_count, pin_override_count, continue_unpinned_count, superseded_count, rollback_count, waves]
+      properties:
+        duration_seconds: {type: integer, format: int64, minimum: 0}
+        success_rate: {type: number, format: double, minimum: 0, maximum: 1}
+        failure_rate: {type: number, format: double, minimum: 0, maximum: 1}
+        blocked_environments: {type: integer, minimum: 0}
+        pinned_environments: {type: integer, minimum: 0}
+        unpinned_pending_environments: {type: integer, minimum: 0}
+        environment_removed_count: {type: integer, minimum: 0}
+        approval_wait_seconds: {type: integer, format: int64, minimum: 0}
+        bake_duration_seconds: {type: integer, format: int64, minimum: 0}
+        bake_bypass_count: {type: integer, minimum: 0}
+        pin_override_count: {type: integer, minimum: 0}
+        continue_unpinned_count: {type: integer, minimum: 0}
+        superseded_count: {type: integer, minimum: 0, maximum: 1}
+        rollback_count: {type: integer, minimum: 0}
+        waves:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutWaveMetrics'}
+
+    ProgressiveRolloutPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRollout'}
+        next_page_token: {type: string}
+        view_counts: {$ref: '#/components/schemas/ProgressiveRolloutViewCounts'}
+
+    ProgressiveRolloutViewCounts:
+      type: object
+      required: [running, plan, history]
+      properties:
+        running: {type: integer, minimum: 0}
+        plan: {type: integer, minimum: 0}
+        history: {type: integer, minimum: 0}
+
+    ProgressiveRolloutDraftUpdate:
+      type: object
+      required: [spec, expected_resource_version]
+      properties:
+        spec: {$ref: '#/components/schemas/ProgressiveRolloutSpec'}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+
+    ProgressiveRolloutPrepareBody:
+      type: object
+      required: [expected_resource_version, candidate_fingerprint]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        candidate_fingerprint: {type: string, minLength: 1}
+        accepted_conflict_fingerprints:
+          type: array
+          items: {type: string}
+          x-go-type-skip-optional-pointer: true
+
+    ProgressiveRolloutCommandBody:
+      type: object
+      required: [expected_resource_version]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        wave_id: {type: string}
+        environment_id: {type: string, format: uuid}
+        environment_ids:
+          type: array
+          items: {type: string, format: uuid}
+          description: Optional explicit subset for deferred Pin actions; omission selects every eligible Environment.
+        confirm_defective_versions:
+          type: boolean
+          default: false
+          description: Explicit confirmation that an authorised Rollback may restore a Defective starting version.
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Mandatory human reason for audited commands such as bypass-bake.
+
+    ProgressiveRolloutApprovalBody:
+      type: object
+      required: [plan_revision, scope_type, scope_id, reason]
+      properties:
+        plan_revision: {type: integer, minimum: 1}
+        scope_type: {type: string, enum: [environment, project]}
+        scope_id: {type: string, format: uuid}
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Mandatory human-readable reason retained with the immutable approval grant.
+
+    ProgressiveRolloutApproval:
+      type: object
+      required: [id, rollout_id, plan_revision, scope_type, scope_id, reason, intent_fingerprint, coverages, actor, granted_at]
+      properties:
+        id: {type: string, format: uuid}
+        rollout_id: {type: string, format: uuid}
+        plan_revision: {type: integer}
+        scope_type: {type: string, enum: [environment, project]}
+        scope_id: {type: string, format: uuid}
+        reason: {type: string}
+        intent_fingerprint: {type: string}
+        coverages:
+          type: array
+          items: {$ref: '#/components/schemas/ProgressiveRolloutApprovalCoverage'}
+        actor: {type: string, format: uuid}
+        granted_at: {type: string, format: date-time}
+        revoked_at: {type: string, format: date-time}
+
+    ProgressiveRolloutApprovalCoverage:
+      type: object
+      required: [environment_id, pin_activation_boundaries]
+      properties:
+        environment_id: {type: string, format: uuid}
+        pin_activation_boundaries:
+          type: object
+          additionalProperties: {type: string}
+          description: Target Module ID to exact latest Pin activation event UUID, or an empty value when none existed.
+        consumed_at: {type: string, format: date-time}
+        revoked_at: {type: string, format: date-time}
+        invalidated_at: {type: string, format: date-time}
+        invalidation_reason: {type: string}
+
+    ProgressiveRolloutConflict:
+      type: object
+      required: [id, rollout_id, plan_revision, environment_id, kind, expected, actual, observed_fingerprint, status, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        rollout_id: {type: string, format: uuid}
+        plan_revision: {type: integer}
+        environment_id: {type: string, format: uuid}
+        module_id: {type: string}
+        kind: {type: string}
+        expected: {type: object, additionalProperties: true}
+        actual: {type: object, additionalProperties: true}
+        observed_fingerprint: {type: string}
+        status: {type: string, enum: [open, approved, resolved, aborted]}
+        resolution: {type: string}
+        resolved_by: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        resolved_at: {type: string, format: date-time}
+
+    ProgressiveRolloutConflictResolutionBody:
+      type: object
+      additionalProperties: false
+      required: [plan_revision, observed_fingerprint, expected_resource_version]
+      properties:
+        plan_revision: {type: integer, minimum: 1}
+        observed_fingerprint: {type: string, minLength: 1}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+
+    ProgressiveRolloutEvent:
+      type: object
+      required: [sequence, rollout_id, type, payload, created_at]
+      properties:
+        sequence: {type: integer, format: int64}
+        rollout_id: {type: string, format: uuid}
+        plan_revision: {type: integer}
+        type: {type: string}
+        actor: {type: string, format: uuid}
+        payload: {type: object, additionalProperties: true}
+        created_at: {type: string, format: date-time}
+
+    ModuleVersionSemanticStatus:
+      x-stellwerk-core-schema: ModuleVersionSemanticStatus
+      description: Core Module Version semantic status, mirrored from the Core API. Core's definition is authoritative.
+      type: string
+      enum: [proposed, default, deprecated, defective]
+      x-enum-varnames: [ModuleVersionSemanticStatusProposed, ModuleVersionSemanticStatusDefault, ModuleVersionSemanticStatusDeprecated, ModuleVersionSemanticStatusDefective]
+
+    ModuleVersionPinStatus:
+      x-stellwerk-core-schema: ModuleVersionPinStatus
+      description: Core Module Version Pin status, mirrored from the Core API. Core's definition is authoritative.
+      type: string
+      enum: [active, override_pending, overridden, removed]

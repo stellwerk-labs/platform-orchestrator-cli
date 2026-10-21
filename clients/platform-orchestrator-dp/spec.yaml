@@ -1,8 +1,173 @@
 openapi: 3.0.0
 info:
-  title: ""
-  version: ""
+  title: Stellwerk Data Plane API
+  version: unreleased
 paths:
+  /orgs/{orgId}/plugins/{pluginId}/external-deployments:
+    post:
+      operationId: admitExternalDeployment
+      tags: [not-implemented]
+      summary: Admit one Core-authorized immutable plan or rollback through the normal Deployment path.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - $ref: "#/components/parameters/idempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExternalDeploymentAdmissionBody"}
+      responses:
+        "200":
+          description: An exact previously authorized dispatch was replayed.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentAdmissionResponse"}
+        "201":
+          description: An ordinary Deployment and durable dispatch receipt were created atomically.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentAdmissionResponse"}
+        "400": {$ref: "#/components/responses/400BadRequest"}
+        "401": {$ref: "#/components/responses/401Unauthorized"}
+        "403": {$ref: "#/components/responses/403Forbidden"}
+        "409": {$ref: "#/components/responses/409Conflict"}
+        "503": {$ref: "#/components/responses/503Unavailable"}
+
+  /orgs/{orgId}/plugins/{pluginId}/external-deployment-readiness:
+    post:
+      operationId: getExternalDeploymentReadiness
+      tags: [not-implemented]
+      summary: Read immutable deployment readiness and active module inventory for exact Environment references.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - $ref: "#/components/parameters/idempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExternalDeploymentReadinessBody"}
+      responses:
+        "200":
+          description: Ordered readiness for every requested Environment.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentReadinessResponse"}
+        "400": {$ref: "#/components/responses/400BadRequest"}
+
+  /orgs/{orgId}/plugins/{pluginId}/external-deployment-plans:
+    post:
+      operationId: planExternalDeployment
+      tags: [not-implemented]
+      summary: Plan exact module versions through the normal deployment planner without exposing parameter values.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - $ref: "#/components/parameters/idempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ExternalDeploymentPlanBody"}
+      responses:
+        "200":
+          description: Immutable base and value-free structural plan.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentPlanResponse"}
+        "400": {$ref: "#/components/responses/400BadRequest"}
+        "409": {$ref: "#/components/responses/409Conflict"}
+
+  /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}:
+    get:
+      operationId: getExternalDeployment
+      tags: [not-implemented]
+      summary: Get an ordinary Deployment only within its exact authorized Environment.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - {name: projectUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environmentUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Exact-environment plugin Deployment status and immutable operation identity.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentStatusResponse"}
+        "404": {$ref: "#/components/responses/404NotFound"}
+
+  /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}/logs:
+    get:
+      operationId: getExternalDeploymentLogs
+      tags: [not-implemented]
+      summary: Retrieve bounded decrypted logs for an exact plugin-owned Deployment after fresh Core user authorization.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - {name: projectUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environmentUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Decrypted logs, limited to 16 MiB. Core proxies this response directly to the authorized user; plugins must not persist it.
+          content:
+            text/plain: {schema: {type: string}}
+        "401": {$ref: "#/components/responses/401Unauthorized"}
+        "404": {$ref: "#/components/responses/404NotFound"}
+        "409": {$ref: "#/components/responses/409Conflict"}
+        "413": {$ref: "#/components/responses/413TooLarge"}
+        "503": {$ref: "#/components/responses/503Unavailable"}
+
+  /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}/outputs:
+    get:
+      operationId: getExternalDeploymentOutputs
+      tags: [not-implemented]
+      summary: Retrieve bounded decrypted outputs for an exact plugin-owned Deployment after fresh Core user authorization.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - {name: projectUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environmentUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Decrypted outputs in their original JSON representation, limited to 16 MiB. Core proxies this response directly to the authorized user; plugins must not persist it.
+          content:
+            text/plain: {schema: {type: string}}
+        "401": {$ref: "#/components/responses/401Unauthorized"}
+        "404": {$ref: "#/components/responses/404NotFound"}
+        "409": {$ref: "#/components/responses/409Conflict"}
+        "413": {$ref: "#/components/responses/413TooLarge"}
+        "503": {$ref: "#/components/responses/503Unavailable"}
+
+  /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployment-dispatches/{dispatchId}:
+    get:
+      operationId: getExternalDeploymentDispatch
+      tags: [not-implemented]
+      summary: Recover immutable Deployment receipt status after a lost admission response.
+      security: [{pluginContext: []}]
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/pluginIdPathParam"
+        - {name: projectUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environmentUUID, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: dispatchId, in: path, required: true, schema: {type: string, minLength: 1, maxLength: 128}}
+      responses:
+        "200":
+          description: Immutable receipt and current ordinary Deployment status.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ExternalDeploymentStatusResponse"}
+        "404": {$ref: "#/components/responses/404NotFound"}
+
   /orgs/{orgId}/deployments:
     get:
       operationId: listDeployments
@@ -38,6 +203,23 @@ paths:
       tags:
         - Deployment
       summary: Create a new deployment in the target project and environment.
+      description: |
+        Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+        busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+        `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+        organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+        resolved against the Environment state at promotion.
+
+        Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+        `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+        requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+        would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+        carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+        diff may still change.
+
+        Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+        plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+        `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
       security:
         - userIdHeader: []
       parameters:
@@ -50,6 +232,7 @@ paths:
           description: |
             Ensures that the deployment request is only accepted once per idempotency key per 24 hours. A uuid or similar is recommended.
             When the key matches the key in last deployment and the environment and manifest is the same, this will return the last deployment.
+            When the key matches a queued request, this returns its queue item until it is dispatched, and its Deployment afterwards.
       requestBody:
         required: true
         content:
@@ -69,8 +252,97 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Deployment"
+        "202":
+          description: The Environment is busy and the request waits in its deployment queue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentQueueItem"
         "400":
           $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+  /orgs/{orgId}/deployment-queue:
+    get:
+      operationId: listDeploymentQueueItems
+      tags:
+        - Deployment
+      summary: List deployment queue items in the organization in queue order.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdQueryParam"
+        - $ref: "#/components/parameters/envIdQueryParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - name: state
+          in: query
+          description: Only return items in this state.
+          required: false
+          schema:
+            $ref: "#/components/schemas/DeploymentQueueItemState"
+      responses:
+        "200":
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentQueueItemPage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+  /orgs/{orgId}/deployment-queue/{queueItemId}:
+    get:
+      operationId: getDeploymentQueueItem
+      tags:
+        - Deployment
+      summary: Get a deployment queue item, including the manifest it requested.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/queueItemIdPathParam"
+      responses:
+        "200":
+          description: The queue item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentQueueItem"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/deployment-queue/{queueItemId}/actions/cancel:
+    post:
+      operationId: cancelDeploymentQueueItem
+      tags:
+        - Deployment
+      summary: Cancel a queued deployment request.
+      description: |
+        Cancels a request that is still waiting. Requires the `deployment_write` permission on its Environment. Repeating the
+        identical cancellation returns the cancelled item. A request that is being promoted at this moment answers 409 with the
+        error code `queue_item_dispatching`; read the item again to see whether it was dispatched.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/queueItemIdPathParam"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentQueueCancelBody"
+      responses:
+        "200":
+          description: The cancelled queue item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentQueueItem"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
   /orgs/{orgId}/last-deployments:
@@ -364,6 +636,51 @@ paths:
         "409":
           $ref: "#/components/responses/409Conflict"
 
+  /internal/orgs/{orgId}/deployments/{deploymentId}/actions/acknowledge-outcome:
+    post:
+      operationId: internalAcknowledgeDeploymentOutcome
+      tags:
+        - internal
+        - Deployment
+      summary: Acknowledge the unknown Runner outcome of a failed plugin-dispatched Deployment.
+      description: |
+        Records, exactly once and with the acting user, that an operator has confirmed the Runner attempt of this
+        failed plugin-dispatched Deployment can no longer change its Environment. Only the current Environment head
+        without Runner stop evidence is accepted, after its Runner dispatch window closed. The acknowledgement lets
+        the next Deployment of that Environment proceed. It does not change the Deployment's status or history.
+        Requires the `deployment.outcome.acknowledge` permission for the Environment; the system user and organization
+        tokens are rejected. Repeating the identical request returns the stored acknowledgement.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentOutcomeAcknowledgementBody"
+      responses:
+        "200":
+          description: The identical acknowledgement was already recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentOutcomeAcknowledgement"
+        "201":
+          description: The acknowledgement was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentOutcomeAcknowledgement"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
   /orgs/{orgId}/deployments/{deploymentId}/resources:
     get:
       operationId: listDeploymentResourceNodes
@@ -643,10 +960,26 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    pluginContext:
+      type: apiKey
+      in: header
+      name: X-Stellwerk-Plugin-Context
 
   responses:
     400BadRequest:
       description: The request was invalid. More detail can be found in the error body.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    401Unauthorized:
+      description: The request-bound plugin context is absent or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    403Forbidden:
+      description: Core no longer authorizes the exact operation, fence, dispatch, actor, scope and request digest.
       content:
         application/json:
           schema:
@@ -663,6 +996,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    413TooLarge:
+      description: Decrypted deployment material exceeds the 16 MiB response limit.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    503Unavailable:
+      description: Authoritative Core authorization or DP-owned encryption material is unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
 
   parameters:
     orgIdPathParam:
@@ -673,6 +1018,16 @@ components:
       required: true
       schema:
         type: string
+    pluginIdPathParam:
+      name: pluginId
+      in: path
+      required: true
+      schema: {type: string}
+    idempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 128}
     projectIdQueryParam:
       name: project_id
       in: query
@@ -693,6 +1048,15 @@ components:
       name: deploymentId
       in: path
       description: A Deployment ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
+    queueItemIdPathParam:
+      name: queueItemId
+      in: path
+      description: A deployment queue item ID
       example: 01234567-89ab-cdef-0123-456789abcdef
       required: true
       schema:
@@ -761,6 +1125,277 @@ components:
             - succeeded
 
   schemas:
+    ExternalEnvironmentRef:
+      type: object
+      additionalProperties: false
+      required: [project_id, env_id, project_uuid, environment_uuid]
+      properties:
+        project_id: {type: string}
+        env_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+
+    ExternalModuleInventory:
+      type: object
+      additionalProperties: false
+      required: [module_id, version]
+      properties:
+        module_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        version: {type: string}
+        version_uuid: {type: string, format: uuid}
+        semantic_version: {type: string}
+        artifact_digest: {type: string}
+
+    ExternalDeploymentReadinessBody:
+      type: object
+      additionalProperties: false
+      required: [environments]
+      properties:
+        environments:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items: {$ref: "#/components/schemas/ExternalEnvironmentRef"}
+
+    ExternalEnvironmentReadiness:
+      type: object
+      additionalProperties: false
+      required: [project_id, env_id, project_uuid, environment_uuid, state, active_modules]
+      properties:
+        project_id: {type: string}
+        env_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        state:
+          type: string
+          enum: [ready, busy, unreconciled]
+          x-enum-varnames: [ExternalEnvironmentReadinessStateReady, ExternalEnvironmentReadinessStateBusy, ExternalEnvironmentReadinessStateUnreconciled]
+        latest_deployment_id: {type: string, format: uuid}
+        latest_status:
+          type: string
+          enum: [executing, failed, succeeded]
+          x-enum-varnames: [ExternalEnvironmentReadinessLatestStatusExecuting, ExternalEnvironmentReadinessLatestStatusFailed, ExternalEnvironmentReadinessLatestStatusSucceeded]
+        latest_mode:
+          type: string
+          enum: [deploy, destroy, rollback]
+          x-enum-varnames: [ExternalEnvironmentReadinessLatestModeDeploy, ExternalEnvironmentReadinessLatestModeDestroy, ExternalEnvironmentReadinessLatestModeRollback]
+        active_lease_until: {type: string, format: date-time}
+        effective_base_deployment_id: {type: string, format: uuid}
+        active_modules:
+          type: array
+          items: {$ref: "#/components/schemas/ExternalModuleInventory"}
+
+    ExternalDeploymentReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: "#/components/schemas/ExternalEnvironmentReadiness"}
+
+    ExternalModuleSelection:
+      type: object
+      additionalProperties: false
+      required: [module_uuid, version, version_uuid, semantic_version, artifact_digest]
+      properties:
+        module_uuid: {type: string, format: uuid}
+        version: {type: string}
+        version_uuid: {type: string, format: uuid}
+        semantic_version: {type: string}
+        artifact_digest: {type: string}
+
+    ExternalDeploymentPlanBody:
+      type: object
+      additionalProperties: false
+      required: [project_id, env_id, project_uuid, environment_uuid, module_versions]
+      properties:
+        project_id: {type: string}
+        env_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        module_versions:
+          type: object
+          minProperties: 1
+          additionalProperties: {$ref: "#/components/schemas/ExternalModuleSelection"}
+
+    ExternalManifestResourceStructure:
+      type: object
+      additionalProperties: false
+      required: [type, param_keys]
+      properties:
+        type: {type: string}
+        class: {type: string}
+        id: {type: string}
+        param_keys: {type: array, items: {type: string}}
+
+    ExternalManifestWorkloadStructure:
+      type: object
+      additionalProperties: false
+      required: [output_keys, resources]
+      properties:
+        output_keys: {type: array, items: {type: string}}
+        resources:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/ExternalManifestResourceStructure"}
+
+    ExternalManifestStructure:
+      type: object
+      additionalProperties: false
+      required: [shared, workloads]
+      properties:
+        shared:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/ExternalManifestResourceStructure"}
+        workloads:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/ExternalManifestWorkloadStructure"}
+
+    ExternalGraphNodeStructure:
+      type: object
+      additionalProperties: false
+      required: [param_keys]
+      properties:
+        module_id: {type: string}
+        version: {type: string}
+        deleted: {type: boolean}
+        param_keys: {type: array, items: {type: string}}
+        drift: {type: string}
+
+    ExternalGraphStructure:
+      type: object
+      additionalProperties: false
+      required: [nodes, edges, workloads, shared_resources, leaf_resources]
+      properties:
+        nodes:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/ExternalGraphNodeStructure"}
+        edges:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {type: string}
+        workloads:
+          type: object
+          additionalProperties: {type: string}
+        shared_resources:
+          type: object
+          additionalProperties: {type: string}
+        leaf_resources:
+          type: array
+          items: {type: string}
+
+    ExternalDeploymentPlanResponse:
+      type: object
+      additionalProperties: false
+      required: [snapshot_id, environment_uuid, effective_base_deployment_id, fingerprint, manifest, graph, diff, module_versions]
+      properties:
+        snapshot_id: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        effective_base_deployment_id: {type: string, format: uuid}
+        fingerprint: {type: string, pattern: '^sha256:[a-f0-9]{64}$'}
+        manifest: {$ref: "#/components/schemas/ExternalManifestStructure"}
+        graph: {$ref: "#/components/schemas/ExternalGraphStructure"}
+        diff: {$ref: "#/components/schemas/DeploymentDiff"}
+        module_versions:
+          type: array
+          items: {$ref: "#/components/schemas/ExternalModuleInventory"}
+
+    ExternalDeploymentAdmissionPlan:
+      type: object
+      additionalProperties: false
+      required: [snapshot_id, fingerprint, expected_module_versions]
+      properties:
+        snapshot_id: {type: string, format: uuid}
+        fingerprint: {type: string, pattern: '^sha256:[a-f0-9]{64}$'}
+        expected_module_versions:
+          type: object
+          minProperties: 1
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+
+    ExternalDeploymentAdmissionRollback:
+      type: object
+      additionalProperties: false
+      required: [forward_deployment_id]
+      properties:
+        forward_deployment_id: {type: string, format: uuid}
+        retry_of_rollback_deployment_id: {type: string, format: uuid}
+
+    ExternalDeploymentAdmissionBody:
+      type: object
+      additionalProperties: false
+      required: [operation_ref, fence, project_id, env_id, project_uuid, environment_uuid, mode]
+      properties:
+        operation_ref: {type: string, format: uuid}
+        first_forward_deployment_id: {type: string, format: uuid}
+        fence: {type: integer, format: int64, minimum: 1}
+        project_id: {type: string, minLength: 1}
+        env_id: {type: string, minLength: 1}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        mode: {type: string, enum: [deploy, rollback]}
+        plan: {$ref: "#/components/schemas/ExternalDeploymentAdmissionPlan"}
+        rollback: {$ref: "#/components/schemas/ExternalDeploymentAdmissionRollback"}
+        runner_log_level: {type: string, enum: [debug, info, warn, error]}
+
+    ExternalDeploymentAdmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [deployment_id, replayed]
+      properties:
+        deployment_id: {type: string, format: uuid}
+        replayed: {type: boolean}
+
+    ExternalDeploymentStatusResponse:
+      type: object
+      additionalProperties: false
+      required: [deployment_id, dispatch_id, operation_ref, fence, request_digest, project_id, env_id, project_uuid, environment_uuid, mode, status, status_message, module_versions, rollback_module_versions, created_at, receipt_created_at]
+      properties:
+        deployment_id: {type: string, format: uuid}
+        first_forward_deployment_id: {type: string, format: uuid}
+        rollback_base_deployment_id: {type: string, format: uuid}
+        admission_base_deployment_id: {type: string, format: uuid}
+        forward_deployment_id: {type: string, format: uuid}
+        retry_of_rollback_deployment_id: {type: string, format: uuid}
+        rollback_retry_provenance_recorded:
+          type: boolean
+          description: Present on rollback status. True only when the retained receipt records validated predecessor provenance. False for read-only legacy lineage projection; terminal outcome and current-head eligibility remain separate admission checks.
+        dispatch_id: {type: string}
+        operation_ref: {type: string, format: uuid}
+        fence: {type: integer, format: int64, minimum: 1}
+        request_digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+        project_id: {type: string}
+        env_id: {type: string}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        mode:
+          type: string
+          enum: [deploy, rollback, destroy]
+          x-enum-varnames: [ExternalDeploymentStatusModeDeploy, ExternalDeploymentStatusModeRollback, ExternalDeploymentStatusModeDestroy]
+        status:
+          type: string
+          enum: [executing, failed, succeeded]
+          x-enum-varnames: [ExternalDeploymentStatusExecuting, ExternalDeploymentStatusFailed, ExternalDeploymentStatusSucceeded]
+        status_message: {type: string}
+        module_versions:
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        rollback_module_versions:
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        rollback_modules:
+          type: array
+          maxItems: 1000
+          description: Immutable metadata projected from the retained effective-base Deployment.
+          items: {$ref: "#/components/schemas/ExternalModuleInventory"}
+        created_at: {type: string, format: date-time}
+        completed_at: {type: string, format: date-time}
+        receipt_created_at: {type: string, format: date-time}
+
     Error:
       description: A standard error response
       properties:
@@ -911,6 +1546,33 @@ components:
           type: integer
           description: The number of terraformed resources changed. Only known after deployment.
 
+    DeploymentOutcomeAcknowledgementBody:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Why the operator is certain the Runner attempt can no longer change the Environment, for example the confirmed removal of its job.
+
+    DeploymentOutcomeAcknowledgement:
+      type: object
+      additionalProperties: false
+      required: [deployment_id, environment_id, plugin_id, operation_ref, actor_id, reason, acknowledged_at, replayed]
+      properties:
+        deployment_id: {type: string, format: uuid}
+        environment_id: {type: string, format: uuid}
+        plugin_id: {type: string}
+        operation_ref: {type: string}
+        actor_id: {type: string, format: uuid}
+        reason: {type: string}
+        acknowledged_at: {type: string, format: date-time}
+        replayed:
+          type: boolean
+          description: True when this identical acknowledgement had already been recorded.
+
     DeploymentSummary:
       description: Summary information for a deployment, more information can be retrieved through the GetDeployment APIs.
       type: object
@@ -976,6 +1638,182 @@ components:
           example: Deployment in flight
         metrics:
           $ref: "#/components/schemas/DeploymentMetrics"
+        environment_fence:
+          $ref: "#/components/schemas/EnvironmentFence"
+
+    EnvironmentFence:
+      description: |
+        Reported on `listLastDeployments` items only, and only while the item's Environment is fenced: its current
+        Deployment is a failed plugin-dispatched Deployment whose Runner may still be active, because no Runner result
+        proves the attempt stopped. Until the fence ends, every new Deployment of the Environment, queued or not, is
+        refused with the conflict code `code`. It ends when a late authenticated Runner result arrives or when an operator
+        acknowledges the outcome of `deployment_id` with `acknowledge-outcome`. Acknowledging starts nothing: requests
+        that waited in the deployment queue are rejected and must be submitted again.
+      type: object
+      required:
+        - code
+        - deployment_id
+        - since
+        - remedy
+      properties:
+        code:
+          description: The conflict code new Deployments of this Environment are refused with.
+          type: string
+          enum:
+            - outcome_unreconciled
+          example: outcome_unreconciled
+        deployment_id:
+          description: The failed plugin-dispatched Deployment that fences the Environment.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        since:
+          description: When the fencing Deployment failed.
+          type: string
+          format: date-time
+          example: "2025-01-02T03:04:05Z"
+        remedy:
+          description: |
+            The operator action that lifts the fence:
+            `POST /internal/orgs/{orgId}/deployments/{deployment_id}/actions/acknowledge-outcome`.
+          type: string
+          enum:
+            - acknowledge-outcome
+          example: acknowledge-outcome
+        remedy_available_at:
+          description: |
+            The end of the Runner dispatch window. `acknowledge-outcome` is refused with 409 before this time. Absent when
+            no window was recorded, then it is accepted at once.
+          type: string
+          format: date-time
+          example: "2025-01-02T04:04:05Z"
+
+    DeploymentQueueItemState:
+      type: string
+      description: |
+        `queued` waits for its Environment. `dispatched` became the Deployment named by `deployment_id`. `cancelled`,
+        `expired` and `rejected` ended without a Deployment; `reason_code` and `reason_message` say why.
+      enum:
+        - queued
+        - dispatched
+        - cancelled
+        - expired
+        - rejected
+
+    DeploymentQueueItem:
+      type: object
+      description: A deploy or rollback request waiting for its Environment, or the record of how its wait ended.
+      required:
+        - id
+        - org_id
+        - project_id
+        - env_id
+        - mode
+        - state
+        - position
+        - halt_on_failure
+        - created_by
+        - created_at
+        - expires_at
+        - attempts
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+        project_id:
+          type: string
+        env_id:
+          type: string
+        mode:
+          type: string
+          enum:
+            - deploy
+            - rollback
+        state:
+          $ref: "#/components/schemas/DeploymentQueueItemState"
+        position:
+          type: integer
+          description: The 1-based position in the Environment's queue while queued, otherwise 0.
+        rollback_to_deployment_id:
+          type: string
+          format: uuid
+        expected_base_deployment_id:
+          type: string
+          format: uuid
+        halt_on_failure:
+          type: boolean
+          description: |
+            The item is rejected with `previous_deployment_failed` instead of being promoted when the Deployment it waited
+            for failed.
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        attempts:
+          type: integer
+          description: Promotion attempts that failed transiently, for example while Core was unavailable.
+        last_error:
+          type: string
+          description: The most recent transient promotion failure.
+        reason_code:
+          type: string
+          description: |
+            Why the item was cancelled, expired or rejected, for example `cancelled`, `expired`, `environment_deleting`,
+            `outcome_unreconciled`, `deployment_base_changed`, `previous_deployment_failed`, `pin_protection` or
+            `actor_forbidden`.
+        reason_message:
+          type: string
+        reason_deployment_id:
+          type: string
+          format: uuid
+          description: |
+            The Deployment the reason refers to: for `previous_deployment_failed` the failed Deployment the item waited
+            for, for `outcome_unreconciled` the failed plugin-dispatched Deployment whose outcome is unreconciled, for
+            `deployment_base_changed` the Environment's current Deployment that replaced the expected base. Absent when
+            the reason refers to no Deployment.
+        settled_by:
+          type: string
+          format: uuid
+          description: The user who cancelled the item.
+        settled_at:
+          type: string
+          format: date-time
+        deployment_id:
+          type: string
+          format: uuid
+          description: The Deployment the item became once dispatched.
+        manifest:
+          $ref: "#/components/schemas/DeploymentManifest"
+
+    DeploymentQueueItemPage:
+      description: A page of deployment queue items
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentQueueItem"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    DeploymentQueueCancelBody:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 1000
+          description: Why the request is no longer wanted.
 
     DeploymentPage:
       description: A page of deployments
@@ -1076,6 +1914,36 @@ components:
               description: The Runner ID that this deployment executes on
               type: string
               example: my-runner
+            pending_changes:
+              $ref: "#/components/schemas/PendingEnvironmentChanges"
+
+    PendingEnvironmentChanges:
+      description: |
+        Reported only on the response that creates a plan-only Deployment or answers a dry run, and only when Deployments
+        that change the Environment run or wait in its deployment queue. The plan or diff describes the Environment as it
+        is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
+        never queued.
+      type: object
+      required:
+        - code
+        - running
+        - queued
+      properties:
+        code:
+          type: string
+          enum:
+            - result_may_change
+          example: result_may_change
+        running:
+          description: Deploy, rollback or destroy Deployments changing the Environment now.
+          type: integer
+          minimum: 0
+          example: 1
+        queued:
+          description: Deploy and rollback requests waiting in the Environment's deployment queue.
+          type: integer
+          minimum: 0
+          example: 2
 
     DeploymentCreateBody:
       type: object
@@ -1108,6 +1976,21 @@ components:
           type: string
           format: uuid
           example: "01234567-89ab-cdef-0123-456789abcdef"
+        module_versions:
+          description: Exact canonical SemVer selections by Module slug. Proposed versions require the scoped module.version.use-proposed capability.
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 1
+          x-go-type-skip-optional-pointer: true
+        confirm_restricted_module_version_uuids:
+          description: Exact Defective Module Version UUIDs explicitly confirmed for an authorised Pin carry-forward or Rollback.
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+          x-go-type-skip-optional-pointer: true
         project_id:
           description: The Project to deploy to.
           type: string
@@ -1152,6 +2035,41 @@ components:
             - error
           example: info
           default: info
+        when_busy:
+          description: |
+            What a deploy or rollback request does when its Environment is busy with another Deployment, has queued requests
+            or is still settling the previous Deployment with Core. `queue` (the default) waits in the Environment's
+            deployment queue and answers 202 with the queue item. `reject` answers 409 with the error code
+            `environment_busy`. A queued request is resolved like a new request when it reaches the head of the queue.
+            Requests authorized by an organization token cannot wait and get 409 `environment_busy` either way. Plan-only
+            requests and dry runs are never queued and ignore this field.
+          type: string
+          enum:
+            - reject
+            - queue
+          default: queue
+        queue_ttl_seconds:
+          description: |
+            How long a queued request may wait before it expires. Defaults to the Data Plane's configured queue TTL and must not
+            exceed its configured maximum. Not valid with `when_busy` set to `reject`.
+          type: integer
+          minimum: 1
+        halt_on_failure:
+          description: |
+            Whether a queued request must not start when the Deployment it waited for failed. That Deployment is the
+            Environment's last deploy, rollback or destroy at promotion, provided it ended after the request was queued;
+            plan runs never count, and a later Deployment supersedes an earlier failure. The request then ends `rejected`
+            with the reason code `previous_deployment_failed` and the queue continues with the next request. A request that
+            starts at once, a plan-only request and a dry run never halt. Not valid with `when_busy` set to `reject`.
+          type: boolean
+          default: false
+        expected_base_deployment_id:
+          description: |
+            The Deployment the request's manifest was derived from. The request fails with the error code `deployment_base_changed`
+            when the Environment's current Deployment differs at the moment the Deployment is created, also when a queued request
+            is promoted. Dry runs do not check it.
+          type: string
+          format: uuid
 
     DeploymentDryRun:
       type: object
@@ -1165,6 +2083,8 @@ components:
           example: my-runner
         diff:
           $ref: "#/components/schemas/DeploymentDiff"
+        pending_changes:
+          $ref: "#/components/schemas/PendingEnvironmentChanges"
 
     DeploymentEncryptedOutputs:
       type: object
@@ -1293,7 +2213,7 @@ components:
         format:
           description: The format of the metadata key.
           type: string
-          example: true
+          example: date-time
         pattern:
           description: A regular expression pattern for the metadata key.
           type: string
@@ -1347,7 +2267,7 @@ components:
           description: The format of the metadata key.
           type: string
           nullable: true
-          example: true
+          example: date-time
         pattern:
           description: A regular expression pattern for the metadata key.
           type: string
@@ -1519,6 +2439,8 @@ components:
       type: object
       required:
         - env_ids_by_project_id
+        - items
+        - observed_at
       properties:
         env_ids_by_project_id:
           type: object
@@ -1526,3 +2448,21 @@ components:
             type: array
             items:
               type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InternalModuleUsageItem'
+        observed_at:
+          type: string
+          format: date-time
+
+    InternalModuleUsageItem:
+      type: object
+      required: [project_id, env_id, environment_uuid, module_version, deployment_id, observed_at]
+      properties:
+        project_id: {type: string}
+        env_id: {type: string}
+        environment_uuid: {type: string, format: uuid}
+        module_version: {type: string}
+        deployment_id: {type: string, format: uuid}
+        observed_at: {type: string, format: date-time}

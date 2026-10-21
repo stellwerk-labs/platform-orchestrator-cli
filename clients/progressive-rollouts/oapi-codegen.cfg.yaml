@@ -1,0 +1,11 @@
+# Models only. Every Progressive Rollouts operation is invoked through Core's
+# generic plugin invocation, never by a plugin route, so the contract has no
+# paths and nothing it defines would survive pruning.
+package: progressiverollouts
+generate:
+  models: true
+compatibility:
+  always-prefix-enum-values: true
+output: models.gen.go
+output-options:
+  skip-prune: true

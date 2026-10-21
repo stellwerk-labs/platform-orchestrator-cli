@@ -1,0 +1,21 @@
+{
+  "buildkit": {
+    "version": "v0.33.1",
+    "image": "moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+    "source": "https://github.com/moby/buildkit/tree/v0.33.1",
+    "platforms": {
+      "linux/amd64": "sha256:98cc6a3fc46220d00f8224ae483f3274fc874e9be8d7dd1e2e2c5481209228b5",
+      "linux/arm64": "sha256:3ad6bb9bc8c78c0069d03247adb9a59b3b43d68e55353e876e558b888c6c1768"
+    }
+  },
+  "sbomGenerator": {
+    "version": "v1.12.0",
+    "embeddedSyftModuleVersion": "v1.51.0",
+    "image": "docker/buildkit-syft-scanner@sha256:ae4f3b554449e7e25548e7d8ccc029d17357348e30c6e3df01b92bc93654d6a9",
+    "source": "https://github.com/docker/buildkit-syft-scanner/tree/v1.12.0",
+    "platforms": {
+      "linux/amd64": "sha256:187e1892a7752c9384c59aba9517dd8e40610b748c72773e87b63720514463c2",
+      "linux/arm64": "sha256:d802508fd7d9841805c8e616c9965c5dbca0c6c415093ed506309d1c58bdd6c8"
+    }
+  }
+}

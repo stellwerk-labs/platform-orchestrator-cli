@@ -86,6 +86,8 @@ func TestScoreDeploy(t *testing.T) {
 			EnvId:     testEnvId,
 			Mode:      dp.DeploymentCreateBodyModePlanOnly,
 			IsDryRun:  true,
+			// Score workloads are merged into the current deployment.
+			ExpectedBaseDeploymentId: ref.Ref(lastDepId),
 			Manifest: &dp.DeploymentManifest{Workloads: map[string]dp.DeploymentManifestWorkload{
 				scoreTestWorkloadName: {
 					Resources: map[string]dp.DeploymentManifestResource{
@@ -227,10 +229,11 @@ func TestScoreDeploy_custom_class(t *testing.T) {
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
-			ProjectId:      testProjectId,
-			EnvId:          testEnvId,
-			Mode:           dp.DeploymentCreateBodyModePlanOnly,
-			RunnerLogLevel: ref.Ref(dp.DeploymentCreateBodyRunnerLogLevel("info")),
+			ProjectId:                testProjectId,
+			EnvId:                    testEnvId,
+			Mode:                     dp.DeploymentCreateBodyModePlanOnly,
+			RunnerLogLevel:           ref.Ref(dp.DeploymentCreateBodyRunnerLogLevel("info")),
+			ExpectedBaseDeploymentId: ref.Ref(lastDepId),
 			Manifest: &dp.DeploymentManifest{Workloads: map[string]dp.DeploymentManifestWorkload{
 				scoreTestWorkloadName: {
 					Resources: map[string]dp.DeploymentManifestResource{
@@ -304,10 +307,12 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating plan_only deployment...
 Deployment %[2]s created.
-Once deployment is complete, logs will be available. To access logs use this secret key: %[4]s, e.g. 'octl logs %[2]s --key=%[4]s'
+Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 `, lastDepId, newDepId, orgId, lk.String(), td+"/score.yaml", testApiUrl), stderr)
+	assert.NotContains(t, stderr, lk.String(), "the runner logs key is never printed by default")
+	assert.NotContains(t, stderr, "AGE-SECRET-KEY-")
 }
 
 func TestScoreDeploy_print_manifest_file(t *testing.T) {

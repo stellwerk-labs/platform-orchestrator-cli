@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 CANDIDATE = re.compile(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.([1-9][0-9]*)")
 SHA = re.compile(r"[0-9a-f]{40}")
 REPOSITORY = "stellwerk-labs/platform-orchestrator-cli"
+_REGISTRY_ORIGIN = "https://ghcr.io"
 
 
 def validate_identity(tag, expected_sha, head_sha, tag_sha):
@@ -68,10 +69,10 @@ def assert_release_unreserved(tag):
 
 def assert_image_absent(repository, tag):
     query = urlencode({"service": "ghcr.io", "scope": f"repository:{repository}:pull"})
-    with urlopen(f"https://ghcr.io/token?{query}", timeout=20) as response:
+    with urlopen(f"{_REGISTRY_ORIGIN}/token?{query}", timeout=20) as response:
         token = json.load(response)["token"]
     request = Request(
-        f"https://ghcr.io/v2/{repository}/manifests/{tag}",
+        f"{_REGISTRY_ORIGIN}/v2/{repository}/manifests/{tag}",
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json",

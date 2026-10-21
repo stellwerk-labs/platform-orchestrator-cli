@@ -42,20 +42,37 @@ These policies use the official GoReleaser
 and [release metadata](https://goreleaser.com/customization/publish/scm/).
 
 The job first verifies that no draft or published release already reserves the
-candidate tag, then reserves an existing-tag GitHub draft before publishing.
-GoReleaser reuses that draft, uploads signed assets and then publishes it as a
-prerelease. Keeping it a draft during upload also supports GitHub's immutable
-release model. Existing stable channels remain unchanged; GoReleaser may also
-reuse an existing stable draft instead of attempting to create a second release
-for that tag. An existing candidate image or release is not overwritten. If
-publication then fails, inspect the evidence and prepare a separately approved
-`rc.N+1`; do not move/delete the old tag, delete its evidence or silently reuse
-the consumed identifier.
+candidate tag, builds and signs the complete local release with GoReleaser's
+publisher skipped, then snapshots the exact 47 local asset names, sizes and
+SHA-256 digests. The workflow verifies the local annotated tag and public tag
+object identify the approved source, creates a draft with the GitHub Releases
+API, and captures the ID from that exact create response. It uploads each asset
+to that numeric ID without replacement, then verifies the complete remote
+inventory against the local snapshot. The exact image, signatures,
+attestations and native CLI smoke are qualified while the release remains a
+draft. Immediately before publishing it rechecks local and public tag identity,
+then re-fetches and validates the same numeric release ID, tag, title, notes,
+draft state, all 47 asset names, sizes and SHA-256 digests, and unique asset IDs
+in that readback. Asset IDs are not persisted as cross-readback identity pins.
+Only then does it publish that release ID as a prerelease with latest disabled
+and verify the final state. Keeping the release a draft during qualification
+also supports GitHub's immutable release model.
 
-The post-publication check verifies exact tag, prerelease/non-draft status and
-signed-asset presence, then inspects/runs the exact candidate image. This is not a
-replacement for independently verifying download signatures, anonymous pulls,
-both image architectures and the matching server contracts.
+If a step fails before draft creation, no draft exists and the already-signed
+Git tag remains consumed. Image-absence preflight only observes that the image
+tag is absent; it does not reserve the tag. Inspect current release and image
+state before acting. If asset upload or qualification fails after draft
+creation, the numeric draft ID and any partial assets/image remain occupied. If
+finalization or its readback fails, inspect the captured numeric release ID
+and image because the release may already be published. Never rerun the
+publisher, replace the release ID, move/delete the old tag, overwrite assets or
+delete evidence. Prepare a separately approved `rc.N+1`. Existing stable
+channels remain unchanged; the stable GoReleaser flow and its existing-draft
+behavior are not changed by the candidate lifecycle.
+
+The candidate checks do not replace independent verification of download
+signatures, anonymous pulls, both image architectures and the matching server
+contracts.
 
 ## Local gates
 

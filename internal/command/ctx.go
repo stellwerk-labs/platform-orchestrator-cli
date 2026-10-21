@@ -28,6 +28,7 @@ type contextKey string
 const (
 	ExtraRequestHeadersEnvVar = "PO_EXTRA_REQUEST_HEADERS"
 	AuthTokenEnvVar           = "PO_AUTH_TOKEN" // #nosec G101
+	CAFileEnvVar              = "PO_CA_FILE"
 
 	CpClientContextKey  contextKey = "cp-client"
 	DpClientContextKey  contextKey = "dp-client"
@@ -126,8 +127,12 @@ func withIamClient(ctx context.Context, apiPrefix string) (context.Context, erro
 		return ctx, nil
 	}
 
+	transport, err := clients.NewSecureTransport(os.Getenv(CAFileEnvVar))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to configure API TLS")
+	}
 	client := &http.Client{
-		Transport: retryhttp.New(retryhttp.WithTransport(clients.NewDebuggingTransport(http.DefaultTransport))),
+		Transport: retryhttp.New(retryhttp.WithTransport(clients.NewDebuggingTransport(transport))),
 		Timeout:   30 * time.Second,
 	}
 
@@ -145,8 +150,12 @@ func withClients(ctx context.Context, apiPrefix, org, authToken string) (context
 		return ctx, nil
 	}
 
+	transport, err := clients.NewSecureTransport(os.Getenv(CAFileEnvVar))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to configure API TLS")
+	}
 	client := &http.Client{
-		Transport: retryhttp.New(retryhttp.WithTransport(clients.NewDebuggingTransport(http.DefaultTransport))),
+		Transport: retryhttp.New(retryhttp.WithTransport(clients.NewDebuggingTransport(transport))),
 		Timeout:   30 * time.Second,
 	}
 

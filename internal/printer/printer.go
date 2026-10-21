@@ -27,10 +27,14 @@ const (
 	tableTypeCurrentUser            = "CurrentUser"
 	tableTypeDeployment             = "Deployment"
 	tableTypeDeploymentManifest     = "DeploymentManifest"
+	tableTypeDeploymentQueueItem    = "DeploymentQueueItem"
 	tableTypeDeploymentSummary      = "DeploymentSummary"
 	tableTypeEnvironment            = "Environment"
 	tableTypeEnvironmentTypeSummary = "EnvironmentTypeSummary"
 	tableTypeMetadataKey            = "MetadataKey"
+	tableTypePluginAuditEvent       = "PluginAuditEvent"
+	tableTypePluginInstallation     = "PluginInstallation"
+	tableTypePluginPackage          = "PluginPackage"
 	tableTypeModule                 = "Module"
 	tableTypeModuleProvider         = "ModuleProvider"
 	tableTypeModuleProviderSummary  = "ModuleProviderSummary"
@@ -46,6 +50,7 @@ const (
 	tableTypeScimGroupMapping       = "ScimGroupMapping"
 	tableTypeServiceUserSummary     = "ServiceUserSummary"
 
+	tableFieldActor                   = "Actor"
 	tableFieldBuiltIn                 = "BuiltIn"
 	tableFieldCompletedAt             = "CompletedAt"
 	tableFieldConfiguration           = "Configuration"
@@ -54,10 +59,12 @@ const (
 	tableFieldCreatedAt               = "CreatedAt"
 	tableFieldCurrentTokenExpiresAt   = "CurrentTokenExpiresAt"
 	tableFieldDependencies            = "Dependencies"
+	tableFieldDeploymentId            = "DeploymentId"
 	tableFieldDescription             = "Description"
 	tableFieldDisplayName             = "DisplayName"
 	tableFieldEnvId                   = "EnvId"
 	tableFieldEnvTypeId               = "EnvTypeId"
+	tableFieldExpiresAt               = "ExpiresAt"
 	tableFieldId                      = "Id"
 	tableFieldIsSystem                = "IsSystem"
 	tableFieldIsDeveloperAccessible   = "IsDeveloperAccessible"
@@ -73,9 +80,12 @@ const (
 	tableFieldOrganizationMemberships = "OrganizationMemberships"
 	tableFieldOrgId                   = "OrgId"
 	tableFieldPlanOnly                = "PlanOnly"
+	tableFieldPosition                = "Position"
 	tableFieldProjectId               = "ProjectId"
 	tableFieldProviderMapping         = "ProviderMapping"
 	tableFieldProviderType            = "ProviderType"
+	tableFieldReason                  = "Reason"
+	tableFieldReasonCode              = "ReasonCode"
 	tableFieldResourceClass           = "ResourceClass"
 	tableFieldResourceType            = "ResourceType"
 	tableFieldRoleId                  = "RoleId"
@@ -85,6 +95,7 @@ const (
 	tableFieldSource                  = "Source"
 	tableFieldScopes                  = "Scopes"
 	tableFieldSchema                  = "Schema"
+	tableFieldState                   = "State"
 	tableFieldStatus                  = "Status"
 	tableFieldPermissions             = "Permissions"
 	tableFieldGroupDisplayName        = "GroupDisplayName"
@@ -121,10 +132,14 @@ var tableColumns = map[string][]string{
 	tableTypeActiveResourceNode:     {tableFieldId, tableFieldResourceType, tableFieldModuleId, tableFieldModuleVersion},
 	tableTypeDeployment:             {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt, tableFieldManifest, tableFieldRunnerId},
 	tableTypeDeploymentManifest:     {tableFieldWorkloads},
+	tableTypeDeploymentQueueItem:    {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldMode, tableFieldState, tableFieldPosition, "HaltOnFailure", tableFieldCreatedAt, tableFieldExpiresAt, tableFieldDeploymentId, tableFieldReasonCode},
 	tableTypeDeploymentSummary:      {tableFieldId, tableFieldProjectId, tableFieldEnvId, tableFieldStatus, tableFieldMode, tableFieldPlanOnly, tableFieldCreatedAt, tableFieldCompletedAt},
 	tableTypeEnvironmentTypeSummary: {tableFieldId, tableFieldDisplayName, tableFieldCreatedAt},
 	tableTypeEnvironment:            {tableFieldId, tableFieldDisplayName, tableFieldEnvTypeId, tableFieldCreatedAt},
 	tableTypeMetadataKey:            {tableFieldName, tableFieldDescription, tableFieldSchema, tableFieldCreatedAt},
+	tableTypePluginAuditEvent:       {tableFieldId, "Revision", "OccurredAt", tableFieldActor, "Action", "InstallationId", tableFieldOrgId, tableFieldReason},
+	tableTypePluginInstallation:     {"InstallationId", "PluginId", tableFieldState, "Availability", "OrganizationMode", "PackageSha256", "TargetPackageSha256", tableFieldUpdatedAt},
+	tableTypePluginPackage:          {"PluginId", "Version", "ManifestSha256", tableFieldCreatedAt},
 	tableTypeModule:                 {tableFieldId, tableFieldDescription, tableFieldOrgId, tableFieldResourceType, tableFieldModuleSource, tableFieldModuleParams, tableFieldModuleInputs, tableFieldProviderMapping, tableFieldDependencies, tableFieldCoprovisioned, tableFieldUpdatedAt, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleSummary:          {tableFieldId, tableFieldDescription, tableFieldResourceType, tableFieldModuleSource, tableFieldVersionId, tableFieldCreatedAt},
 	tableTypeModuleProvider:         {tableFieldId, tableFieldDescription, tableFieldProviderType, tableFieldSource, tableFieldVersionConstraint, tableFieldConfiguration, tableFieldCreatedAt},
