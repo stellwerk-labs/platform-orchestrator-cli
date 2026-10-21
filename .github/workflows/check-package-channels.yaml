@@ -1,0 +1,236 @@
+name: Check package channels
+
+on:
+  push:
+    branches:
+      - verification/cli-package-channels-20261021
+
+permissions:
+  contents: read
+
+jobs:
+  check-package-channels:
+    if: github.repository == 'stellwerk-labs/platform-orchestrator-cli' && github.event_name == 'push' && github.ref == 'refs/heads/verification/cli-package-channels-20261021'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact channel validator source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: b4b0fffb2a02f8b17202033f68bf9d798a76d513
+          persist-credentials: false
+      - name: Observe channel access without writes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import http.client
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import runpy
+          import signal
+          import ssl
+          import subprocess
+          import sys
+
+          SOURCE = "b4b0fffb2a02f8b17202033f68bf9d798a76d513"
+          REPOSITORY = "stellwerk-labs/platform-orchestrator-cli"
+          REF = "refs/heads/verification/cli-package-channels-20261021"
+          CHANNELS = {"stellwerk-labs/homebrew-tap": 1294382484,
+                      "stellwerk-labs/scoop-bucket": 1294382491}
+          PINS = {
+              "scripts/stable-release-preflight.py": "51bf897ca829f47ef63e50ee96e9e535f60bfa38ff48d2aa3cbe66a9ffd7e207",
+              "scripts/candidate-release.py": "1c77b1a852d74b54a37802197282446361c984265b27e519f37448cae7db2f2c",
+              ".goreleaser.yaml": "ee908da0cbba0240f06b5dd9e6e9e5f2547688cb80239875038742cc9f86023a",
+              ".github/workflows/ci.yaml": "fbd2f27cce62fda8f864a758433304d9876e28ab2df68aef1b5582940c3baa12",
+          }
+          SUFFIXES = ("", "/git/ref/heads/main", "/branches/main",
+                      "/rules/branches/main?per_page=100", "/branches/main/protection")
+          PATHS = {"/repos/" + repo + suffix for repo in CHANNELS for suffix in SUFFIXES}
+
+
+          class Refusal(Exception):
+              pass
+
+
+          def require(condition, category):
+              if not condition:
+                  raise Refusal(category)
+
+
+          def scope_evidence(header):
+              if header is None:
+                  return False, "WRITE_SCOPE_UNPROVEN"
+              scopes = {item.strip() for item in header.split(",")}
+              applicable = bool(scopes & {"repo", "public_repo"})
+              return applicable, "APPLICABLE_REPO_SCOPE" if applicable else "REPO_SCOPE_NOT_GRANTED"
+
+
+          def pairs(items):
+              result = {}
+              for key, value in items:
+                  require(key not in result, "DUPLICATE_JSON_KEY")
+                  result[key] = value
+              return result
+
+
+          def decode_json(raw):
+              try:
+                  return json.loads(raw, object_pairs_hook=pairs)
+              except (ValueError, UnicodeError):
+                  raise Refusal("RESPONSE_SCHEMA_REFUSED") from None
+
+
+          def deadline(signum, frame):
+              raise Refusal("GET_TIMEOUT")
+
+
+          def api_get(path, token, optional=False):
+              require(path in PATHS, "ENDPOINT_REFUSED")
+              connection = http.client.HTTPSConnection("api.github.com", timeout=20,
+                                                       context=ssl.create_default_context())
+              signal.signal(signal.SIGALRM, deadline)
+              signal.alarm(20)
+              try:
+                  connection.request("GET", path, headers={
+                      "Authorization": "Bearer " + token,
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "cli-package-channel-preflight",
+                  })
+                  response = connection.getresponse()
+                  status = response.status
+                  require(not 300 <= status < 400, "REDIRECT_REFUSED")
+                  if optional and status in (403, 404):
+                      return status, None, (False, "WRITE_SCOPE_UNPROVEN"), False
+                  require(status == 200, "AUTH_REFUSED" if status in (401, 403) else "HTTP_REFUSED")
+                  raw = response.read(1048577)
+                  require(len(raw) <= 1048576, "RESPONSE_SIZE_REFUSED")
+                  return status, decode_json(raw), scope_evidence(response.getheader("X-OAuth-Scopes")), bool(response.getheader("Link"))
+              except (OSError, http.client.HTTPException):
+                  raise Refusal("GET_TRANSPORT_REFUSED") from None
+              finally:
+                  signal.alarm(0)
+                  connection.close()
+
+
+          def ref_sha(document):
+              require(isinstance(document, dict), "REF_SCHEMA_REFUSED")
+              obj = document.get("object")
+              require(document.get("ref") == "refs/heads/main" and isinstance(obj, dict),
+                      "REF_SCHEMA_REFUSED")
+              require(obj.get("type") == "commit" and isinstance(obj.get("sha"), str)
+                      and re.fullmatch("[a-f0-9]{40}", obj["sha"]), "REF_SCHEMA_REFUSED")
+              return obj["sha"]
+
+
+          def repository_access(repository, document, validate):
+              require(isinstance(document, dict), "REPOSITORY_SCHEMA_REFUSED")
+              try:
+                  validate(repository, document)
+              except (ValueError, AttributeError):
+                  raise Refusal("PRODUCER_CHANNEL_PREDICATE_REFUSED") from None
+              owner = document.get("owner")
+              require(document.get("id") == CHANNELS[repository]
+                      and isinstance(owner, dict) and owner.get("id") == 288887095
+                      and owner.get("login") == "stellwerk-labs"
+                      and document.get("private") is False and document.get("visibility") == "public"
+                      and document.get("disabled") is False and document.get("default_branch") == "main",
+                      "CHANNEL_IDENTITY_REFUSED")
+
+
+          def rule_evidence(branch, sha, rules, paginated, protection_status):
+              require(protection_status in (200, 403, 404), "PROTECTION_STATUS_REFUSED")
+              require(isinstance(branch, dict) and branch.get("name") == "main"
+                      and isinstance(branch.get("commit"), dict)
+                      and branch["commit"].get("sha") == sha and type(branch.get("protected")) is bool,
+                      "BRANCH_SCHEMA_REFUSED")
+              require(isinstance(rules, list) and all(isinstance(rule, dict) for rule in rules),
+                      "RULE_SCHEMA_REFUSED")
+              # Public branch metadata and applicable rules do not require admin-read.
+              clear = branch["protected"] is False and not rules and not paginated and protection_status != 200
+              return clear, "PUBLIC_RULES_CLEAR" if clear else "BRANCH_RULES_UNPROVEN"
+
+
+          def source_guard():
+              require(sys.version_info >= (3, 12), "PYTHON_VERSION_REFUSED")
+              for name, expected in (("GITHUB_REPOSITORY", REPOSITORY), ("GITHUB_EVENT_NAME", "push"),
+                                     ("GITHUB_REF", REF),
+                                     ("GITHUB_WORKFLOW_REF", REPOSITORY + "/.github/workflows/check-package-channels.yaml@" + REF)):
+                  require(os.environ.get(name) == expected, "EVENT_BOUNDARY_REFUSED")
+              for name in ("GITHUB_SHA", "GITHUB_WORKFLOW_SHA"):
+                  require(re.fullmatch("[a-f0-9]{40}", os.environ.get(name, "")), "RUN_IDENTITY_REFUSED")
+              require(os.environ["GITHUB_SHA"] == os.environ["GITHUB_WORKFLOW_SHA"], "WORKFLOW_IDENTITY_REFUSED")
+              for name in ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT"):
+                  require(re.fullmatch("[1-9][0-9]*", os.environ.get(name, "")), "RUN_IDENTITY_REFUSED")
+              def git(*args):
+                  return subprocess.check_output(["git", *args], text=True, stderr=subprocess.DEVNULL, timeout=20).strip()
+              require(git("rev-parse", "HEAD") == SOURCE and not git("status", "--porcelain=v1", "--untracked-files=all"),
+                      "CHECKOUT_REFUSED")
+              for path, expected in PINS.items():
+                  require(hashlib.sha256(Path(path).read_bytes()).hexdigest() == expected, "SOURCE_BYTES_REFUSED")
+              return runpy.run_path("scripts/stable-release-preflight.py")["validate_channel_access"]
+
+
+          def main():
+              report = {"source": SOURCE, "result": "REFUSED", "category": "INTERNAL_REFUSAL",
+                        "refs_unchanged": False, "channels": {}}
+              baseline = {}
+              token = os.environ.get("GH_PAT", "")
+              try:
+                  validate = source_guard()
+                  report.update({key.lower(): os.environ[key] for key in
+                                 ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_SHA", "GITHUB_WORKFLOW_SHA")})
+                  require(bool(token) and token.strip() == token, "CREDENTIAL_MISSING_OR_INVALID")
+                  for repository in CHANNELS:
+                      baseline[repository] = ref_sha(api_get("/repos/" + repository + "/git/ref/heads/main", token)[1])
+                  for repository, identity in CHANNELS.items():
+                      base = "/repos/" + repository
+                      status, metadata, scope, unused = api_get(base, token)
+                      repository_access(repository, metadata, validate)
+                      branch = api_get(base + "/branches/main", token)[1]
+                      unused, rules, unused_scope, paginated = api_get(base + "/rules/branches/main?per_page=100", token)
+                      protection_status = api_get(base + "/branches/main/protection", token, optional=True)[0]
+                      clear, rule_category = rule_evidence(branch, baseline[repository], rules, paginated, protection_status)
+                      report["channels"][repository] = {
+                          "id": identity, "metadata_get_200": status == 200,
+                          "producer_predicate": True, "exact_public_active_identity": True,
+                          "main_sha": baseline[repository], "applicable_repo_scope": scope[0],
+                          "scope_category": scope[1], "public_rules_clear": clear,
+                          "rules_category": rule_category,
+                          "optional_admin_read": "OBSERVED" if protection_status == 200 else "UNPROVEN",
+                      }
+                  proven = all(item["applicable_repo_scope"] and item["public_rules_clear"]
+                               for item in report["channels"].values())
+                  report["result"] = "OBSERVED_READ_ONLY_PREFLIGHT" if proven else "UNPROVEN"
+                  report["category"] = "SCOPE_AND_PUBLIC_RULES_OBSERVED" if proven else "SCOPE_OR_RULES_UNPROVEN"
+              except Refusal as error:
+                  report["category"] = error.args[0]
+              except Exception:
+                  report["category"] = "INTERNAL_REFUSAL"
+              finally:
+                  if baseline:
+                      unchanged = len(baseline) == len(CHANNELS)
+                      for repository, sha in baseline.items():
+                          try:
+                              unchanged = (ref_sha(api_get("/repos/" + repository + "/git/ref/heads/main", token)[1]) == sha) and unchanged
+                          except Exception:
+                              unchanged = False
+                      report["refs_unchanged"] = unchanged
+                      if not unchanged:
+                          report.update(result="REFUSED", category="REF_READBACK_REFUSED")
+              summary = json.dumps(report, sort_keys=True)
+              print(summary)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+                  stream.write("Read-only observation, not a contents-write test or publication approval.\n\n" + summary + "\n")
+              return 0 if report["result"] == "OBSERVED_READ_ONLY_PREFLIGHT" and report["refs_unchanged"] else 1
+
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PY
