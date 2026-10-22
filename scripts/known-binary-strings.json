@@ -1,6 +1,6 @@
 {
-  "policy": "go1.26.2-runewidth-v0.0.16-six-public-string-boundary-v1",
-  "goVersion": "go1.26.2",
+  "policy": "go1.26.10-runewidth-v0.0.16-six-public-string-boundary-v1",
+  "goVersion": "go1.26.10",
   "module": "github.com/mattn/go-runewidth",
   "version": "v0.0.16",
   "sum": "h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6TULQc=",
@@ -13,11 +13,11 @@
   "contextSHA256": "3b763936a436c90c693a5f2f63a3893c53838b3bbfcd4b4791aa3a09059eff3e",
   "proof": "The unstripped Go string symbol and AST of the actually compiled files prove six adjacent public constants. Every finding occurrence must match the complete 37-byte context. No raw finding or credential is recorded.",
   "sources": [
-    {"source": "https://github.com/golang/go/blob/go1.26.2/src/crypto/hpke/hpke.go#L58", "sha256": "48af513f3aca41e79583c63fd6d913213bbffb602a2060576bcdb1462e71c474", "length": 6},
-    {"source": "https://github.com/golang/go/blob/go1.26.2/src/crypto/x509/pkix/pkix.go#L34", "sha256": "7b8cb67e7e0fa0f067027a09a6d7793507d9ed74c9c20265c7514dfc63998d9b", "length": 6},
-    {"source": "https://github.com/golang/go/blob/go1.26.2/src/net/mail/message.go#L136", "sha256": "f1940257874dddd4ecbf3f5599360360d78640ca61011f4984d5e7bb361fbcd7", "length": 6},
+    {"source": "https://github.com/golang/go/blob/go1.26.10/src/crypto/hpke/hpke.go#L58", "sha256": "48af513f3aca41e79583c63fd6d913213bbffb602a2060576bcdb1462e71c474", "length": 6},
+    {"source": "https://github.com/golang/go/blob/go1.26.10/src/crypto/x509/pkix/pkix.go#L34", "sha256": "7b8cb67e7e0fa0f067027a09a6d7793507d9ed74c9c20265c7514dfc63998d9b", "length": 6},
+    {"source": "https://github.com/golang/go/blob/go1.26.10/src/net/mail/message.go#L136", "sha256": "f1940257874dddd4ecbf3f5599360360d78640ca61011f4984d5e7bb361fbcd7", "length": 6},
     {"source": "https://github.com/mattn/go-runewidth/blob/v0.0.16/runewidth_posix.go#L29", "sha256": "b12863c62429bf672f85e334546c33aac4dcc7cea2cac3c59cb754d1e9e37d5a", "length": 6},
     {"source": "https://github.com/mattn/go-runewidth/blob/v0.0.16/runewidth_posix.go#L64", "sha256": "b12863c62429bf672f85e334546c33aac4dcc7cea2cac3c59cb754d1e9e37d5a", "length": 6},
-    {"source": "https://github.com/golang/go/blob/go1.26.2/src/context/context.go#L732", "sha256": "765f99f7cc0710b0117ffa183e432524f429c21496fcbad9b63fb9886fdbaac7", "length": 7}
+    {"source": "https://github.com/golang/go/blob/go1.26.10/src/context/context.go#L732", "sha256": "765f99f7cc0710b0117ffa183e432524f429c21496fcbad9b63fb9886fdbaac7", "length": 7}
   ]
 }

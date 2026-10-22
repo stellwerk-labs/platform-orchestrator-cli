@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  GOTOOLCHAIN: go1.26.2
+  GOTOOLCHAIN: go1.26.10
   GOWORK: 'off'
   GOENV: 'off'
   GOFLAGS: ''
@@ -126,7 +126,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.26.2'
+          go-version: '1.26.10'
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
@@ -248,7 +248,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.26.2'
+          go-version: '1.26.10'
 
       - name: Generate
         run: make generate
@@ -273,6 +273,9 @@ jobs:
 
       - name: Check vendored API specifications
         run: make check-api-specs
+
+      - name: Check known Go vulnerabilities
+        run: sh scripts/check-go-security.sh
 
       - name: Test
         run: go tool gotestsum --format github-actions

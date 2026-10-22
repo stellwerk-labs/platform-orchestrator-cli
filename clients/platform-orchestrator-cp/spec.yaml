@@ -524,7 +524,8 @@ paths:
                 withdraw: {type: boolean}
                 original_request:
                   description: The retained original submit request, unchanged. Required only when Core has not recorded the dispatch; if supplied for a recorded dispatch it must match its immutable intent.
-                  $ref: '#/components/schemas/PluginDeploymentSubmitRequest'
+                  allOf:
+                    - $ref: '#/components/schemas/PluginDeploymentSubmitRequest'
       responses:
         '200':
           description: Exact upstream receipt or absence, with its status. Protection remains until terminal or withdrawn-and-absent evidence is proven.
@@ -3654,7 +3655,8 @@ components:
           x-enum-varnames: [PluginInstallationStateInstalled, PluginInstallationStateActive, PluginInstallationStateDisabled, PluginInstallationStateUninstalled, PluginInstallationStatePurged]
         availability:
           description: Derived from the state, never set. available while active, not_enabled (safety-only) while disabled, unavailable while installed and not yet proven by the running plugin, not_installed once uninstalled or purged.
-          $ref: '#/components/schemas/PluginAvailabilityState'
+          allOf:
+            - $ref: '#/components/schemas/PluginAvailabilityState'
         diagnostic: {$ref: '#/components/schemas/PluginInstallationDiagnostic'}
         observation: {$ref: '#/components/schemas/PluginStatusObservation'}
         backend_url: {type: string}
@@ -4361,7 +4363,8 @@ components:
           x-go-type: json.RawMessage
         entitlement_warning:
           description: Set when the operation's required feature is in its signed grace period. The operation was still performed; clients should show the warning.
-          $ref: '#/components/schemas/PluginEntitlementWarning'
+          allOf:
+            - $ref: '#/components/schemas/PluginEntitlementWarning'
     PluginAvailabilityState:
       type: string
       enum: [available, not_installed, not_enabled, not_entitled, incompatible, unavailable]

@@ -72,7 +72,7 @@ sboms:
     cmd: qualify-release-content.sh
     args: []
     env:
-      - GOTOOLCHAIN=go1.26.2
+      - GOTOOLCHAIN=go1.26.10
       - GOWORK=off
       - GOENV=off
       - QUALIFY_SOURCE_SHA={{ .FullCommit }}

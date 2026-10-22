@@ -1879,7 +1879,8 @@ components:
           type: string
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject:
           description: The membership subject identity.
           type: string
@@ -1934,7 +1935,8 @@ components:
           example: user@example.com
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject:
           description: The membership subject identity.
           type: string
@@ -1990,7 +1992,8 @@ components:
           example: user@example.com
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject:
           description: The membership subject identity.
           type: string
@@ -2027,7 +2030,8 @@ components:
           format: uuid
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject:
           description: The membership subject identity.
           type: string
@@ -2056,7 +2060,8 @@ components:
       properties:
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject:
           description: The membership subject identity.
           type: string
@@ -2314,7 +2319,8 @@ components:
           type: string
         membership_subject_type:
           description: The membership subject type that the invitation is valid for.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         membership_subject:
           description: The membership subject that the invitation is valid for
           type: string
@@ -2345,7 +2351,8 @@ components:
           x-pattern-error: email_address contains invalid characters
         membership_subject_type:
           description: The membership subject type that the invitation is valid for.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         membership_subject:
           description: The membership subject that the invitation is valid for
           type: string
@@ -3034,7 +3041,8 @@ components:
             - service-user
         subject_type:
           description: The membership subject type.
-          $ref: "#/components/schemas/SubjectType"
+          allOf:
+            - $ref: "#/components/schemas/SubjectType"
         subject_id:
           description: The membership subject id.
           type: string

@@ -303,7 +303,7 @@ class ReleaseContentTest(unittest.TestCase):
         finding = {"RuleID": "generic-api-key", "Match": context[:34].decode(), "Secret": context[16:33].decode()}
         self.assertEqual(hashlib.sha256(finding["Secret"].encode()).hexdigest(), content.BINARY_SECRET)
         sums = " ".join((content.BINARY_MODULE, content.BINARY_VERSION, content.BINARY_SUM))
-        metadata = {"GoVersion": "go1.26.2", "Path": "github.com/stellwerk-labs/platform-orchestrator-cli",
+        metadata = {"GoVersion": "go1.26.10", "Path": "github.com/stellwerk-labs/platform-orchestrator-cli",
                     "Settings": [{"Key": "GOOS", "Value": "linux"}, {"Key": "GOARCH", "Value": "amd64"}],
                     "Deps": [{"Path": content.BINARY_MODULE, "Version": content.BINARY_VERSION, "Sum": content.BINARY_SUM}]}
         self.assertTrue(content.known_binary_finding(data, finding, sums, metadata))
@@ -340,7 +340,7 @@ class ReleaseContentTest(unittest.TestCase):
         (source / "main.go").write_text('package main\nimport ("fmt"; "github.com/mattn/go-runewidth")\nfunc main(){fmt.Print(' +
                                        context_literal + ', runewidth.StringWidth("x"))}\n')
         binary = self.shipping / "application"
-        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.2", "GOWORK": "off", "GOENV": "off",
+        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.10", "GOWORK": "off", "GOENV": "off",
                        "GOOS": "linux", "GOARCH": "amd64", "CGO_ENABLED": "0", "GOFLAGS": "", "GOEXPERIMENT": ""}
         subprocess.run(["go", "build", "-mod=mod", "-trimpath", "-o", str(binary), "."], cwd=source,
                        env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
