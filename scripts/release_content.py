@@ -95,7 +95,7 @@ BINARY_SUM = "h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6TULQc="
 BINARY_MATCH = "7e24f2ade193f05a114944db58399676f153d033dc62a375e7bcc4a9ef57445b"
 BINARY_SECRET = "5f033b94b9ad6def05a2585fc320d32cbaeaa41e6966e7196686760fd140055c"
 BINARY_CONTEXT = "3b763936a436c90c693a5f2f63a3893c53838b3bbfcd4b4791aa3a09059eff3e"
-BINARY_POLICY = "go1.26.2-runewidth-v0.0.16-six-public-string-boundary-v1"
+BINARY_POLICY = "go1.26.10-runewidth-v0.0.16-six-public-string-boundary-v1"
 
 
 def executable_target(data):
@@ -128,7 +128,7 @@ def known_binary_finding(data, finding, sums, buildinfo):
     if identity not in [line.split() for line in sums.splitlines()]:
         return False
     settings = {setting["Key"]: setting["Value"] for setting in buildinfo.get("Settings", [])}
-    if (buildinfo.get("GoVersion") != "go1.26.2"
+    if (buildinfo.get("GoVersion") != "go1.26.10"
             or buildinfo.get("Path") != "github.com/stellwerk-labs/platform-orchestrator-cli"
             or (settings.get("GOOS"), settings.get("GOARCH")) != target):
         return False
@@ -187,7 +187,7 @@ def binary_scan(directory, empty_cwd):
         findings = inspect(strings)
         if not findings:
             continue
-        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.2", "GOWORK": "off", "GOENV": "off"}
+        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.10", "GOWORK": "off", "GOENV": "off"}
         metadata = subprocess.run(["go", "version", "-m", "-json", str(path)], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, env=environment, timeout=15, check=False)
         if metadata.returncode or metadata.stderr:

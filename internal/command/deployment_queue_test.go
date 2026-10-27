@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -575,7 +576,10 @@ func TestDeploymentQueueCommands(t *testing.T) {
 		fixture.queueReads = []dp.DeploymentQueueItem{halting}
 		stdout, _, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, queueTestOrg, testGetCmd, "deployment-queue-items", testProjectId, testEnvId, "--state", "queued", outFlag, jsonOutput})
 		require.NoError(t, err)
-		require.Equal(t, []string{"env_id=my-env&project_id=my-project&state=queued"}, fixture.queueQueries)
+		require.Len(t, fixture.queueQueries, 1)
+		query, err := url.ParseQuery(fixture.queueQueries[0])
+		require.NoError(t, err)
+		require.Equal(t, url.Values{"env_id": {testEnvId}, "project_id": {testProjectId}, "state": {"queued"}}, query)
 		var items []dp.DeploymentQueueItem
 		require.NoError(t, json.Unmarshal([]byte(stdout), &items))
 		require.Len(t, items, 1)

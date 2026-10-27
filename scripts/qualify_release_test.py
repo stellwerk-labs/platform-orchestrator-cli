@@ -27,7 +27,7 @@ class QualificationTest(unittest.TestCase):
         (source / "go.mod").write_text("module " + cls.module + "\n\ngo 1.26.0\n")
         (source / "main.go").write_text("package main\nfunc main() {}\n")
         cls.binary = cls.root / "client"
-        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.2", "GOWORK": "off", "GOENV": "off",
+        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.10", "GOWORK": "off", "GOENV": "off",
                        "GOOS": "linux", "GOARCH": "amd64", "CGO_ENABLED": "0", "GOFLAGS": "", "GOEXPERIMENT": ""}
         subprocess.run(["go", "build", "-trimpath", "-o", str(cls.binary), "."], cwd=source,
                        env=environment, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -172,7 +172,7 @@ class QualificationTest(unittest.TestCase):
         document = release.generate_spdx(filesystem, output, release.sha(self.binary), producer, dependencies={})
         self.assertEqual(document["creationInfo"]["created"], producer["created"])
         self.assertTrue(document["documentNamespace"].endswith(release.sha(self.binary)))
-        self.assertTrue(any(package.get("name") == "stdlib" and package.get("versionInfo") == "go1.26.2"
+        self.assertTrue(any(package.get("name") == "stdlib" and package.get("versionInfo") == "go1.26.10"
                             for package in document["packages"]))
         with self.assertRaisesRegex(ValueError, "missing compiled dependency"):
             release.generate_spdx(filesystem, self.root / "missing.spdx.json", release.sha(self.binary), producer,

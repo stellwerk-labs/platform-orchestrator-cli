@@ -9,7 +9,7 @@ The Stellwerk CLI for platform-orchestrator-cp, platform-orchestrator-dp and pla
 Release archives and the CLI release image include `licenses/`: the application's EUPL
 text, Go's license/patent grants, and the union of dependency notices for every
 configured GoReleaser target. Collection uses checksum-verified go-licenses
-v2.0.1 and Go 1.26.2, without changing the module's minimum Go version. Unknown
+v2.0.1 and Go 1.26.10, without changing the module's minimum Go version. Unknown
 licenses and missing/empty legal notices fail the build. Reciprocal-license
 source files saved by go-licenses are preserved too. Generated notices are
 replaced only when their recorded checksums match and no untracked files exist.
@@ -143,7 +143,7 @@ Gitleaks 8.30.1 and private-reference checks cover shipping paths, archive membe
 binary strings, release notes and generated metadata. Inline scanner exemptions
 and artifact-provided ignore files cannot weaken the gate. The only binary
 exception is the exact source-proven compiler boundary documented in
-[known-binary-strings.json](scripts/known-binary-strings.json), bound to Go 1.26.2,
+[known-binary-strings.json](scripts/known-binary-strings.json), bound to Go 1.26.10,
 the compiled module checksum and every occurrence's complete surrounding bytes.
 Changed findings and additional secrets fail, including in the same executable.
 

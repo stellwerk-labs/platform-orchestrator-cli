@@ -169,7 +169,7 @@ func TestRegenerationOnlyReplacesAnUnchangedGeneratedTree(t *testing.T) {
 
 func TestRealCollectorIncludesWindowsOnlyNoticesAndRejectsUnknown(t *testing.T) {
 	// These are real modules and the real pinned classifier, not a mocked command.
-	t.Setenv("GOTOOLCHAIN", "go1.26.2")
+	t.Setenv("GOTOOLCHAIN", "go1.26.10")
 	t.Setenv("GOWORK", "off")
 	t.Setenv("GOENV", "off")
 	t.Setenv("CGO_ENABLED", "0")
