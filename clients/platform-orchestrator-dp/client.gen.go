@@ -1418,6 +1418,14 @@ type MetadataKeyUpdateBody struct {
 	Schema *UpdateMetadataKeySchema `json:"schema,omitempty"`
 }
 
+// ModuleTestDeploymentCreateBody defines model for ModuleTestDeploymentCreateBody.
+type ModuleTestDeploymentCreateBody struct {
+	Deployment DeploymentCreateBody `json:"deployment"`
+
+	// DraftTestSnapshots Stable Module UUID to immutable captured test snapshot UUID. Draft heads and published Version references are not accepted here.
+	DraftTestSnapshots map[string]openapi_types.UUID `json:"draft_test_snapshots"`
+}
+
 // OpenidConfiguration OpenID discovery configuration.
 type OpenidConfiguration struct {
 	ClaimsSupported                  []string `json:"claims_supported"`
@@ -1687,6 +1695,14 @@ type ListMetadataKeysParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// CreateModuleTestDeploymentParams defines parameters for CreateModuleTestDeployment.
+type CreateModuleTestDeploymentParams struct {
+	// IdempotencyKey Ensures that the deployment request is only accepted once per idempotency key per 24 hours. A uuid or similar is recommended.
+	// When the key matches the key in last deployment and the environment and manifest is the same, this will return the last deployment.
+	// When the key matches a queued request, this returns its queue item until it is dispatched, and its Deployment afterwards.
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
 // PlanExternalDeploymentParams defines parameters for PlanExternalDeployment.
 type PlanExternalDeploymentParams struct {
 	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
@@ -1719,6 +1735,9 @@ type CreateMetadataKeyJSONRequestBody = MetadataKeyCreateBody
 
 // UpdateMetadataKeyJSONRequestBody defines body for UpdateMetadataKey for application/json ContentType.
 type UpdateMetadataKeyJSONRequestBody = MetadataKeyUpdateBody
+
+// CreateModuleTestDeploymentJSONRequestBody defines body for CreateModuleTestDeployment for application/json ContentType.
+type CreateModuleTestDeploymentJSONRequestBody = ModuleTestDeploymentCreateBody
 
 // PlanExternalDeploymentJSONRequestBody defines body for PlanExternalDeployment for application/json ContentType.
 type PlanExternalDeploymentJSONRequestBody = ExternalDeploymentPlanBody
@@ -2095,6 +2114,54 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /orgs/{orgId}/metadata-keys/{metadataKeyName} (the `UpdateMetadataKey` operationId).
 	UpdateMetadataKey(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, body UpdateMetadataKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateModuleTestDeploymentWithBody Create a new deployment in the target project and environment.
+	//
+	// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+	// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+	// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+	// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+	// resolved against the Environment state at promotion.
+	//
+	// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+	// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+	// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+	// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+	// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+	// diff may still change.
+	//
+	// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+	// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+	// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+	CreateModuleTestDeploymentWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateModuleTestDeployment Create a new deployment in the target project and environment.
+	//
+	// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+	// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+	// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+	// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+	// resolved against the Environment state at promotion.
+	//
+	// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+	// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+	// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+	// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+	// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+	// diff may still change.
+	//
+	// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+	// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+	// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+	CreateModuleTestDeployment(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, body CreateModuleTestDeploymentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PlanExternalDeploymentWithBody Plan exact module versions through the normal deployment planner without exposing parameter values.
 	//
@@ -2772,6 +2839,74 @@ func (c *Client) UpdateMetadataKeyWithBody(ctx context.Context, orgId OrgIdPathP
 // Corresponds with PATCH /orgs/{orgId}/metadata-keys/{metadataKeyName} (the `UpdateMetadataKey` operationId).
 func (c *Client) UpdateMetadataKey(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, body UpdateMetadataKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateMetadataKeyRequest(c.Server, orgId, metadataKeyName, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateModuleTestDeploymentWithBody Create a new deployment in the target project and environment.
+//
+// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+// resolved against the Environment state at promotion.
+//
+// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+// diff may still change.
+//
+// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+func (c *Client) CreateModuleTestDeploymentWithBody(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleTestDeploymentRequestWithBody(c.Server, orgId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateModuleTestDeployment Create a new deployment in the target project and environment.
+//
+// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+// resolved against the Environment state at promotion.
+//
+// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+// diff may still change.
+//
+// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+func (c *Client) CreateModuleTestDeployment(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, body CreateModuleTestDeploymentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleTestDeploymentRequest(c.Server, orgId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4548,6 +4683,68 @@ func NewUpdateMetadataKeyRequestWithBody(server string, orgId OrgIdPathParam, me
 	return req, nil
 }
 
+// NewCreateModuleTestDeploymentRequest calls the generic CreateModuleTestDeployment builder with application/json body
+func NewCreateModuleTestDeploymentRequest(server string, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, body CreateModuleTestDeploymentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateModuleTestDeploymentRequestWithBody(server, orgId, params, "application/json", bodyReader)
+}
+
+// NewCreateModuleTestDeploymentRequestWithBody constructs an http.Request for the CreateModuleTestDeployment method, with any body, and a specified content type
+func NewCreateModuleTestDeploymentRequestWithBody(server string, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/module-test-deployments", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.IdempotencyKey != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", *params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Idempotency-Key", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewPlanExternalDeploymentRequest calls the generic PlanExternalDeployment builder with application/json body
 func NewPlanExternalDeploymentRequest(server string, orgId OrgIdPathParam, pluginId PluginIdPathParam, params *PlanExternalDeploymentParams, body PlanExternalDeploymentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -5375,6 +5572,54 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PATCH /orgs/{orgId}/metadata-keys/{metadataKeyName} (the `UpdateMetadataKey` operationId).
 	UpdateMetadataKeyWithResponse(ctx context.Context, orgId OrgIdPathParam, metadataKeyName MetadataKeyNamePathParam, body UpdateMetadataKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMetadataKeyResponse, error)
+
+	// CreateModuleTestDeploymentWithBodyWithResponse Create a new deployment in the target project and environment.
+	//
+	// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+	// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+	// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+	// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+	// resolved against the Environment state at promotion.
+	//
+	// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+	// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+	// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+	// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+	// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+	// diff may still change.
+	//
+	// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+	// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+	// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+	CreateModuleTestDeploymentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleTestDeploymentResponse, error)
+
+	// CreateModuleTestDeploymentWithResponse Create a new deployment in the target project and environment.
+	//
+	// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+	// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+	// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+	// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+	// resolved against the Environment state at promotion.
+	//
+	// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+	// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+	// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+	// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+	// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+	// diff may still change.
+	//
+	// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+	// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+	// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+	CreateModuleTestDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, body CreateModuleTestDeploymentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleTestDeploymentResponse, error)
 
 	// PlanExternalDeploymentWithBodyWithResponse Plan exact module versions through the normal deployment planner without exposing parameter values.
 	//
@@ -6869,6 +7114,75 @@ func (r UpdateMetadataKeyResponse) ContentType() string {
 	return ""
 }
 
+type CreateModuleTestDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DeploymentDryRun
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Deployment
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *DeploymentQueueItem
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CreateModuleTestDeploymentResponse) GetJSON200() *DeploymentDryRun {
+	return r.JSON200
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateModuleTestDeploymentResponse) GetJSON201() *Deployment {
+	return r.JSON201
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r CreateModuleTestDeploymentResponse) GetJSON202() *DeploymentQueueItem {
+	return r.JSON202
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateModuleTestDeploymentResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateModuleTestDeploymentResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateModuleTestDeploymentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateModuleTestDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateModuleTestDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateModuleTestDeploymentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PlanExternalDeploymentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7820,6 +8134,66 @@ func (c *ClientWithResponses) UpdateMetadataKeyWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseUpdateMetadataKeyResponse(rsp)
+}
+
+// CreateModuleTestDeploymentWithBodyWithResponse Create a new deployment in the target project and environment.
+//
+// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+// resolved against the Environment state at promotion.
+//
+// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+// diff may still change.
+//
+// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+func (c *ClientWithResponses) CreateModuleTestDeploymentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleTestDeploymentResponse, error) {
+	rsp, err := c.CreateModuleTestDeploymentWithBody(ctx, orgId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleTestDeploymentResponse(rsp)
+}
+
+// CreateModuleTestDeploymentWithResponse Create a new deployment in the target project and environment.
+//
+// Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+// busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+// `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+// organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+// resolved against the Environment state at promotion.
+//
+// Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+// `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+// requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+// would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+// carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+// diff may still change.
+//
+// Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+// plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+// `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/module-test-deployments (the `CreateModuleTestDeployment` operationId).
+func (c *ClientWithResponses) CreateModuleTestDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, params *CreateModuleTestDeploymentParams, body CreateModuleTestDeploymentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleTestDeploymentResponse, error) {
+	rsp, err := c.CreateModuleTestDeployment(ctx, orgId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleTestDeploymentResponse(rsp)
 }
 
 // PlanExternalDeploymentWithBodyWithResponse Plan exact module versions through the normal deployment planner without exposing parameter values.
@@ -8978,6 +9352,60 @@ func ParseUpdateMetadataKeyResponse(rsp *http.Response) (*UpdateMetadataKeyRespo
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateModuleTestDeploymentResponse parses an HTTP response from a CreateModuleTestDeploymentWithResponse call
+func ParseCreateModuleTestDeploymentResponse(rsp *http.Response) (*CreateModuleTestDeploymentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateModuleTestDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentDryRun
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Deployment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DeploymentQueueItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

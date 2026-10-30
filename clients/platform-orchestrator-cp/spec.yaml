@@ -1928,6 +1928,75 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/resource-types/{typeId}/versions:
+    get:
+      operationId: listResourceTypeVersions
+      summary: List immutable Resource Type interface versions
+      tags: [ResourceType]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: per_page
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+      responses:
+        '200':
+          description: Immutable interfaces in ascending version order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: {type: array, items: {$ref: '#/components/schemas/ResourceTypeVersion'}}
+                  next_page_token: {type: string}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+    post:
+      operationId: publishResourceTypeVersion
+      summary: Publish an immutable interface without changing previous contracts
+      tags: [ResourceType]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ResourceTypeVersionPublishBody'}
+      responses:
+        '201':
+          description: New immutable interface; existing Modules and deployments unchanged.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceTypeVersion'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/resource-types/{typeId}/versions/{resourceTypeVersion}:
+    get:
+      operationId: getResourceTypeVersion
+      summary: Read an exact immutable Resource Type interface
+      tags: [ResourceType]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
+        - name: resourceTypeVersion
+          in: path
+          required: true
+          schema: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: Exact immutable interface.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ResourceTypeVersion'}
+        '404': {$ref: '#/components/responses/404NotFound'}
   /orgs/{orgId}/resource-types/{typeId}/actions/{catalogueAction}:
     post:
       operationId: changeResourceTypeCatalogueStatus
@@ -2424,6 +2493,296 @@ paths:
           $ref: '#/components/responses/404NotFound'
         '409':
           $ref: '#/components/responses/409Conflict'
+  /orgs/{orgId}/modules/{moduleId}/drafts:
+    get:
+      operationId: listModuleDrafts
+      tags: [Modules]
+      summary: List retained authoring Drafts of a Module
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: per_page
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+      responses:
+        '200':
+          description: List retained authoring Drafts of a Module.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraftPage'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+    post:
+      operationId: createModuleDraft
+      tags: [Modules]
+      summary: Create an editable Module Draft without publishing a Version
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleDraftCreateBody'}
+      responses:
+        '201':
+          description: Create an editable Module Draft without publishing a Version.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraft'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}:
+    get:
+      operationId: getModuleDraft
+      tags: [Modules]
+      summary: Read a Module Draft
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Read a Module Draft.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraft'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+    put:
+      operationId: updateModuleDraft
+      tags: [Modules]
+      summary: Save a new authoring revision with optimistic concurrency
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleDraftUpdateBody'}
+      responses:
+        '200':
+          description: Save a new authoring revision with optimistic concurrency.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraft'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/revisions/{draftRevision}:
+    get:
+      operationId: getModuleDraftRevision
+      tags: [Modules]
+      summary: Read an immutable authoring revision
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: draftRevision
+          in: path
+          required: true
+          schema: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: Read an immutable authoring revision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraftRevision'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots:
+    post:
+      operationId: captureModuleDraftTestSnapshot
+      summary: Capture one reviewed immutable Draft test definition without executing it
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleDraftTestCaptureBody'}
+      responses:
+        '201':
+          description: Immutable scoped test material captured. No Deployment or successful test is implied.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraftTestSnapshot'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/draft-test-snapshots/{snapshotId}:
+    get:
+      operationId: getModuleDraftTestSnapshot
+      summary: Read an immutable Draft test definition in its exact Environment scope
+      tags: [Modules]
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: snapshotId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Retained immutable test material, distinct from published Versions and execution results.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraftTestSnapshot'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish:
+    post:
+      operationId: publishModuleDraft
+      tags: [Modules]
+      summary: Publish exactly the reviewed stored Draft revision as Proposed
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '201':
+          description: Publish exactly the reviewed stored Draft revision as Proposed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraftPublication'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard:
+    post:
+      operationId: discardModuleDraft
+      tags: [Modules]
+      summary: Discard an open Draft while retaining its authoring history
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - name: draftId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleReasonedCommand'}
+      responses:
+        '200':
+          description: Discard an open Draft while retaining its authoring history.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ModuleDraft'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/version-publications:
+    post:
+      operationId: publishModuleVersionWithInterface
+      tags: [Modules]
+      summary: Publish an explicit interface-bound Module Version through a capability-specific route
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+      responses:
+        '201':
+          description: Immutable Proposed version published.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CoreModuleVersion'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications:
+    post:
+      operationId: publishStableModuleVersionSuccessorWithInterface
+      tags: [Modules]
+      summary: Atomically publish a stable successor and deprecate the exact Proposed prerelease
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/StableModuleVersionSuccessorBody'}
+      responses:
+        '201':
+          description: Stable Proposed successor and deprecated prerelease committed atomically.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/StableModuleVersionSuccessorResult'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
   /orgs/{orgId}/modules/{moduleId}/versions:
     get:
       operationId: listModuleVersions
@@ -3191,6 +3550,10 @@ paths:
       tags:
         - Rules
       summary: Create a new module rule in the org
+      description: >-
+        A Module without a Default requires both project_id and env_id, so first-implementation
+        tests cannot introduce an unresolved global Rule that blocks other Environments.
+        Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
       security:
         - userIdHeader: []
       parameters:
@@ -3307,6 +3670,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalModuleCatalogue'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+  /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue:
+    post:
+      operationId: generateInternalExecutionCatalogue
+      tags:
+        - internal
+      summary: Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - name: X-Stellwerk-Rollback
+          in: header
+          required: false
+          schema: {type: boolean, default: false}
+          description: Internal audited exception allowing retained Deprecated or Defective artifacts during rollback.
+        - name: X-Stellwerk-Module-Operation-Id
+          in: header
+          required: false
+          schema: {type: string, format: uuid}
+          description: Exact add-on operation allowed to consume its own override-pending Pin target.
+        - name: X-Stellwerk-Module-Operation-Planning
+          in: header
+          required: false
+          schema: {type: boolean, default: false}
+          description: Internal dry-run compilation for an add-on Module operation. It does not mutate or override Core Pins.
+        - name: X-Stellwerk-Restricted-Version-Confirmations
+          in: header
+          required: false
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items: {type: string, format: uuid}
+          description: Exact Defective Module Version UUIDs confirmed by an authorised deployment caller.
+        - name: X-Stellwerk-Active-Module-Versions
+          in: header
+          required: false
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items: {type: string}
+          description: Exact Module coordinates observed in the Environment's last graph. This evidence permits an archived Module to carry forward only the version already active there.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalExecutionCatalogueGenerateBody'
+      responses:
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '503':
+          description: The Data Plane principal could not be verified while IAM was unavailable.
+        '200':
+          description: Successful get response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalExecutionCatalogue'
         '404':
           $ref: '#/components/responses/404NotFound'
         '409':
@@ -3924,6 +4353,11 @@ components:
           x-enum-varnames: [AdmissionModeDeploy, AdmissionModeRollback, AdmissionModeDestroy]
         module_versions:
           description: Exact resolved Module UUID to Version UUID graph admitted for execution.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        draft_test_snapshots:
+          description: Explicit exact subset of module_versions whose UUIDs identify immutable Draft test snapshots bound to this Environment. Omission never turns an unknown published Version into a test. Fresh selections require current Module authoring authority.
           type: object
           maxProperties: 1000
           additionalProperties: {type: string, format: uuid}
@@ -4878,6 +5312,33 @@ components:
           description: If true, it means that the runner was updated to a new value. Otherwise it was not updated and `runner_id` indicates the existing value.
           type: boolean
           default: false
+    ResourceTypeVersion:
+      type: object
+      required: [uuid, resource_type_uuid, resource_type_id, version, output_schema, created_at]
+      properties:
+        uuid: {type: string, format: uuid}
+        resource_type_uuid: {type: string, format: uuid}
+        resource_type_id: {type: string}
+        version: {type: integer, format: int64, minimum: 1}
+        output_schema: {type: object, additionalProperties: true}
+        module_contract: {$ref: '#/components/schemas/ResourceTypeModuleContract'}
+        created_at: {type: string, format: date-time}
+        created_by: {type: string, format: uuid}
+        reason: {type: string}
+    ResourceTypeVersionPublishBody:
+      type: object
+      additionalProperties: false
+      required: [version, expected_resource_version, reason, output_schema]
+      properties:
+        version:
+          type: integer
+          format: int64
+          minimum: 2
+          description: Exact next immutable interface number. It is distinct from the catalogue resource_version concurrency precondition.
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        output_schema: {type: object, additionalProperties: true}
+        module_contract: {$ref: '#/components/schemas/ResourceTypeModuleContract'}
     ResourceType:
       type: object
       description: A resource type that can be used in modules.
@@ -5374,6 +5835,15 @@ components:
         - dependencies
         - coprovisioned
       properties:
+        resource_type_version:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+        resource_type_version_uuid:
+          type: string
+          format: uuid
+          description: Immutable identity of the exact Resource Type interface.
         output_schema:
           $ref: '#/components/schemas/ModuleOutputSchema'
         module_params:
@@ -6518,10 +6988,99 @@ components:
       properties:
         reason: {type: string, minLength: 1, maxLength: 2000}
         expected_resource_version: {type: integer, format: int64, minimum: 1}
+    ModuleDraftCreateBody:
+      type: object
+      additionalProperties: false
+      required: [definition, reason]
+      properties:
+        definition: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    ModuleDraftUpdateBody:
+      type: object
+      additionalProperties: false
+      required: [definition, reason, expected_resource_version]
+      properties:
+        definition: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+    ModuleDraft:
+      type: object
+      required: [id, org_id, module_uuid, module_slug, resource_version, definition, status, created_at, created_by, updated_at, updated_by]
+      properties:
+        id: {type: string, format: uuid}
+        org_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        module_slug: {type: string}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        definition: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+        status: {type: string, enum: [open, published, discarded]}
+        published_version_uuid: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        created_by: {type: string, format: uuid}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    ModuleDraftPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleDraft'}
+        next_page_token: {type: string}
+    ModuleDraftRevision:
+      type: object
+      required: [draft_id, resource_version, definition, status, created_at, actor, reason]
+      properties:
+        draft_id: {type: string, format: uuid}
+        resource_version: {type: integer, format: int64, minimum: 1}
+        definition: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+        status: {type: string, enum: [open, published, discarded]}
+        published_version_uuid: {type: string, format: uuid}
+        created_at: {type: string, format: date-time}
+        actor: {type: string, format: uuid}
+        reason: {type: string}
+    ModuleDraftTestCaptureBody:
+      type: object
+      additionalProperties: false
+      required: [reason, expected_resource_version]
+      properties:
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+    ModuleDraftTestSnapshot:
+      type: object
+      required: [id, provenance, org_id, module_uuid, module_slug, draft_id, draft_revision, resource_type_version_uuid, resource_type_version, project_uuid, environment_uuid, definition, captured_at, captured_by, reason]
+      properties:
+        id: {type: string, format: uuid}
+        provenance: {type: string, enum: [draft_test]}
+        org_id: {type: string}
+        module_uuid: {type: string, format: uuid}
+        module_slug: {type: string}
+        draft_id: {type: string, format: uuid}
+        draft_revision: {type: integer, format: int64, minimum: 1}
+        resource_type_version_uuid: {type: string, format: uuid}
+        resource_type_version: {type: integer, format: int64, minimum: 1}
+        project_uuid: {type: string, format: uuid}
+        environment_uuid: {type: string, format: uuid}
+        definition: {$ref: '#/components/schemas/ModuleVersionPublishBody'}
+        captured_at: {type: string, format: date-time}
+        captured_by: {type: string, format: uuid}
+        reason: {type: string}
+    ModuleDraftPublication:
+      type: object
+      required: [draft, version]
+      properties:
+        draft: {$ref: '#/components/schemas/ModuleDraft'}
+        version: {$ref: '#/components/schemas/CoreModuleVersion'}
     ModuleVersionPublishBody:
       type: object
+      additionalProperties: false
       required: [semantic_version, module_source, module_params, module_inputs, provider_mapping, dependencies, coprovisioned]
       properties:
+        resource_type_version:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Exact Resource Type interface version. Omission retains version 1 and never selects latest.
         output_schema:
           $ref: '#/components/schemas/ModuleOutputSchema'
         semantic_version:
@@ -6559,6 +7118,15 @@ components:
       type: object
       required: [org_id, module_uuid, module_slug, uuid, opaque_version_id, migration_generation, verification_status, lifecycle_status, artifact_digest, source_revision, resource_version, created_at]
       properties:
+        resource_type_version:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+        resource_type_version_uuid:
+          type: string
+          format: uuid
+          description: Immutable identity of the exact Resource Type interface.
         org_id: {type: string}
         module_uuid: {type: string, format: uuid}
         module_slug: {type: string}
@@ -6668,6 +7236,15 @@ components:
         - dependencies
         - coprovisioned
       properties:
+        resource_type_version:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+        resource_type_version_uuid:
+          type: string
+          format: uuid
+          description: Immutable identity of the exact Resource Type interface.
         output_schema:
           $ref: '#/components/schemas/ModuleOutputSchema'
         module_source: {type: string}
@@ -7017,6 +7594,108 @@ components:
       type: object
       description: The request contents to generate a module catalogue
       properties:
+        pinned_module_versions:
+          description: The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
+          type: array
+          items:
+            description: The module id and version separated by a '@'.
+            type: string
+            example: my-module@01234567-89ab-cdef-0123-456789abcdef
+          x-go-type-skip-optional-pointer: true
+        pinned_providers:
+          description: The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request providers retained by the previous graph.
+          type: array
+          items:
+            description: The provider type and id separated by a '.'.
+            type: string
+            example: aws.default
+          x-go-type-skip-optional-pointer: true
+        are_rules_ignored:
+          description: When running a destroy deployment, only pinned module versions are required and rule evaluation is skipped.
+          type: boolean
+          example: false
+          x-go-type-skip-optional-pointer: true
+    InternalExecutionCatalogue:
+      type: object
+      required: [modules, providers]
+      properties:
+        modules:
+          type: array
+          items: {$ref: '#/components/schemas/InternalExecutionCatalogueModule'}
+        providers:
+          type: array
+          items: {$ref: '#/components/schemas/ModuleProvider'}
+    InternalExecutionCatalogueModule:
+      type: object
+      description: A module within a catalogue
+      allOf:
+        - $ref: '#/components/schemas/Module'
+        - required:
+            - rules
+            - artifact_digest
+            - module_uuid
+            - version_uuid
+          properties:
+            draft_test:
+              description: Exact scoped immutable Draft test material. Published lifecycle, SemVer, migration and verification fields must be absent for this executable. Absence of this property identifies a published Version, whose existing metadata remains required by the planner.
+              $ref: '#/components/schemas/ModuleDraftTestSnapshot'
+            rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/InternalModuleCatalogueModuleRule'
+            artifact_digest:
+              type: string
+            semantic_status:
+              $ref: '#/components/schemas/ModuleVersionSemanticStatus'
+            module_uuid:
+              type: string
+              format: uuid
+            version_uuid:
+              type: string
+              format: uuid
+            semantic_version:
+              type: string
+              description: Canonical SemVer for managed versions; empty only for migrated v0 versions.
+            migration_generation:
+              type: string
+              enum: [v0, v1, managed]
+              description: Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
+            verification_status:
+              $ref: '#/components/schemas/ModuleVerificationStatus'
+    ModuleDraftTestCoordinate:
+      type: object
+      additionalProperties: false
+      required: [module_uuid, snapshot_uuid]
+      properties:
+        module_uuid: {type: string, format: uuid}
+        snapshot_uuid: {type: string, format: uuid}
+    InternalExecutionCatalogueGenerateBody:
+      type: object
+      additionalProperties: false
+      description: The request contents to generate a module catalogue
+      properties:
+        retained_draft_test_snapshots:
+          description: Exact scoped test coordinates required only as retained graph or bundle material. They receive no rules and do not authorize execution.
+          type: array
+          maxItems: 1000
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/ModuleDraftTestCoordinate'}
+          x-go-type-skip-optional-pointer: true
+        selected_published_module_versions:
+          description: Explicit Module reference to published Version reference selection. Distinct from retained material; supports a first Proposed Version without a Default.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string}
+        material_only:
+          description: Read exact retained material without applying current adoption or Pin selectors. Requires are_rules_ignored and forbids fresh selections. Actual Deployment admission remains authoritative.
+          type: boolean
+          default: false
+          x-go-type-skip-optional-pointer: true
+        draft_test_snapshots:
+          description: Explicit Module UUID to immutable test snapshot UUID selection, bound to this Environment. No current Draft head or implicit selection is accepted.
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
         pinned_module_versions:
           description: The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
           type: array

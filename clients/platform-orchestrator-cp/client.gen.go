@@ -100,6 +100,27 @@ func (e EnvironmentStatus) Valid() bool {
 	}
 }
 
+// Defines values for InternalExecutionCatalogueModuleMigrationGeneration.
+const (
+	InternalExecutionCatalogueModuleMigrationGenerationManaged InternalExecutionCatalogueModuleMigrationGeneration = "managed"
+	InternalExecutionCatalogueModuleMigrationGenerationV0      InternalExecutionCatalogueModuleMigrationGeneration = "v0"
+	InternalExecutionCatalogueModuleMigrationGenerationV1      InternalExecutionCatalogueModuleMigrationGeneration = "v1"
+)
+
+// Valid indicates whether the value is a known member of the InternalExecutionCatalogueModuleMigrationGeneration enum.
+func (e InternalExecutionCatalogueModuleMigrationGeneration) Valid() bool {
+	switch e {
+	case InternalExecutionCatalogueModuleMigrationGenerationManaged:
+		return true
+	case InternalExecutionCatalogueModuleMigrationGenerationV0:
+		return true
+	case InternalExecutionCatalogueModuleMigrationGenerationV1:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for InternalModuleCatalogueModuleMigrationGeneration.
 const (
 	InternalModuleCatalogueModuleMigrationGenerationManaged InternalModuleCatalogueModuleMigrationGeneration = "managed"
@@ -175,6 +196,63 @@ func (e ModuleCatalogueStatus) Valid() bool {
 	case ModuleCatalogueStatusActive:
 		return true
 	case ModuleCatalogueStatusArchived:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ModuleDraftStatus.
+const (
+	ModuleDraftStatusDiscarded ModuleDraftStatus = "discarded"
+	ModuleDraftStatusOpen      ModuleDraftStatus = "open"
+	ModuleDraftStatusPublished ModuleDraftStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the ModuleDraftStatus enum.
+func (e ModuleDraftStatus) Valid() bool {
+	switch e {
+	case ModuleDraftStatusDiscarded:
+		return true
+	case ModuleDraftStatusOpen:
+		return true
+	case ModuleDraftStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ModuleDraftRevisionStatus.
+const (
+	ModuleDraftRevisionStatusDiscarded ModuleDraftRevisionStatus = "discarded"
+	ModuleDraftRevisionStatusOpen      ModuleDraftRevisionStatus = "open"
+	ModuleDraftRevisionStatusPublished ModuleDraftRevisionStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the ModuleDraftRevisionStatus enum.
+func (e ModuleDraftRevisionStatus) Valid() bool {
+	switch e {
+	case ModuleDraftRevisionStatusDiscarded:
+		return true
+	case ModuleDraftRevisionStatusOpen:
+		return true
+	case ModuleDraftRevisionStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ModuleDraftTestSnapshotProvenance.
+const (
+	DraftTest ModuleDraftTestSnapshotProvenance = "draft_test"
+)
+
+// Valid indicates whether the value is a known member of the ModuleDraftTestSnapshotProvenance enum.
+func (e ModuleDraftTestSnapshotProvenance) Valid() bool {
+	switch e {
+	case DraftTest:
 		return true
 	default:
 		return false
@@ -1424,11 +1502,17 @@ type CoreModuleVersion struct {
 	OrgId               string                               `json:"org_id"`
 	PublishedBy         *openapi_types.UUID                  `json:"published_by,omitempty"`
 	ReleaseNotes        *string                              `json:"release_notes,omitempty"`
-	ResourceVersion     int64                                `json:"resource_version"`
-	SemanticVersion     *string                              `json:"semantic_version,omitempty"`
-	SourceRevision      string                               `json:"source_revision"`
-	Uuid                openapi_types.UUID                   `json:"uuid"`
-	VerificationStatus  ModuleVerificationStatus             `json:"verification_status"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID      `json:"resource_type_version_uuid,omitempty"`
+	ResourceVersion         int64                    `json:"resource_version"`
+	SemanticVersion         *string                  `json:"semantic_version,omitempty"`
+	SourceRevision          string                   `json:"source_revision"`
+	Uuid                    openapi_types.UUID       `json:"uuid"`
+	VerificationStatus      ModuleVerificationStatus `json:"verification_status"`
 }
 
 // CoreModuleVersionMigrationGeneration defines model for CoreModuleVersion.MigrationGeneration.
@@ -1482,8 +1566,14 @@ type CoreModuleVersionDetail struct {
 	// ResourceType The resource type that this module provisions.
 	//
 	// Example: s3
-	ResourceType string            `json:"resource_type"`
-	Version      CoreModuleVersion `json:"version"`
+	ResourceType string `json:"resource_type"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID `json:"resource_type_version_uuid,omitempty"`
+	Version                 CoreModuleVersion   `json:"version"`
 
 	// VersionId A unique identifier for this version of the module
 	//
@@ -1520,9 +1610,12 @@ type DeploymentAdmissionRequest struct {
 	CarryForwardModuleVersions *map[string]openapi_types.UUID `json:"carry_forward_module_versions,omitempty"`
 
 	// ConfirmedRestrictedVersionUuids Exact Defective target Version UUIDs used by this compiled Deployment and explicitly confirmed by the authorised caller.
-	ConfirmedRestrictedVersionUuids *[]openapi_types.UUID          `json:"confirmed_restricted_version_uuids,omitempty"`
-	EnvironmentUuid                 openapi_types.UUID             `json:"environment_uuid"`
-	Mode                            DeploymentAdmissionRequestMode `json:"mode"`
+	ConfirmedRestrictedVersionUuids *[]openapi_types.UUID `json:"confirmed_restricted_version_uuids,omitempty"`
+
+	// DraftTestSnapshots Explicit exact subset of module_versions whose UUIDs identify immutable Draft test snapshots bound to this Environment. Omission never turns an unknown published Version into a test. Fresh selections require current Module authoring authority.
+	DraftTestSnapshots *map[string]openapi_types.UUID `json:"draft_test_snapshots,omitempty"`
+	EnvironmentUuid    openapi_types.UUID             `json:"environment_uuid"`
+	Mode               DeploymentAdmissionRequestMode `json:"mode"`
 
 	// ModuleVersions Exact resolved Module UUID to Version UUID graph admitted for execution.
 	ModuleVersions map[string]openapi_types.UUID `json:"module_versions"`
@@ -1814,6 +1907,129 @@ type GCSStorageConfiguration struct {
 	Type StateStorageType `json:"type"`
 }
 
+// InternalExecutionCatalogue defines model for InternalExecutionCatalogue.
+type InternalExecutionCatalogue struct {
+	Modules   []InternalExecutionCatalogueModule `json:"modules"`
+	Providers []ModuleProvider                   `json:"providers"`
+}
+
+// InternalExecutionCatalogueGenerateBody The request contents to generate a module catalogue
+type InternalExecutionCatalogueGenerateBody struct {
+	// AreRulesIgnored When running a destroy deployment, only pinned module versions are required and rule evaluation is skipped.
+	//
+	// Example: false
+	AreRulesIgnored bool `json:"are_rules_ignored,omitempty"`
+
+	// DraftTestSnapshots Explicit Module UUID to immutable test snapshot UUID selection, bound to this Environment. No current Draft head or implicit selection is accepted.
+	DraftTestSnapshots *map[string]openapi_types.UUID `json:"draft_test_snapshots,omitempty"`
+
+	// MaterialOnly Read exact retained material without applying current adoption or Pin selectors. Requires are_rules_ignored and forbids fresh selections. Actual Deployment admission remains authoritative.
+	MaterialOnly bool `json:"material_only,omitempty"`
+
+	// PinnedModuleVersions The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
+	PinnedModuleVersions []string `json:"pinned_module_versions,omitempty"`
+
+	// PinnedProviders The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request providers retained by the previous graph.
+	PinnedProviders []string `json:"pinned_providers,omitempty"`
+
+	// RetainedDraftTestSnapshots Exact scoped test coordinates required only as retained graph or bundle material. They receive no rules and do not authorize execution.
+	RetainedDraftTestSnapshots []ModuleDraftTestCoordinate `json:"retained_draft_test_snapshots,omitempty"`
+
+	// SelectedPublishedModuleVersions Explicit Module reference to published Version reference selection. Distinct from retained material; supports a first Proposed Version without a Default.
+	SelectedPublishedModuleVersions *map[string]string `json:"selected_published_module_versions,omitempty"`
+}
+
+// InternalExecutionCatalogueModule A module within a catalogue
+type InternalExecutionCatalogueModule struct {
+	ArtifactDigest string `json:"artifact_digest"`
+
+	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
+	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned"`
+
+	// CreatedAt The date and time when the module was created.
+	//
+	// Example: 2023-01-01T00:00:00Z
+	CreatedAt time.Time `json:"created_at"`
+
+	// Dependencies A mapping of alias to resource dependencies that must be provisioned with this module
+	Dependencies map[string]ModuleDependencyManifest `json:"dependencies"`
+
+	// Description An optional text description for this module
+	//
+	// Example: Module for an aws s3 bucket
+	Description *string                  `json:"description,omitempty"`
+	DraftTest   *ModuleDraftTestSnapshot `json:"draft_test,omitempty"`
+
+	// Id The unique identifier for a module
+	//
+	// Example: my-s3-module
+	Id ModuleId `json:"id"`
+
+	// MigrationGeneration Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
+	MigrationGeneration *InternalExecutionCatalogueModuleMigrationGeneration `json:"migration_generation,omitempty"`
+
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
+	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
+
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
+
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+	ModuleSourceCode *string            `json:"module_source_code,omitempty"`
+	ModuleUuid       openapi_types.UUID `json:"module_uuid"`
+
+	// OrgId The Organization ID
+	//
+	// Example: my-org
+	OrgId string `json:"org_id"`
+
+	// OutputSchema Immutable author-declared output interface. Required on new managed
+	// publication when the Resource Type output_schema is nonempty, and must
+	// equal that contract as a JSON value. Never inferred from external source.
+	// Historical absence is preserved and does not imply artifact verification.
+	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
+	// ProviderMapping A mapping of module providers to use when provisioning using this module
+	//
+	// Example: {"aws":"aws.default"}
+	ProviderMapping map[string]string `json:"provider_mapping"`
+
+	// ResourceType The resource type that this module provisions.
+	//
+	// Example: s3
+	ResourceType string `json:"resource_type"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID                 `json:"resource_type_version_uuid,omitempty"`
+	Rules                   []InternalModuleCatalogueModuleRule `json:"rules"`
+	SemanticStatus          *ModuleVersionSemanticStatus        `json:"semantic_status,omitempty"`
+
+	// SemanticVersion Canonical SemVer for managed versions; empty only for migrated v0 versions.
+	SemanticVersion *string `json:"semantic_version,omitempty"`
+
+	// UpdatedAt The date and time when the module was updated to this version.
+	//
+	// Example: 2023-01-01T00:00:00Z
+	UpdatedAt          time.Time                 `json:"updated_at"`
+	VerificationStatus *ModuleVerificationStatus `json:"verification_status,omitempty"`
+
+	// VersionId A unique identifier for this version of the module
+	//
+	// Example: a1b2c3d4-some-version
+	VersionId   string             `json:"version_id"`
+	VersionUuid openapi_types.UUID `json:"version_uuid"`
+}
+
+// InternalExecutionCatalogueModuleMigrationGeneration Authoritative persisted migration provenance. External digest claims are optional for both managed and migrated versions; v0 must not acquire invented metadata.
+type InternalExecutionCatalogueModuleMigrationGeneration string
+
 // InternalModuleCatalogue A collation of all the applicable modules, and providers for an environment. A module is applicable if there is at least one rule for it that matches the requested environment.
 type InternalModuleCatalogue struct {
 	Modules   []InternalModuleCatalogueModule `json:"modules"`
@@ -1895,9 +2111,15 @@ type InternalModuleCatalogueModule struct {
 	// ResourceType The resource type that this module provisions.
 	//
 	// Example: s3
-	ResourceType   string                              `json:"resource_type"`
-	Rules          []InternalModuleCatalogueModuleRule `json:"rules"`
-	SemanticStatus ModuleVersionSemanticStatus         `json:"semantic_status"`
+	ResourceType string `json:"resource_type"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID                 `json:"resource_type_version_uuid,omitempty"`
+	Rules                   []InternalModuleCatalogueModuleRule `json:"rules"`
+	SemanticStatus          ModuleVersionSemanticStatus         `json:"semantic_status"`
 
 	// SemanticVersion Canonical SemVer for managed versions; empty only for migrated v0 versions.
 	SemanticVersion string `json:"semantic_version"`
@@ -2321,6 +2543,12 @@ type Module struct {
 	// Example: s3
 	ResourceType string `json:"resource_type"`
 
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID `json:"resource_type_version_uuid,omitempty"`
+
 	// UpdatedAt The date and time when the module was updated to this version.
 	//
 	// Example: 2023-01-01T00:00:00Z
@@ -2433,6 +2661,12 @@ type ModuleCoreFields struct {
 	// equal that contract as a JSON value. Never inferred from external source.
 	// Historical absence is preserved and does not imply artifact verification.
 	OutputSchema *ModuleOutputSchema `json:"output_schema,omitempty"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID `json:"resource_type_version_uuid,omitempty"`
 }
 
 // ModuleCreateBody A request to create a new module
@@ -2508,6 +2742,99 @@ type ModuleDependencyManifest struct {
 	//
 	// Example: postgres
 	Type string `json:"type"`
+}
+
+// ModuleDraft defines model for ModuleDraft.
+type ModuleDraft struct {
+	CreatedAt            time.Time                `json:"created_at"`
+	CreatedBy            openapi_types.UUID       `json:"created_by"`
+	Definition           ModuleVersionPublishBody `json:"definition"`
+	Id                   openapi_types.UUID       `json:"id"`
+	ModuleSlug           string                   `json:"module_slug"`
+	ModuleUuid           openapi_types.UUID       `json:"module_uuid"`
+	OrgId                string                   `json:"org_id"`
+	PublishedVersionUuid *openapi_types.UUID      `json:"published_version_uuid,omitempty"`
+	ResourceVersion      int64                    `json:"resource_version"`
+	Status               ModuleDraftStatus        `json:"status"`
+	UpdatedAt            time.Time                `json:"updated_at"`
+	UpdatedBy            openapi_types.UUID       `json:"updated_by"`
+}
+
+// ModuleDraftStatus defines model for ModuleDraft.Status.
+type ModuleDraftStatus string
+
+// ModuleDraftCreateBody defines model for ModuleDraftCreateBody.
+type ModuleDraftCreateBody struct {
+	Definition ModuleVersionPublishBody `json:"definition"`
+	Reason     string                   `json:"reason"`
+}
+
+// ModuleDraftPage defines model for ModuleDraftPage.
+type ModuleDraftPage struct {
+	Items         []ModuleDraft `json:"items"`
+	NextPageToken *string       `json:"next_page_token,omitempty"`
+}
+
+// ModuleDraftPublication defines model for ModuleDraftPublication.
+type ModuleDraftPublication struct {
+	Draft   ModuleDraft       `json:"draft"`
+	Version CoreModuleVersion `json:"version"`
+}
+
+// ModuleDraftRevision defines model for ModuleDraftRevision.
+type ModuleDraftRevision struct {
+	Actor                openapi_types.UUID        `json:"actor"`
+	CreatedAt            time.Time                 `json:"created_at"`
+	Definition           ModuleVersionPublishBody  `json:"definition"`
+	DraftId              openapi_types.UUID        `json:"draft_id"`
+	PublishedVersionUuid *openapi_types.UUID       `json:"published_version_uuid,omitempty"`
+	Reason               string                    `json:"reason"`
+	ResourceVersion      int64                     `json:"resource_version"`
+	Status               ModuleDraftRevisionStatus `json:"status"`
+}
+
+// ModuleDraftRevisionStatus defines model for ModuleDraftRevision.Status.
+type ModuleDraftRevisionStatus string
+
+// ModuleDraftTestCaptureBody defines model for ModuleDraftTestCaptureBody.
+type ModuleDraftTestCaptureBody struct {
+	ExpectedResourceVersion int64  `json:"expected_resource_version"`
+	Reason                  string `json:"reason"`
+}
+
+// ModuleDraftTestCoordinate defines model for ModuleDraftTestCoordinate.
+type ModuleDraftTestCoordinate struct {
+	ModuleUuid   openapi_types.UUID `json:"module_uuid"`
+	SnapshotUuid openapi_types.UUID `json:"snapshot_uuid"`
+}
+
+// ModuleDraftTestSnapshot defines model for ModuleDraftTestSnapshot.
+type ModuleDraftTestSnapshot struct {
+	CapturedAt              time.Time                         `json:"captured_at"`
+	CapturedBy              openapi_types.UUID                `json:"captured_by"`
+	Definition              ModuleVersionPublishBody          `json:"definition"`
+	DraftId                 openapi_types.UUID                `json:"draft_id"`
+	DraftRevision           int64                             `json:"draft_revision"`
+	EnvironmentUuid         openapi_types.UUID                `json:"environment_uuid"`
+	Id                      openapi_types.UUID                `json:"id"`
+	ModuleSlug              string                            `json:"module_slug"`
+	ModuleUuid              openapi_types.UUID                `json:"module_uuid"`
+	OrgId                   string                            `json:"org_id"`
+	ProjectUuid             openapi_types.UUID                `json:"project_uuid"`
+	Provenance              ModuleDraftTestSnapshotProvenance `json:"provenance"`
+	Reason                  string                            `json:"reason"`
+	ResourceTypeVersion     int64                             `json:"resource_type_version"`
+	ResourceTypeVersionUuid openapi_types.UUID                `json:"resource_type_version_uuid"`
+}
+
+// ModuleDraftTestSnapshotProvenance defines model for ModuleDraftTestSnapshot.Provenance.
+type ModuleDraftTestSnapshotProvenance string
+
+// ModuleDraftUpdateBody defines model for ModuleDraftUpdateBody.
+type ModuleDraftUpdateBody struct {
+	Definition              ModuleVersionPublishBody `json:"definition"`
+	ExpectedResourceVersion int64                    `json:"expected_resource_version"`
+	Reason                  string                   `json:"reason"`
 }
 
 // ModuleExtensionContribution defines model for ModuleExtensionContribution.
@@ -2904,6 +3231,12 @@ type ModuleVersion struct {
 	// Example: s3
 	ResourceType string `json:"resource_type"`
 
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID `json:"resource_type_version_uuid,omitempty"`
+
 	// VersionId A unique identifier for this version of the module
 	//
 	// Example: a1b2c3d4-some-version
@@ -2954,7 +3287,13 @@ type ModuleVersionComparisonSnapshot struct {
 	OutputSchema    *ModuleOutputSchema `json:"output_schema,omitempty"`
 	ProviderMapping map[string]string   `json:"provider_mapping"`
 	ResourceType    string              `json:"resource_type"`
-	SourceRevision  string              `json:"source_revision"`
+
+	// ResourceTypeVersion Exact immutable Resource Type interface version, distinct from resource_version concurrency metadata.
+	ResourceTypeVersion *int64 `json:"resource_type_version,omitempty"`
+
+	// ResourceTypeVersionUuid Immutable identity of the exact Resource Type interface.
+	ResourceTypeVersionUuid *openapi_types.UUID `json:"resource_type_version_uuid,omitempty"`
+	SourceRevision          string              `json:"source_revision"`
 }
 
 // ModuleVersionLifecycle defines model for ModuleVersionLifecycle.
@@ -3144,8 +3483,11 @@ type ModuleVersionPublishBody struct {
 	OutputSchema    *ModuleOutputSchema `json:"output_schema,omitempty"`
 	ProviderMapping map[string]string   `json:"provider_mapping"`
 	ReleaseNotes    *string             `json:"release_notes,omitempty"`
-	SemanticVersion string              `json:"semantic_version"`
-	SourceRevision  *string             `json:"source_revision,omitempty"`
+
+	// ResourceTypeVersion Exact Resource Type interface version. Omission retains version 1 and never selects latest.
+	ResourceTypeVersion *int64  `json:"resource_type_version,omitempty"`
+	SemanticVersion     string  `json:"semantic_version"`
+	SourceRevision      *string `json:"source_revision,omitempty"`
 }
 
 // ModuleVersionSemanticStatus defines model for ModuleVersionSemanticStatus.
@@ -4237,6 +4579,42 @@ type ResourceTypeUpdateBody struct {
 	OutputSchema *map[string]interface{} `json:"output_schema,omitempty"`
 }
 
+// ResourceTypeVersion defines model for ResourceTypeVersion.
+type ResourceTypeVersion struct {
+	CreatedAt time.Time           `json:"created_at"`
+	CreatedBy *openapi_types.UUID `json:"created_by,omitempty"`
+
+	// ModuleContract Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+	// module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+	// Root type must be object. References and unsupported keywords are rejected.
+	// Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+	// declarations, not external artifacts or resolved runtime values.
+	ModuleContract   *ResourceTypeModuleContract `json:"module_contract,omitempty"`
+	OutputSchema     map[string]interface{}      `json:"output_schema"`
+	Reason           *string                     `json:"reason,omitempty"`
+	ResourceTypeId   string                      `json:"resource_type_id"`
+	ResourceTypeUuid openapi_types.UUID          `json:"resource_type_uuid"`
+	Uuid             openapi_types.UUID          `json:"uuid"`
+	Version          int64                       `json:"version"`
+}
+
+// ResourceTypeVersionPublishBody defines model for ResourceTypeVersionPublishBody.
+type ResourceTypeVersionPublishBody struct {
+	ExpectedResourceVersion int64 `json:"expected_resource_version"`
+
+	// ModuleContract Immutable, offline OpenAPI 3.0 Schema Object subset over module_inputs,
+	// module_params, provider_mapping, dependencies, coprovisioned and output_schema.
+	// Root type must be object. References and unsupported keywords are rejected.
+	// Maximum 64 KiB, 16 schema levels and 64 schema nodes. This validates author
+	// declarations, not external artifacts or resolved runtime values.
+	ModuleContract *ResourceTypeModuleContract `json:"module_contract,omitempty"`
+	OutputSchema   map[string]interface{}      `json:"output_schema"`
+	Reason         string                      `json:"reason"`
+
+	// Version Exact next immutable interface number. It is distinct from the catalogue resource_version concurrency precondition.
+	Version int64 `json:"version"`
+}
+
 // Rule The full details of a rule that matches resource requests against a module
 type Rule = RuleSummary
 
@@ -4811,6 +5189,24 @@ type GenerateInternalModuleCatalogueParams struct {
 	XStellwerkActiveModuleVersions *[]string `json:"X-Stellwerk-Active-Module-Versions,omitempty"`
 }
 
+// GenerateInternalExecutionCatalogueParams defines parameters for GenerateInternalExecutionCatalogue.
+type GenerateInternalExecutionCatalogueParams struct {
+	// XStellwerkRollback Internal audited exception allowing retained Deprecated or Defective artifacts during rollback.
+	XStellwerkRollback *bool `json:"X-Stellwerk-Rollback,omitempty"`
+
+	// XStellwerkModuleOperationId Exact add-on operation allowed to consume its own override-pending Pin target.
+	XStellwerkModuleOperationId *openapi_types.UUID `json:"X-Stellwerk-Module-Operation-Id,omitempty"`
+
+	// XStellwerkModuleOperationPlanning Internal dry-run compilation for an add-on Module operation. It does not mutate or override Core Pins.
+	XStellwerkModuleOperationPlanning *bool `json:"X-Stellwerk-Module-Operation-Planning,omitempty"`
+
+	// XStellwerkRestrictedVersionConfirmations Exact Defective Module Version UUIDs confirmed by an authorised deployment caller.
+	XStellwerkRestrictedVersionConfirmations *[]openapi_types.UUID `json:"X-Stellwerk-Restricted-Version-Confirmations,omitempty"`
+
+	// XStellwerkActiveModuleVersions Exact Module coordinates observed in the Environment's last graph. This evidence permits an archived Module to carry forward only the version already active there.
+	XStellwerkActiveModuleVersions *[]string `json:"X-Stellwerk-Active-Module-Versions,omitempty"`
+}
+
 // ListInternalEnvironmentsByProjectUuidParams defines parameters for ListInternalEnvironmentsByProjectUuid.
 type ListInternalEnvironmentsByProjectUuidParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -4966,6 +5362,43 @@ type ChangeModuleCatalogueStatusParams struct {
 // ChangeModuleCatalogueStatusParamsCatalogueAction defines parameters for ChangeModuleCatalogueStatus.
 type ChangeModuleCatalogueStatusParamsCatalogueAction string
 
+// ListModuleDraftsParams defines parameters for ListModuleDrafts.
+type ListModuleDraftsParams struct {
+	// Page The page token to request from
+	Page    *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *int                 `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// CreateModuleDraftParams defines parameters for CreateModuleDraft.
+type CreateModuleDraftParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// UpdateModuleDraftParams defines parameters for UpdateModuleDraft.
+type UpdateModuleDraftParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// DiscardModuleDraftParams defines parameters for DiscardModuleDraft.
+type DiscardModuleDraftParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// PublishModuleDraftParams defines parameters for PublishModuleDraft.
+type PublishModuleDraftParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// PublishModuleVersionWithInterfaceParams defines parameters for PublishModuleVersionWithInterface.
+type PublishModuleVersionWithInterfaceParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // ListModuleVersionsParams defines parameters for ListModuleVersions.
 type ListModuleVersionsParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -4994,6 +5427,12 @@ type TransitionModuleVersionParamsLifecycleAction string
 
 // PublishStableModuleVersionSuccessorParams defines parameters for PublishStableModuleVersionSuccessor.
 type PublishStableModuleVersionSuccessorParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// PublishStableModuleVersionSuccessorWithInterfaceParams defines parameters for PublishStableModuleVersionSuccessorWithInterface.
+type PublishStableModuleVersionSuccessorWithInterfaceParams struct {
 	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
 	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
 }
@@ -5098,6 +5537,12 @@ type ListAvailableResourceTypesParams struct {
 	IncludeNonDeveloperAccessible *IncludeNonDeveloperAccessibleQueryParam `form:"include_non_developer_accessible,omitempty" json:"include_non_developer_accessible,omitempty"`
 }
 
+// CaptureModuleDraftTestSnapshotParams defines parameters for CaptureModuleDraftTestSnapshot.
+type CaptureModuleDraftTestSnapshotParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
 // ListResourceTypesParams defines parameters for ListResourceTypes.
 type ListResourceTypesParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -5115,6 +5560,19 @@ type ChangeResourceTypeCatalogueStatusParams struct {
 
 // ChangeResourceTypeCatalogueStatusParamsCatalogueAction defines parameters for ChangeResourceTypeCatalogueStatus.
 type ChangeResourceTypeCatalogueStatusParamsCatalogueAction string
+
+// ListResourceTypeVersionsParams defines parameters for ListResourceTypeVersions.
+type ListResourceTypeVersionsParams struct {
+	// Page The page token to request from
+	Page    *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *int                 `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// PublishResourceTypeVersionParams defines parameters for PublishResourceTypeVersion.
+type PublishResourceTypeVersionParams struct {
+	// IdempotencyKey Stable caller-generated key used to deduplicate command retries.
+	IdempotencyKey IdempotencyKeyHeader `json:"Idempotency-Key"`
+}
 
 // ListRunnerRulesInOrgParams defines parameters for ListRunnerRulesInOrg.
 type ListRunnerRulesInOrgParams struct {
@@ -5243,6 +5701,9 @@ type InternalUpdateEnvironmentJSONRequestBody = EnvironmentInternalUpdateBody
 // GenerateInternalModuleCatalogueJSONRequestBody defines body for GenerateInternalModuleCatalogue for application/json ContentType.
 type GenerateInternalModuleCatalogueJSONRequestBody = InternalModuleCatalogueGenerateBody
 
+// GenerateInternalExecutionCatalogueJSONRequestBody defines body for GenerateInternalExecutionCatalogue for application/json ContentType.
+type GenerateInternalExecutionCatalogueJSONRequestBody = InternalExecutionCatalogueGenerateBody
+
 // InternalCreateResourceTypeJSONRequestBody defines body for InternalCreateResourceType for application/json ContentType.
 type InternalCreateResourceTypeJSONRequestBody = ResourceTypeCreateBody
 
@@ -5306,6 +5767,21 @@ type UpdateModuleCatalogueEntryJSONRequestBody = ModuleCatalogueUpdateBody
 // ChangeModuleCatalogueStatusJSONRequestBody defines body for ChangeModuleCatalogueStatus for application/json ContentType.
 type ChangeModuleCatalogueStatusJSONRequestBody = ModuleReasonedCommand
 
+// CreateModuleDraftJSONRequestBody defines body for CreateModuleDraft for application/json ContentType.
+type CreateModuleDraftJSONRequestBody = ModuleDraftCreateBody
+
+// UpdateModuleDraftJSONRequestBody defines body for UpdateModuleDraft for application/json ContentType.
+type UpdateModuleDraftJSONRequestBody = ModuleDraftUpdateBody
+
+// DiscardModuleDraftJSONRequestBody defines body for DiscardModuleDraft for application/json ContentType.
+type DiscardModuleDraftJSONRequestBody = ModuleReasonedCommand
+
+// PublishModuleDraftJSONRequestBody defines body for PublishModuleDraft for application/json ContentType.
+type PublishModuleDraftJSONRequestBody = ModuleReasonedCommand
+
+// PublishModuleVersionWithInterfaceJSONRequestBody defines body for PublishModuleVersionWithInterface for application/json ContentType.
+type PublishModuleVersionWithInterfaceJSONRequestBody = ModuleVersionPublishBody
+
 // PublishModuleVersionJSONRequestBody defines body for PublishModuleVersion for application/json ContentType.
 type PublishModuleVersionJSONRequestBody = ModuleVersionPublishBody
 
@@ -5314,6 +5790,9 @@ type TransitionModuleVersionJSONRequestBody = ModuleReasonedCommand
 
 // PublishStableModuleVersionSuccessorJSONRequestBody defines body for PublishStableModuleVersionSuccessor for application/json ContentType.
 type PublishStableModuleVersionSuccessorJSONRequestBody = StableModuleVersionSuccessorBody
+
+// PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody defines body for PublishStableModuleVersionSuccessorWithInterface for application/json ContentType.
+type PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody = StableModuleVersionSuccessorBody
 
 // CheckPluginAuthorizationJSONRequestBody defines body for CheckPluginAuthorization for application/json ContentType.
 type CheckPluginAuthorizationJSONRequestBody = PluginAuthorizationCheckRequest
@@ -5366,6 +5845,9 @@ type UpdateEnvironmentJSONRequestBody = EnvironmentUpdateBody
 // AcknowledgeDeploymentOutcomeJSONRequestBody defines body for AcknowledgeDeploymentOutcome for application/json ContentType.
 type AcknowledgeDeploymentOutcomeJSONRequestBody = DeploymentOutcomeAcknowledgementBody
 
+// CaptureModuleDraftTestSnapshotJSONRequestBody defines body for CaptureModuleDraftTestSnapshot for application/json ContentType.
+type CaptureModuleDraftTestSnapshotJSONRequestBody = ModuleDraftTestCaptureBody
+
 // CreateResourceTypeJSONRequestBody defines body for CreateResourceType for application/json ContentType.
 type CreateResourceTypeJSONRequestBody = ResourceTypeCreateBody
 
@@ -5374,6 +5856,9 @@ type UpdateResourceTypeJSONRequestBody = ResourceTypeUpdateBody
 
 // ChangeResourceTypeCatalogueStatusJSONRequestBody defines body for ChangeResourceTypeCatalogueStatus for application/json ContentType.
 type ChangeResourceTypeCatalogueStatusJSONRequestBody = ModuleReasonedCommand
+
+// PublishResourceTypeVersionJSONRequestBody defines body for PublishResourceTypeVersion for application/json ContentType.
+type PublishResourceTypeVersionJSONRequestBody = ResourceTypeVersionPublishBody
 
 // CreateRunnerRuleInOrgJSONRequestBody defines body for CreateRunnerRuleInOrg for application/json ContentType.
 type CreateRunnerRuleInOrgJSONRequestBody = RunnerRuleCreateBody
@@ -6220,6 +6705,20 @@ type ClientInterface interface {
 	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-catalogue (the `GenerateInternalModuleCatalogue` operationId).
 	GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GenerateInternalExecutionCatalogueWithBody Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+	GenerateInternalExecutionCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GenerateInternalExecutionCatalogue Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+	GenerateInternalExecutionCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, body GenerateInternalExecutionCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetInternalProjectByUuid Get a Project by UUID
 	//
 	// Corresponds with GET /internal/orgs/{orgId}/projects/{projectUuid} (the `GetInternalProjectByUuid` operationId).
@@ -6454,12 +6953,16 @@ type ClientInterface interface {
 
 	// CreateModuleRuleInOrgWithBody Create a new module rule in the org
 	//
+	// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
+	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with POST /orgs/{orgId}/module-rules (the `CreateModuleRuleInOrg` operationId).
 	CreateModuleRuleInOrgWithBody(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateModuleRuleInOrg Create a new module rule in the org
+	//
+	// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -6616,6 +7119,91 @@ type ClientInterface interface {
 	// Takes a body of the `application/json` content type.
 	ChangeModuleCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListModuleDrafts List retained authoring Drafts of a Module
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts (the `ListModuleDrafts` operationId).
+	ListModuleDrafts(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleDraftsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateModuleDraftWithBody Create an editable Module Draft without publishing a Version
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+	CreateModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateModuleDraft Create an editable Module Draft without publishing a Version
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+	CreateModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, body CreateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetModuleDraft Read a Module Draft
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `GetModuleDraft` operationId).
+	GetModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateModuleDraftWithBody Save a new authoring revision with optimistic concurrency
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+	UpdateModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateModuleDraft Save a new authoring revision with optimistic concurrency
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+	UpdateModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, body UpdateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DiscardModuleDraftWithBody Discard an open Draft while retaining its authoring history
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+	DiscardModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DiscardModuleDraft Discard an open Draft while retaining its authoring history
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+	DiscardModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, body DiscardModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishModuleDraftWithBody Publish exactly the reviewed stored Draft revision as Proposed
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+	PublishModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishModuleDraft Publish exactly the reviewed stored Draft revision as Proposed
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+	PublishModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, body PublishModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetModuleDraftRevision Read an immutable authoring revision
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/revisions/{draftRevision} (the `GetModuleDraftRevision` operationId).
+	GetModuleDraftRevision(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, draftRevision int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishModuleVersionWithInterfaceWithBody Publish an explicit interface-bound Module Version through a capability-specific route
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+	PublishModuleVersionWithInterfaceWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishModuleVersionWithInterface Publish an explicit interface-bound Module Version through a capability-specific route
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+	PublishModuleVersionWithInterface(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, body PublishModuleVersionWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListModuleVersions List the versions of a module
 	//
 	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/versions (the `ListModuleVersions` operationId).
@@ -6669,6 +7257,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/stable-successor (the `PublishStableModuleVersionSuccessor` operationId).
 	PublishStableModuleVersionSuccessor(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishStableModuleVersionSuccessorWithInterfaceWithBody Atomically publish a stable successor and deprecate the exact Proposed prerelease
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+	PublishStableModuleVersionSuccessorWithInterfaceWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishStableModuleVersionSuccessorWithInterface Atomically publish a stable successor and deprecate the exact Proposed prerelease
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+	PublishStableModuleVersionSuccessorWithInterface(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, body PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetModuleVersionUsage Inspect observed Environment adoption and Pin usage for one immutable Module Version
 	//
@@ -7052,6 +7654,25 @@ type ClientInterface interface {
 	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployments/{deploymentId}/actions/acknowledge-outcome (the `AcknowledgeDeploymentOutcome` operationId).
 	AcknowledgeDeploymentOutcome(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetModuleDraftTestSnapshot Read an immutable Draft test definition in its exact Environment scope
+	//
+	// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/draft-test-snapshots/{snapshotId} (the `GetModuleDraftTestSnapshot` operationId).
+	GetModuleDraftTestSnapshot(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, snapshotId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CaptureModuleDraftTestSnapshotWithBody Capture one reviewed immutable Draft test definition without executing it
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+	CaptureModuleDraftTestSnapshotWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CaptureModuleDraftTestSnapshot Capture one reviewed immutable Draft test definition without executing it
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+	CaptureModuleDraftTestSnapshot(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, body CaptureModuleDraftTestSnapshotJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListResourceTypes List available resource types
 	//
 	// Corresponds with GET /orgs/{orgId}/resource-types (the `ListResourceTypes` operationId).
@@ -7108,6 +7729,30 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/actions/{catalogueAction} (the `ChangeResourceTypeCatalogueStatus` operationId).
 	ChangeResourceTypeCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListResourceTypeVersions List immutable Resource Type interface versions
+	//
+	// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions (the `ListResourceTypeVersions` operationId).
+	ListResourceTypeVersions(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *ListResourceTypeVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishResourceTypeVersionWithBody Publish an immutable interface without changing previous contracts
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+	PublishResourceTypeVersionWithBody(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishResourceTypeVersion Publish an immutable interface without changing previous contracts
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+	PublishResourceTypeVersion(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, body PublishResourceTypeVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetResourceTypeVersion Read an exact immutable Resource Type interface
+	//
+	// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions/{resourceTypeVersion} (the `GetResourceTypeVersion` operationId).
+	GetResourceTypeVersion(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, resourceTypeVersion int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRunnerRulesInOrg List runner rules in the org
 	//
@@ -7771,6 +8416,40 @@ func (c *Client) GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgI
 	return c.Client.Do(req)
 }
 
+// GenerateInternalExecutionCatalogueWithBody Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+func (c *Client) GenerateInternalExecutionCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenerateInternalExecutionCatalogueRequestWithBody(c.Server, orgId, projectId, envId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GenerateInternalExecutionCatalogue Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+func (c *Client) GenerateInternalExecutionCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, body GenerateInternalExecutionCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenerateInternalExecutionCatalogueRequest(c.Server, orgId, projectId, envId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetInternalProjectByUuid Get a Project by UUID
 //
 // Corresponds with GET /internal/orgs/{orgId}/projects/{projectUuid} (the `GetInternalProjectByUuid` operationId).
@@ -8365,6 +9044,8 @@ func (c *Client) ListModuleRulesInOrg(ctx context.Context, orgId OrgIdPathParam,
 
 // CreateModuleRuleInOrgWithBody Create a new module rule in the org
 //
+// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
+//
 // Takes any type of body and a specified content type.
 //
 // Corresponds with POST /orgs/{orgId}/module-rules (the `CreateModuleRuleInOrg` operationId).
@@ -8381,6 +9062,8 @@ func (c *Client) CreateModuleRuleInOrgWithBody(ctx context.Context, orgId OrgIdP
 }
 
 // CreateModuleRuleInOrg Create a new module rule in the org
+//
+// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -8847,6 +9530,221 @@ func (c *Client) ChangeModuleCatalogueStatus(ctx context.Context, orgId OrgIdPat
 	return c.Client.Do(req)
 }
 
+// ListModuleDrafts List retained authoring Drafts of a Module
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts (the `ListModuleDrafts` operationId).
+func (c *Client) ListModuleDrafts(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleDraftsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleDraftsRequest(c.Server, orgId, moduleId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateModuleDraftWithBody Create an editable Module Draft without publishing a Version
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+func (c *Client) CreateModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleDraftRequestWithBody(c.Server, orgId, moduleId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateModuleDraft Create an editable Module Draft without publishing a Version
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+func (c *Client) CreateModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, body CreateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateModuleDraftRequest(c.Server, orgId, moduleId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetModuleDraft Read a Module Draft
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `GetModuleDraft` operationId).
+func (c *Client) GetModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleDraftRequest(c.Server, orgId, moduleId, draftId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateModuleDraftWithBody Save a new authoring revision with optimistic concurrency
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+func (c *Client) UpdateModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateModuleDraftRequestWithBody(c.Server, orgId, moduleId, draftId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateModuleDraft Save a new authoring revision with optimistic concurrency
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+func (c *Client) UpdateModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, body UpdateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateModuleDraftRequest(c.Server, orgId, moduleId, draftId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DiscardModuleDraftWithBody Discard an open Draft while retaining its authoring history
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+func (c *Client) DiscardModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDiscardModuleDraftRequestWithBody(c.Server, orgId, moduleId, draftId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DiscardModuleDraft Discard an open Draft while retaining its authoring history
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+func (c *Client) DiscardModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, body DiscardModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDiscardModuleDraftRequest(c.Server, orgId, moduleId, draftId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishModuleDraftWithBody Publish exactly the reviewed stored Draft revision as Proposed
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+func (c *Client) PublishModuleDraftWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleDraftRequestWithBody(c.Server, orgId, moduleId, draftId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishModuleDraft Publish exactly the reviewed stored Draft revision as Proposed
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+func (c *Client) PublishModuleDraft(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, body PublishModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleDraftRequest(c.Server, orgId, moduleId, draftId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetModuleDraftRevision Read an immutable authoring revision
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/revisions/{draftRevision} (the `GetModuleDraftRevision` operationId).
+func (c *Client) GetModuleDraftRevision(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, draftRevision int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleDraftRevisionRequest(c.Server, orgId, moduleId, draftId, draftRevision)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishModuleVersionWithInterfaceWithBody Publish an explicit interface-bound Module Version through a capability-specific route
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+func (c *Client) PublishModuleVersionWithInterfaceWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleVersionWithInterfaceRequestWithBody(c.Server, orgId, moduleId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishModuleVersionWithInterface Publish an explicit interface-bound Module Version through a capability-specific route
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+func (c *Client) PublishModuleVersionWithInterface(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, body PublishModuleVersionWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishModuleVersionWithInterfaceRequest(c.Server, orgId, moduleId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListModuleVersions List the versions of a module
 //
 // Corresponds with GET /orgs/{orgId}/modules/{moduleId}/versions (the `ListModuleVersions` operationId).
@@ -8991,6 +9889,40 @@ func (c *Client) PublishStableModuleVersionSuccessorWithBody(ctx context.Context
 // Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/stable-successor (the `PublishStableModuleVersionSuccessor` operationId).
 func (c *Client) PublishStableModuleVersionSuccessor(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPublishStableModuleVersionSuccessorRequest(c.Server, orgId, moduleId, moduleVersionId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishStableModuleVersionSuccessorWithInterfaceWithBody Atomically publish a stable successor and deprecate the exact Proposed prerelease
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+func (c *Client) PublishStableModuleVersionSuccessorWithInterfaceWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishStableModuleVersionSuccessorWithInterfaceRequestWithBody(c.Server, orgId, moduleId, moduleVersionId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishStableModuleVersionSuccessorWithInterface Atomically publish a stable successor and deprecate the exact Proposed prerelease
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+func (c *Client) PublishStableModuleVersionSuccessorWithInterface(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, body PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishStableModuleVersionSuccessorWithInterfaceRequest(c.Server, orgId, moduleId, moduleVersionId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -9903,6 +10835,55 @@ func (c *Client) AcknowledgeDeploymentOutcome(ctx context.Context, orgId OrgIdPa
 	return c.Client.Do(req)
 }
 
+// GetModuleDraftTestSnapshot Read an immutable Draft test definition in its exact Environment scope
+//
+// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/draft-test-snapshots/{snapshotId} (the `GetModuleDraftTestSnapshot` operationId).
+func (c *Client) GetModuleDraftTestSnapshot(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, snapshotId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleDraftTestSnapshotRequest(c.Server, orgId, projectId, envId, moduleId, snapshotId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CaptureModuleDraftTestSnapshotWithBody Capture one reviewed immutable Draft test definition without executing it
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+func (c *Client) CaptureModuleDraftTestSnapshotWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCaptureModuleDraftTestSnapshotRequestWithBody(c.Server, orgId, projectId, envId, moduleId, draftId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CaptureModuleDraftTestSnapshot Capture one reviewed immutable Draft test definition without executing it
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+func (c *Client) CaptureModuleDraftTestSnapshot(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, body CaptureModuleDraftTestSnapshotJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCaptureModuleDraftTestSnapshotRequest(c.Server, orgId, projectId, envId, moduleId, draftId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListResourceTypes List available resource types
 //
 // Corresponds with GET /orgs/{orgId}/resource-types (the `ListResourceTypes` operationId).
@@ -10040,6 +11021,70 @@ func (c *Client) ChangeResourceTypeCatalogueStatusWithBody(ctx context.Context, 
 // Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/actions/{catalogueAction} (the `ChangeResourceTypeCatalogueStatus` operationId).
 func (c *Client) ChangeResourceTypeCatalogueStatus(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewChangeResourceTypeCatalogueStatusRequest(c.Server, orgId, typeId, catalogueAction, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListResourceTypeVersions List immutable Resource Type interface versions
+//
+// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions (the `ListResourceTypeVersions` operationId).
+func (c *Client) ListResourceTypeVersions(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *ListResourceTypeVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListResourceTypeVersionsRequest(c.Server, orgId, typeId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishResourceTypeVersionWithBody Publish an immutable interface without changing previous contracts
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+func (c *Client) PublishResourceTypeVersionWithBody(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishResourceTypeVersionRequestWithBody(c.Server, orgId, typeId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PublishResourceTypeVersion Publish an immutable interface without changing previous contracts
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+func (c *Client) PublishResourceTypeVersion(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, body PublishResourceTypeVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishResourceTypeVersionRequest(c.Server, orgId, typeId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetResourceTypeVersion Read an exact immutable Resource Type interface
+//
+// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions/{resourceTypeVersion} (the `GetResourceTypeVersion` operationId).
+func (c *Client) GetResourceTypeVersion(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, resourceTypeVersion int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetResourceTypeVersionRequest(c.Server, orgId, typeId, resourceTypeVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -11606,6 +12651,126 @@ func NewGenerateInternalModuleCatalogueRequestWithBody(server string, orgId OrgI
 	}
 
 	operationPath := fmt.Sprintf("/internal/orgs/%s/projects/%s/envs/%s/module-catalogue", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XStellwerkRollback != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-Stellwerk-Rollback", *params.XStellwerkRollback, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "boolean", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Rollback", headerParam0)
+		}
+
+		if params.XStellwerkModuleOperationId != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Stellwerk-Module-Operation-Id", *params.XStellwerkModuleOperationId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: "uuid"})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Module-Operation-Id", headerParam1)
+		}
+
+		if params.XStellwerkModuleOperationPlanning != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithOptions("simple", false, "X-Stellwerk-Module-Operation-Planning", *params.XStellwerkModuleOperationPlanning, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "boolean", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Module-Operation-Planning", headerParam2)
+		}
+
+		if params.XStellwerkRestrictedVersionConfirmations != nil {
+			var headerParam3 string
+
+			headerParam3, err = runtime.StyleParamWithOptions("simple", false, "X-Stellwerk-Restricted-Version-Confirmations", *params.XStellwerkRestrictedVersionConfirmations, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "array", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Restricted-Version-Confirmations", headerParam3)
+		}
+
+		if params.XStellwerkActiveModuleVersions != nil {
+			var headerParam4 string
+
+			headerParam4, err = runtime.StyleParamWithOptions("simple", false, "X-Stellwerk-Active-Module-Versions", *params.XStellwerkActiveModuleVersions, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "array", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Stellwerk-Active-Module-Versions", headerParam4)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGenerateInternalExecutionCatalogueRequest calls the generic GenerateInternalExecutionCatalogue builder with application/json body
+func NewGenerateInternalExecutionCatalogueRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, body GenerateInternalExecutionCatalogueJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewGenerateInternalExecutionCatalogueRequestWithBody(server, orgId, projectId, envId, params, "application/json", bodyReader)
+}
+
+// NewGenerateInternalExecutionCatalogueRequestWithBody constructs an http.Request for the GenerateInternalExecutionCatalogue method, with any body, and a specified content type
+func NewGenerateInternalExecutionCatalogueRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectId", projectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "envId", envId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/projects/%s/envs/%s/module-execution-catalogue", pathParam0, pathParam1, pathParam2)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -14263,6 +15428,545 @@ func NewChangeModuleCatalogueStatusRequestWithBody(server string, orgId OrgIdPat
 	return req, nil
 }
 
+// NewListModuleDraftsRequest constructs an http.Request for the ListModuleDrafts method
+func NewListModuleDraftsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleDraftsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateModuleDraftRequest calls the generic CreateModuleDraft builder with application/json body
+func NewCreateModuleDraftRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, body CreateModuleDraftJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateModuleDraftRequestWithBody(server, orgId, moduleId, params, "application/json", bodyReader)
+}
+
+// NewCreateModuleDraftRequestWithBody constructs an http.Request for the CreateModuleDraft method, with any body, and a specified content type
+func NewCreateModuleDraftRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetModuleDraftRequest constructs an http.Request for the GetModuleDraft method
+func NewGetModuleDraftRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateModuleDraftRequest calls the generic UpdateModuleDraft builder with application/json body
+func NewUpdateModuleDraftRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, body UpdateModuleDraftJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateModuleDraftRequestWithBody(server, orgId, moduleId, draftId, params, "application/json", bodyReader)
+}
+
+// NewUpdateModuleDraftRequestWithBody constructs an http.Request for the UpdateModuleDraft method, with any body, and a specified content type
+func NewUpdateModuleDraftRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewDiscardModuleDraftRequest calls the generic DiscardModuleDraft builder with application/json body
+func NewDiscardModuleDraftRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, body DiscardModuleDraftJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDiscardModuleDraftRequestWithBody(server, orgId, moduleId, draftId, params, "application/json", bodyReader)
+}
+
+// NewDiscardModuleDraftRequestWithBody constructs an http.Request for the DiscardModuleDraft method, with any body, and a specified content type
+func NewDiscardModuleDraftRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts/%s/discard", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewPublishModuleDraftRequest calls the generic PublishModuleDraft builder with application/json body
+func NewPublishModuleDraftRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, body PublishModuleDraftJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishModuleDraftRequestWithBody(server, orgId, moduleId, draftId, params, "application/json", bodyReader)
+}
+
+// NewPublishModuleDraftRequestWithBody constructs an http.Request for the PublishModuleDraft method, with any body, and a specified content type
+func NewPublishModuleDraftRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts/%s/publish", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetModuleDraftRevisionRequest constructs an http.Request for the GetModuleDraftRevision method
+func NewGetModuleDraftRevisionRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, draftRevision int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "draftRevision", draftRevision, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/drafts/%s/revisions/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPublishModuleVersionWithInterfaceRequest calls the generic PublishModuleVersionWithInterface builder with application/json body
+func NewPublishModuleVersionWithInterfaceRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, body PublishModuleVersionWithInterfaceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishModuleVersionWithInterfaceRequestWithBody(server, orgId, moduleId, params, "application/json", bodyReader)
+}
+
+// NewPublishModuleVersionWithInterfaceRequestWithBody constructs an http.Request for the PublishModuleVersionWithInterface method, with any body, and a specified content type
+func NewPublishModuleVersionWithInterfaceRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/version-publications", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewListModuleVersionsRequest constructs an http.Request for the ListModuleVersions method
 func NewListModuleVersionsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams) (*http.Request, error) {
 	var err error
@@ -14708,6 +16412,80 @@ func NewPublishStableModuleVersionSuccessorRequestWithBody(server string, orgId 
 	}
 
 	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/stable-successor", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewPublishStableModuleVersionSuccessorWithInterfaceRequest calls the generic PublishStableModuleVersionSuccessorWithInterface builder with application/json body
+func NewPublishStableModuleVersionSuccessorWithInterfaceRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, body PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishStableModuleVersionSuccessorWithInterfaceRequestWithBody(server, orgId, moduleId, moduleVersionId, params, "application/json", bodyReader)
+}
+
+// NewPublishStableModuleVersionSuccessorWithInterfaceRequestWithBody constructs an http.Request for the PublishStableModuleVersionSuccessorWithInterface method, with any body, and a specified content type
+func NewPublishStableModuleVersionSuccessorWithInterfaceRequestWithBody(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "moduleVersionId", moduleVersionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s/successor-publications", pathParam0, pathParam1, pathParam2)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -16872,6 +18650,156 @@ func NewAcknowledgeDeploymentOutcomeRequestWithBody(server string, orgId OrgIdPa
 	return req, nil
 }
 
+// NewGetModuleDraftTestSnapshotRequest constructs an http.Request for the GetModuleDraftTestSnapshot method
+func NewGetModuleDraftTestSnapshotRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, snapshotId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectId", projectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "envId", envId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam4 string
+
+	pathParam4, err = runtime.StyleParamWithOptions("simple", false, "snapshotId", snapshotId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/modules/%s/draft-test-snapshots/%s", pathParam0, pathParam1, pathParam2, pathParam3, pathParam4)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCaptureModuleDraftTestSnapshotRequest calls the generic CaptureModuleDraftTestSnapshot builder with application/json body
+func NewCaptureModuleDraftTestSnapshotRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, body CaptureModuleDraftTestSnapshotJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCaptureModuleDraftTestSnapshotRequestWithBody(server, orgId, projectId, envId, moduleId, draftId, params, "application/json", bodyReader)
+}
+
+// NewCaptureModuleDraftTestSnapshotRequestWithBody constructs an http.Request for the CaptureModuleDraftTestSnapshot method, with any body, and a specified content type
+func NewCaptureModuleDraftTestSnapshotRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectId", projectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "envId", envId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "moduleId", moduleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam4 string
+
+	pathParam4, err = runtime.StyleParamWithOptions("simple", false, "draftId", draftId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/modules/%s/drafts/%s/test-snapshots", pathParam0, pathParam1, pathParam2, pathParam3, pathParam4)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
 // NewListResourceTypesRequest constructs an http.Request for the ListResourceTypes method
 func NewListResourceTypesRequest(server string, orgId OrgIdPathParam, params *ListResourceTypesParams) (*http.Request, error) {
 	var err error
@@ -17197,6 +19125,201 @@ func NewChangeResourceTypeCatalogueStatusRequestWithBody(server string, orgId Or
 
 		req.Header.Set("Idempotency-Key", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewListResourceTypeVersionsRequest constructs an http.Request for the ListResourceTypeVersions method
+func NewListResourceTypeVersionsRequest(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *ListResourceTypeVersionsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "typeId", typeId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/resource-types/%s/versions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPublishResourceTypeVersionRequest calls the generic PublishResourceTypeVersion builder with application/json body
+func NewPublishResourceTypeVersionRequest(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, body PublishResourceTypeVersionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishResourceTypeVersionRequestWithBody(server, orgId, typeId, params, "application/json", bodyReader)
+}
+
+// NewPublishResourceTypeVersionRequestWithBody constructs an http.Request for the PublishResourceTypeVersion method, with any body, and a specified content type
+func NewPublishResourceTypeVersionRequestWithBody(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "typeId", typeId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/resource-types/%s/versions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetResourceTypeVersionRequest constructs an http.Request for the GetResourceTypeVersion method
+func NewGetResourceTypeVersionRequest(server string, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, resourceTypeVersion int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "typeId", typeId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "resourceTypeVersion", resourceTypeVersion, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/resource-types/%s/versions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -18665,6 +20788,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-catalogue (the `GenerateInternalModuleCatalogue` operationId).
 	GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalModuleCatalogueParams, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
 
+	// GenerateInternalExecutionCatalogueWithBodyWithResponse Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+	GenerateInternalExecutionCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalExecutionCatalogueResponse, error)
+
+	// GenerateInternalExecutionCatalogueWithResponse Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+	GenerateInternalExecutionCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, body GenerateInternalExecutionCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalExecutionCatalogueResponse, error)
+
 	// GetInternalProjectByUuidWithResponse Get a Project by UUID
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -18931,12 +21068,16 @@ type ClientWithResponsesInterface interface {
 
 	// CreateModuleRuleInOrgWithBodyWithResponse Create a new module rule in the org
 	//
+	// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
+	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with POST /orgs/{orgId}/module-rules (the `CreateModuleRuleInOrg` operationId).
 	CreateModuleRuleInOrgWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleRuleInOrgResponse, error)
 
 	// CreateModuleRuleInOrgWithResponse Create a new module rule in the org
+	//
+	// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -19127,6 +21268,97 @@ type ClientWithResponsesInterface interface {
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	ChangeModuleCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, catalogueAction ChangeModuleCatalogueStatusParamsCatalogueAction, params *ChangeModuleCatalogueStatusParams, body ChangeModuleCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeModuleCatalogueStatusResponse, error)
 
+	// ListModuleDraftsWithResponse List retained authoring Drafts of a Module
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts (the `ListModuleDrafts` operationId).
+	ListModuleDraftsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleDraftsParams, reqEditors ...RequestEditorFn) (*ListModuleDraftsResponse, error)
+
+	// CreateModuleDraftWithBodyWithResponse Create an editable Module Draft without publishing a Version
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+	CreateModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleDraftResponse, error)
+
+	// CreateModuleDraftWithResponse Create an editable Module Draft without publishing a Version
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+	CreateModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, body CreateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleDraftResponse, error)
+
+	// GetModuleDraftWithResponse Read a Module Draft
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `GetModuleDraft` operationId).
+	GetModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetModuleDraftResponse, error)
+
+	// UpdateModuleDraftWithBodyWithResponse Save a new authoring revision with optimistic concurrency
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+	UpdateModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateModuleDraftResponse, error)
+
+	// UpdateModuleDraftWithResponse Save a new authoring revision with optimistic concurrency
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+	UpdateModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, body UpdateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleDraftResponse, error)
+
+	// DiscardModuleDraftWithBodyWithResponse Discard an open Draft while retaining its authoring history
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+	DiscardModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DiscardModuleDraftResponse, error)
+
+	// DiscardModuleDraftWithResponse Discard an open Draft while retaining its authoring history
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+	DiscardModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, body DiscardModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*DiscardModuleDraftResponse, error)
+
+	// PublishModuleDraftWithBodyWithResponse Publish exactly the reviewed stored Draft revision as Proposed
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+	PublishModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleDraftResponse, error)
+
+	// PublishModuleDraftWithResponse Publish exactly the reviewed stored Draft revision as Proposed
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+	PublishModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, body PublishModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleDraftResponse, error)
+
+	// GetModuleDraftRevisionWithResponse Read an immutable authoring revision
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/revisions/{draftRevision} (the `GetModuleDraftRevision` operationId).
+	GetModuleDraftRevisionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, draftRevision int64, reqEditors ...RequestEditorFn) (*GetModuleDraftRevisionResponse, error)
+
+	// PublishModuleVersionWithInterfaceWithBodyWithResponse Publish an explicit interface-bound Module Version through a capability-specific route
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+	PublishModuleVersionWithInterfaceWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleVersionWithInterfaceResponse, error)
+
+	// PublishModuleVersionWithInterfaceWithResponse Publish an explicit interface-bound Module Version through a capability-specific route
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+	PublishModuleVersionWithInterfaceWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, body PublishModuleVersionWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleVersionWithInterfaceResponse, error)
+
 	// ListModuleVersionsWithResponse List the versions of a module
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -19190,6 +21422,20 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/stable-successor (the `PublishStableModuleVersionSuccessor` operationId).
 	PublishStableModuleVersionSuccessorWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorParams, body PublishStableModuleVersionSuccessorJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorResponse, error)
+
+	// PublishStableModuleVersionSuccessorWithInterfaceWithBodyWithResponse Atomically publish a stable successor and deprecate the exact Proposed prerelease
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+	PublishStableModuleVersionSuccessorWithInterfaceWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorWithInterfaceResponse, error)
+
+	// PublishStableModuleVersionSuccessorWithInterfaceWithResponse Atomically publish a stable successor and deprecate the exact Proposed prerelease
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+	PublishStableModuleVersionSuccessorWithInterfaceWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, body PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorWithInterfaceResponse, error)
 
 	// GetModuleVersionUsageWithResponse Inspect observed Environment adoption and Pin usage for one immutable Module Version
 	//
@@ -19611,6 +21857,27 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployments/{deploymentId}/actions/acknowledge-outcome (the `AcknowledgeDeploymentOutcome` operationId).
 	AcknowledgeDeploymentOutcomeWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, deploymentId openapi_types.UUID, body AcknowledgeDeploymentOutcomeJSONRequestBody, reqEditors ...RequestEditorFn) (*AcknowledgeDeploymentOutcomeResponse, error)
 
+	// GetModuleDraftTestSnapshotWithResponse Read an immutable Draft test definition in its exact Environment scope
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/draft-test-snapshots/{snapshotId} (the `GetModuleDraftTestSnapshot` operationId).
+	GetModuleDraftTestSnapshotWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, snapshotId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetModuleDraftTestSnapshotResponse, error)
+
+	// CaptureModuleDraftTestSnapshotWithBodyWithResponse Capture one reviewed immutable Draft test definition without executing it
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+	CaptureModuleDraftTestSnapshotWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CaptureModuleDraftTestSnapshotResponse, error)
+
+	// CaptureModuleDraftTestSnapshotWithResponse Capture one reviewed immutable Draft test definition without executing it
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+	CaptureModuleDraftTestSnapshotWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, body CaptureModuleDraftTestSnapshotJSONRequestBody, reqEditors ...RequestEditorFn) (*CaptureModuleDraftTestSnapshotResponse, error)
+
 	// ListResourceTypesWithResponse List available resource types
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -19673,6 +21940,34 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/actions/{catalogueAction} (the `ChangeResourceTypeCatalogueStatus` operationId).
 	ChangeResourceTypeCatalogueStatusWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, catalogueAction ChangeResourceTypeCatalogueStatusParamsCatalogueAction, params *ChangeResourceTypeCatalogueStatusParams, body ChangeResourceTypeCatalogueStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeResourceTypeCatalogueStatusResponse, error)
+
+	// ListResourceTypeVersionsWithResponse List immutable Resource Type interface versions
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions (the `ListResourceTypeVersions` operationId).
+	ListResourceTypeVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *ListResourceTypeVersionsParams, reqEditors ...RequestEditorFn) (*ListResourceTypeVersionsResponse, error)
+
+	// PublishResourceTypeVersionWithBodyWithResponse Publish an immutable interface without changing previous contracts
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+	PublishResourceTypeVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishResourceTypeVersionResponse, error)
+
+	// PublishResourceTypeVersionWithResponse Publish an immutable interface without changing previous contracts
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+	PublishResourceTypeVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, body PublishResourceTypeVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishResourceTypeVersionResponse, error)
+
+	// GetResourceTypeVersionWithResponse Read an exact immutable Resource Type interface
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions/{resourceTypeVersion} (the `GetResourceTypeVersion` operationId).
+	GetResourceTypeVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, resourceTypeVersion int64, reqEditors ...RequestEditorFn) (*GetResourceTypeVersionResponse, error)
 
 	// ListRunnerRulesInOrgWithResponse List runner rules in the org
 	//
@@ -20829,6 +23124,75 @@ func (r GenerateInternalModuleCatalogueResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GenerateInternalModuleCatalogueResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GenerateInternalExecutionCatalogueResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *InternalExecutionCatalogue
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GenerateInternalExecutionCatalogueResponse) GetJSON200() *InternalExecutionCatalogue {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GenerateInternalExecutionCatalogueResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GenerateInternalExecutionCatalogueResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GenerateInternalExecutionCatalogueResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r GenerateInternalExecutionCatalogueResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r GenerateInternalExecutionCatalogueResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GenerateInternalExecutionCatalogueResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GenerateInternalExecutionCatalogueResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GenerateInternalExecutionCatalogueResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -23476,6 +25840,558 @@ func (r ChangeModuleCatalogueStatusResponse) ContentType() string {
 	return ""
 }
 
+type ListModuleDraftsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraftPage
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListModuleDraftsResponse) GetJSON200() *ModuleDraftPage {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListModuleDraftsResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListModuleDraftsResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListModuleDraftsResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ListModuleDraftsResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r ListModuleDraftsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleDraftsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleDraftsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListModuleDraftsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateModuleDraftResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ModuleDraft
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateModuleDraftResponse) GetJSON201() *ModuleDraft {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateModuleDraftResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CreateModuleDraftResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r CreateModuleDraftResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateModuleDraftResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateModuleDraftResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateModuleDraftResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateModuleDraftResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateModuleDraftResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetModuleDraftResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraft
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetModuleDraftResponse) GetJSON200() *ModuleDraft {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetModuleDraftResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetModuleDraftResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetModuleDraftResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r GetModuleDraftResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r GetModuleDraftResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleDraftResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleDraftResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetModuleDraftResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateModuleDraftResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraft
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateModuleDraftResponse) GetJSON200() *ModuleDraft {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateModuleDraftResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateModuleDraftResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateModuleDraftResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateModuleDraftResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateModuleDraftResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateModuleDraftResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateModuleDraftResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateModuleDraftResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DiscardModuleDraftResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraft
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DiscardModuleDraftResponse) GetJSON200() *ModuleDraft {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DiscardModuleDraftResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DiscardModuleDraftResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DiscardModuleDraftResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r DiscardModuleDraftResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r DiscardModuleDraftResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DiscardModuleDraftResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DiscardModuleDraftResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DiscardModuleDraftResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PublishModuleDraftResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ModuleDraftPublication
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PublishModuleDraftResponse) GetJSON201() *ModuleDraftPublication {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PublishModuleDraftResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PublishModuleDraftResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PublishModuleDraftResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r PublishModuleDraftResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r PublishModuleDraftResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishModuleDraftResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishModuleDraftResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PublishModuleDraftResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetModuleDraftRevisionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraftRevision
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetModuleDraftRevisionResponse) GetJSON200() *ModuleDraftRevision {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetModuleDraftRevisionResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetModuleDraftRevisionResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetModuleDraftRevisionResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r GetModuleDraftRevisionResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r GetModuleDraftRevisionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleDraftRevisionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleDraftRevisionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetModuleDraftRevisionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PublishModuleVersionWithInterfaceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *CoreModuleVersion
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PublishModuleVersionWithInterfaceResponse) GetJSON201() *CoreModuleVersion {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PublishModuleVersionWithInterfaceResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PublishModuleVersionWithInterfaceResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PublishModuleVersionWithInterfaceResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r PublishModuleVersionWithInterfaceResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r PublishModuleVersionWithInterfaceResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishModuleVersionWithInterfaceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishModuleVersionWithInterfaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PublishModuleVersionWithInterfaceResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListModuleVersionsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -23883,6 +26799,75 @@ func (r PublishStableModuleVersionSuccessorResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PublishStableModuleVersionSuccessorResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PublishStableModuleVersionSuccessorWithInterfaceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *StableModuleVersionSuccessorResult
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetJSON201() *StableModuleVersionSuccessorResult {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PublishStableModuleVersionSuccessorWithInterfaceResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -26083,6 +29068,144 @@ func (r AcknowledgeDeploymentOutcomeResponse) ContentType() string {
 	return ""
 }
 
+type GetModuleDraftTestSnapshotResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ModuleDraftTestSnapshot
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetModuleDraftTestSnapshotResponse) GetJSON200() *ModuleDraftTestSnapshot {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetModuleDraftTestSnapshotResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetModuleDraftTestSnapshotResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetModuleDraftTestSnapshotResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r GetModuleDraftTestSnapshotResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r GetModuleDraftTestSnapshotResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleDraftTestSnapshotResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleDraftTestSnapshotResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetModuleDraftTestSnapshotResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CaptureModuleDraftTestSnapshotResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ModuleDraftTestSnapshot
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CaptureModuleDraftTestSnapshotResponse) GetJSON201() *ModuleDraftTestSnapshot {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CaptureModuleDraftTestSnapshotResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CaptureModuleDraftTestSnapshotResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r CaptureModuleDraftTestSnapshotResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CaptureModuleDraftTestSnapshotResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r CaptureModuleDraftTestSnapshotResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CaptureModuleDraftTestSnapshotResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CaptureModuleDraftTestSnapshotResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CaptureModuleDraftTestSnapshotResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListResourceTypesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -26407,6 +29530,177 @@ func (r ChangeResourceTypeCatalogueStatusResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ChangeResourceTypeCatalogueStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListResourceTypeVersionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		Items         []ResourceTypeVersion `json:"items"`
+		NextPageToken *string               `json:"next_page_token,omitempty"`
+	}
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListResourceTypeVersionsResponse) GetJSON200() *struct {
+	Items         []ResourceTypeVersion `json:"items"`
+	NextPageToken *string               `json:"next_page_token,omitempty"`
+} {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListResourceTypeVersionsResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListResourceTypeVersionsResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r ListResourceTypeVersionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListResourceTypeVersionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListResourceTypeVersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListResourceTypeVersionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PublishResourceTypeVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ResourceTypeVersion
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PublishResourceTypeVersionResponse) GetJSON201() *ResourceTypeVersion {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PublishResourceTypeVersionResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PublishResourceTypeVersionResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r PublishResourceTypeVersionResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r PublishResourceTypeVersionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishResourceTypeVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishResourceTypeVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PublishResourceTypeVersionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetResourceTypeVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ResourceTypeVersion
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetResourceTypeVersionResponse) GetJSON200() *ResourceTypeVersion {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetResourceTypeVersionResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetResourceTypeVersionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetResourceTypeVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetResourceTypeVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetResourceTypeVersionResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -28093,6 +31387,32 @@ func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithResponse(ctx co
 	return ParseGenerateInternalModuleCatalogueResponse(rsp)
 }
 
+// GenerateInternalExecutionCatalogueWithBodyWithResponse Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+func (c *ClientWithResponses) GenerateInternalExecutionCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalExecutionCatalogueResponse, error) {
+	rsp, err := c.GenerateInternalExecutionCatalogueWithBody(ctx, orgId, projectId, envId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGenerateInternalExecutionCatalogueResponse(rsp)
+}
+
+// GenerateInternalExecutionCatalogueWithResponse Resolve scoped immutable executables for the authenticated Data Plane without executing a Deployment.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-execution-catalogue (the `GenerateInternalExecutionCatalogue` operationId).
+func (c *ClientWithResponses) GenerateInternalExecutionCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *GenerateInternalExecutionCatalogueParams, body GenerateInternalExecutionCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalExecutionCatalogueResponse, error) {
+	rsp, err := c.GenerateInternalExecutionCatalogue(ctx, orgId, projectId, envId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGenerateInternalExecutionCatalogueResponse(rsp)
+}
+
 // GetInternalProjectByUuidWithResponse Get a Project by UUID
 //
 // Returns a wrapper object for the known response body format(s).
@@ -28575,6 +31895,8 @@ func (c *ClientWithResponses) ListModuleRulesInOrgWithResponse(ctx context.Conte
 
 // CreateModuleRuleInOrgWithBodyWithResponse Create a new module rule in the org
 //
+// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
+//
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
 // Corresponds with POST /orgs/{orgId}/module-rules (the `CreateModuleRuleInOrg` operationId).
@@ -28587,6 +31909,8 @@ func (c *ClientWithResponses) CreateModuleRuleInOrgWithBodyWithResponse(ctx cont
 }
 
 // CreateModuleRuleInOrgWithResponse Create a new module rule in the org
+//
+// A Module without a Default requires both project_id and env_id, so first-implementation tests cannot introduce an unresolved global Rule that blocks other Environments. Rules never implicitly select a Draft. Publish a Default before creating broader Rules.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -28963,6 +32287,175 @@ func (c *ClientWithResponses) ChangeModuleCatalogueStatusWithResponse(ctx contex
 	return ParseChangeModuleCatalogueStatusResponse(rsp)
 }
 
+// ListModuleDraftsWithResponse List retained authoring Drafts of a Module
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts (the `ListModuleDrafts` operationId).
+func (c *ClientWithResponses) ListModuleDraftsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleDraftsParams, reqEditors ...RequestEditorFn) (*ListModuleDraftsResponse, error) {
+	rsp, err := c.ListModuleDrafts(ctx, orgId, moduleId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleDraftsResponse(rsp)
+}
+
+// CreateModuleDraftWithBodyWithResponse Create an editable Module Draft without publishing a Version
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+func (c *ClientWithResponses) CreateModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateModuleDraftResponse, error) {
+	rsp, err := c.CreateModuleDraftWithBody(ctx, orgId, moduleId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleDraftResponse(rsp)
+}
+
+// CreateModuleDraftWithResponse Create an editable Module Draft without publishing a Version
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts (the `CreateModuleDraft` operationId).
+func (c *ClientWithResponses) CreateModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *CreateModuleDraftParams, body CreateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateModuleDraftResponse, error) {
+	rsp, err := c.CreateModuleDraft(ctx, orgId, moduleId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateModuleDraftResponse(rsp)
+}
+
+// GetModuleDraftWithResponse Read a Module Draft
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `GetModuleDraft` operationId).
+func (c *ClientWithResponses) GetModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetModuleDraftResponse, error) {
+	rsp, err := c.GetModuleDraft(ctx, orgId, moduleId, draftId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleDraftResponse(rsp)
+}
+
+// UpdateModuleDraftWithBodyWithResponse Save a new authoring revision with optimistic concurrency
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+func (c *ClientWithResponses) UpdateModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateModuleDraftResponse, error) {
+	rsp, err := c.UpdateModuleDraftWithBody(ctx, orgId, moduleId, draftId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateModuleDraftResponse(rsp)
+}
+
+// UpdateModuleDraftWithResponse Save a new authoring revision with optimistic concurrency
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /orgs/{orgId}/modules/{moduleId}/drafts/{draftId} (the `UpdateModuleDraft` operationId).
+func (c *ClientWithResponses) UpdateModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *UpdateModuleDraftParams, body UpdateModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleDraftResponse, error) {
+	rsp, err := c.UpdateModuleDraft(ctx, orgId, moduleId, draftId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateModuleDraftResponse(rsp)
+}
+
+// DiscardModuleDraftWithBodyWithResponse Discard an open Draft while retaining its authoring history
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+func (c *ClientWithResponses) DiscardModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DiscardModuleDraftResponse, error) {
+	rsp, err := c.DiscardModuleDraftWithBody(ctx, orgId, moduleId, draftId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDiscardModuleDraftResponse(rsp)
+}
+
+// DiscardModuleDraftWithResponse Discard an open Draft while retaining its authoring history
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/discard (the `DiscardModuleDraft` operationId).
+func (c *ClientWithResponses) DiscardModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *DiscardModuleDraftParams, body DiscardModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*DiscardModuleDraftResponse, error) {
+	rsp, err := c.DiscardModuleDraft(ctx, orgId, moduleId, draftId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDiscardModuleDraftResponse(rsp)
+}
+
+// PublishModuleDraftWithBodyWithResponse Publish exactly the reviewed stored Draft revision as Proposed
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+func (c *ClientWithResponses) PublishModuleDraftWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleDraftResponse, error) {
+	rsp, err := c.PublishModuleDraftWithBody(ctx, orgId, moduleId, draftId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleDraftResponse(rsp)
+}
+
+// PublishModuleDraftWithResponse Publish exactly the reviewed stored Draft revision as Proposed
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/publish (the `PublishModuleDraft` operationId).
+func (c *ClientWithResponses) PublishModuleDraftWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *PublishModuleDraftParams, body PublishModuleDraftJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleDraftResponse, error) {
+	rsp, err := c.PublishModuleDraft(ctx, orgId, moduleId, draftId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleDraftResponse(rsp)
+}
+
+// GetModuleDraftRevisionWithResponse Read an immutable authoring revision
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/modules/{moduleId}/drafts/{draftId}/revisions/{draftRevision} (the `GetModuleDraftRevision` operationId).
+func (c *ClientWithResponses) GetModuleDraftRevisionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, draftRevision int64, reqEditors ...RequestEditorFn) (*GetModuleDraftRevisionResponse, error) {
+	rsp, err := c.GetModuleDraftRevision(ctx, orgId, moduleId, draftId, draftRevision, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleDraftRevisionResponse(rsp)
+}
+
+// PublishModuleVersionWithInterfaceWithBodyWithResponse Publish an explicit interface-bound Module Version through a capability-specific route
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+func (c *ClientWithResponses) PublishModuleVersionWithInterfaceWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishModuleVersionWithInterfaceResponse, error) {
+	rsp, err := c.PublishModuleVersionWithInterfaceWithBody(ctx, orgId, moduleId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleVersionWithInterfaceResponse(rsp)
+}
+
+// PublishModuleVersionWithInterfaceWithResponse Publish an explicit interface-bound Module Version through a capability-specific route
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/version-publications (the `PublishModuleVersionWithInterface` operationId).
+func (c *ClientWithResponses) PublishModuleVersionWithInterfaceWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *PublishModuleVersionWithInterfaceParams, body PublishModuleVersionWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishModuleVersionWithInterfaceResponse, error) {
+	rsp, err := c.PublishModuleVersionWithInterface(ctx, orgId, moduleId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishModuleVersionWithInterfaceResponse(rsp)
+}
+
 // ListModuleVersionsWithResponse List the versions of a module
 //
 // Returns a wrapper object for the known response body format(s).
@@ -29085,6 +32578,32 @@ func (c *ClientWithResponses) PublishStableModuleVersionSuccessorWithResponse(ct
 		return nil, err
 	}
 	return ParsePublishStableModuleVersionSuccessorResponse(rsp)
+}
+
+// PublishStableModuleVersionSuccessorWithInterfaceWithBodyWithResponse Atomically publish a stable successor and deprecate the exact Proposed prerelease
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+func (c *ClientWithResponses) PublishStableModuleVersionSuccessorWithInterfaceWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorWithInterfaceResponse, error) {
+	rsp, err := c.PublishStableModuleVersionSuccessorWithInterfaceWithBody(ctx, orgId, moduleId, moduleVersionId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishStableModuleVersionSuccessorWithInterfaceResponse(rsp)
+}
+
+// PublishStableModuleVersionSuccessorWithInterfaceWithResponse Atomically publish a stable successor and deprecate the exact Proposed prerelease
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}/successor-publications (the `PublishStableModuleVersionSuccessorWithInterface` operationId).
+func (c *ClientWithResponses) PublishStableModuleVersionSuccessorWithInterfaceWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, params *PublishStableModuleVersionSuccessorWithInterfaceParams, body PublishStableModuleVersionSuccessorWithInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishStableModuleVersionSuccessorWithInterfaceResponse, error) {
+	rsp, err := c.PublishStableModuleVersionSuccessorWithInterface(ctx, orgId, moduleId, moduleVersionId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishStableModuleVersionSuccessorWithInterfaceResponse(rsp)
 }
 
 // GetModuleVersionUsageWithResponse Inspect observed Environment adoption and Pin usage for one immutable Module Version
@@ -29819,6 +33338,45 @@ func (c *ClientWithResponses) AcknowledgeDeploymentOutcomeWithResponse(ctx conte
 	return ParseAcknowledgeDeploymentOutcomeResponse(rsp)
 }
 
+// GetModuleDraftTestSnapshotWithResponse Read an immutable Draft test definition in its exact Environment scope
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/draft-test-snapshots/{snapshotId} (the `GetModuleDraftTestSnapshot` operationId).
+func (c *ClientWithResponses) GetModuleDraftTestSnapshotWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, snapshotId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetModuleDraftTestSnapshotResponse, error) {
+	rsp, err := c.GetModuleDraftTestSnapshot(ctx, orgId, projectId, envId, moduleId, snapshotId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleDraftTestSnapshotResponse(rsp)
+}
+
+// CaptureModuleDraftTestSnapshotWithBodyWithResponse Capture one reviewed immutable Draft test definition without executing it
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+func (c *ClientWithResponses) CaptureModuleDraftTestSnapshotWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CaptureModuleDraftTestSnapshotResponse, error) {
+	rsp, err := c.CaptureModuleDraftTestSnapshotWithBody(ctx, orgId, projectId, envId, moduleId, draftId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCaptureModuleDraftTestSnapshotResponse(rsp)
+}
+
+// CaptureModuleDraftTestSnapshotWithResponse Capture one reviewed immutable Draft test definition without executing it
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/projects/{projectId}/envs/{envId}/modules/{moduleId}/drafts/{draftId}/test-snapshots (the `CaptureModuleDraftTestSnapshot` operationId).
+func (c *ClientWithResponses) CaptureModuleDraftTestSnapshotWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, moduleId ModuleIdPathParam, draftId openapi_types.UUID, params *CaptureModuleDraftTestSnapshotParams, body CaptureModuleDraftTestSnapshotJSONRequestBody, reqEditors ...RequestEditorFn) (*CaptureModuleDraftTestSnapshotResponse, error) {
+	rsp, err := c.CaptureModuleDraftTestSnapshot(ctx, orgId, projectId, envId, moduleId, draftId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCaptureModuleDraftTestSnapshotResponse(rsp)
+}
+
 // ListResourceTypesWithResponse List available resource types
 //
 // Returns a wrapper object for the known response body format(s).
@@ -29934,6 +33492,58 @@ func (c *ClientWithResponses) ChangeResourceTypeCatalogueStatusWithResponse(ctx 
 		return nil, err
 	}
 	return ParseChangeResourceTypeCatalogueStatusResponse(rsp)
+}
+
+// ListResourceTypeVersionsWithResponse List immutable Resource Type interface versions
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions (the `ListResourceTypeVersions` operationId).
+func (c *ClientWithResponses) ListResourceTypeVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *ListResourceTypeVersionsParams, reqEditors ...RequestEditorFn) (*ListResourceTypeVersionsResponse, error) {
+	rsp, err := c.ListResourceTypeVersions(ctx, orgId, typeId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListResourceTypeVersionsResponse(rsp)
+}
+
+// PublishResourceTypeVersionWithBodyWithResponse Publish an immutable interface without changing previous contracts
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+func (c *ClientWithResponses) PublishResourceTypeVersionWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishResourceTypeVersionResponse, error) {
+	rsp, err := c.PublishResourceTypeVersionWithBody(ctx, orgId, typeId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishResourceTypeVersionResponse(rsp)
+}
+
+// PublishResourceTypeVersionWithResponse Publish an immutable interface without changing previous contracts
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/resource-types/{typeId}/versions (the `PublishResourceTypeVersion` operationId).
+func (c *ClientWithResponses) PublishResourceTypeVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, params *PublishResourceTypeVersionParams, body PublishResourceTypeVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishResourceTypeVersionResponse, error) {
+	rsp, err := c.PublishResourceTypeVersion(ctx, orgId, typeId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishResourceTypeVersionResponse(rsp)
+}
+
+// GetResourceTypeVersionWithResponse Read an exact immutable Resource Type interface
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/resource-types/{typeId}/versions/{resourceTypeVersion} (the `GetResourceTypeVersion` operationId).
+func (c *ClientWithResponses) GetResourceTypeVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, typeId ResourceTypeIdPathParam, resourceTypeVersion int64, reqEditors ...RequestEditorFn) (*GetResourceTypeVersionResponse, error) {
+	rsp, err := c.GetResourceTypeVersion(ctx, orgId, typeId, resourceTypeVersion, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetResourceTypeVersionResponse(rsp)
 }
 
 // ListRunnerRulesInOrgWithResponse List runner rules in the org
@@ -31084,6 +34694,63 @@ func ParseGenerateInternalModuleCatalogueResponse(rsp *http.Response) (*Generate
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGenerateInternalExecutionCatalogueResponse parses an HTTP response from a GenerateInternalExecutionCatalogueWithResponse call
+func ParseGenerateInternalExecutionCatalogueResponse(rsp *http.Response) (*GenerateInternalExecutionCatalogueResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GenerateInternalExecutionCatalogueResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InternalExecutionCatalogue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case rsp.StatusCode == 503:
+		break // No content-type
 
 	}
 
@@ -33047,6 +36714,438 @@ func ParseChangeModuleCatalogueStatusResponse(rsp *http.Response) (*ChangeModule
 	return response, nil
 }
 
+// ParseListModuleDraftsResponse parses an HTTP response from a ListModuleDraftsWithResponse call
+func ParseListModuleDraftsResponse(rsp *http.Response) (*ListModuleDraftsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleDraftsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraftPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateModuleDraftResponse parses an HTTP response from a CreateModuleDraftWithResponse call
+func ParseCreateModuleDraftResponse(rsp *http.Response) (*CreateModuleDraftResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateModuleDraftResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleDraft
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetModuleDraftResponse parses an HTTP response from a GetModuleDraftWithResponse call
+func ParseGetModuleDraftResponse(rsp *http.Response) (*GetModuleDraftResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleDraftResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraft
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateModuleDraftResponse parses an HTTP response from a UpdateModuleDraftWithResponse call
+func ParseUpdateModuleDraftResponse(rsp *http.Response) (*UpdateModuleDraftResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateModuleDraftResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraft
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDiscardModuleDraftResponse parses an HTTP response from a DiscardModuleDraftWithResponse call
+func ParseDiscardModuleDraftResponse(rsp *http.Response) (*DiscardModuleDraftResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DiscardModuleDraftResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraft
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishModuleDraftResponse parses an HTTP response from a PublishModuleDraftWithResponse call
+func ParsePublishModuleDraftResponse(rsp *http.Response) (*PublishModuleDraftResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishModuleDraftResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleDraftPublication
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetModuleDraftRevisionResponse parses an HTTP response from a GetModuleDraftRevisionWithResponse call
+func ParseGetModuleDraftRevisionResponse(rsp *http.Response) (*GetModuleDraftRevisionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleDraftRevisionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraftRevision
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishModuleVersionWithInterfaceResponse parses an HTTP response from a PublishModuleVersionWithInterfaceWithResponse call
+func ParsePublishModuleVersionWithInterfaceResponse(rsp *http.Response) (*PublishModuleVersionWithInterfaceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishModuleVersionWithInterfaceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CoreModuleVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListModuleVersionsResponse parses an HTTP response from a ListModuleVersionsWithResponse call
 func ParseListModuleVersionsResponse(rsp *http.Response) (*ListModuleVersionsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -33310,6 +37409,60 @@ func ParsePublishStableModuleVersionSuccessorResponse(rsp *http.Response) (*Publ
 	}
 
 	response := &PublishStableModuleVersionSuccessorResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest StableModuleVersionSuccessorResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishStableModuleVersionSuccessorWithInterfaceResponse parses an HTTP response from a PublishStableModuleVersionSuccessorWithInterfaceWithResponse call
+func ParsePublishStableModuleVersionSuccessorWithInterfaceResponse(rsp *http.Response) (*PublishStableModuleVersionSuccessorWithInterfaceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishStableModuleVersionSuccessorWithInterfaceResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -35047,6 +39200,114 @@ func ParseAcknowledgeDeploymentOutcomeResponse(rsp *http.Response) (*Acknowledge
 	return response, nil
 }
 
+// ParseGetModuleDraftTestSnapshotResponse parses an HTTP response from a GetModuleDraftTestSnapshotWithResponse call
+func ParseGetModuleDraftTestSnapshotResponse(rsp *http.Response) (*GetModuleDraftTestSnapshotResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleDraftTestSnapshotResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleDraftTestSnapshot
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCaptureModuleDraftTestSnapshotResponse parses an HTTP response from a CaptureModuleDraftTestSnapshotWithResponse call
+func ParseCaptureModuleDraftTestSnapshotResponse(rsp *http.Response) (*CaptureModuleDraftTestSnapshotResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CaptureModuleDraftTestSnapshotResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ModuleDraftTestSnapshot
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListResourceTypesResponse parses an HTTP response from a ListResourceTypesWithResponse call
 func ParseListResourceTypesResponse(rsp *http.Response) (*ListResourceTypesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -35284,6 +39545,129 @@ func ParseChangeResourceTypeCatalogueStatusResponse(rsp *http.Response) (*Change
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListResourceTypeVersionsResponse parses an HTTP response from a ListResourceTypeVersionsWithResponse call
+func ParseListResourceTypeVersionsResponse(rsp *http.Response) (*ListResourceTypeVersionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListResourceTypeVersionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Items         []ResourceTypeVersion `json:"items"`
+			NextPageToken *string               `json:"next_page_token,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishResourceTypeVersionResponse parses an HTTP response from a PublishResourceTypeVersionWithResponse call
+func ParsePublishResourceTypeVersionResponse(rsp *http.Response) (*PublishResourceTypeVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishResourceTypeVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ResourceTypeVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetResourceTypeVersionResponse parses an HTTP response from a GetResourceTypeVersionWithResponse call
+func ParseGetResourceTypeVersionResponse(rsp *http.Response) (*GetResourceTypeVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetResourceTypeVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResourceTypeVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

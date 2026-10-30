@@ -45,7 +45,7 @@ var CreateManagedModuleVersion = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		response, err := MustCpClient(cmd.Context()).PublishModuleVersionWithResponse(cmd.Context(), orgID, args[0],
+		response, err := publishVersionForSelectedInterface(cmd.Context(), MustCpClient(cmd.Context()), orgID, args[0],
 			&cp.PublishModuleVersionParams{IdempotencyKey: moduleCommandIdempotencyKey(cmd)}, *body)
 		if err != nil {
 			return errors.Wrap(err, "failed to publish Module Version")
@@ -296,7 +296,7 @@ var PublishStableModuleVersion = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		response, err := MustCpClient(cmd.Context()).PublishStableModuleVersionSuccessorWithResponse(cmd.Context(), orgID, args[0], args[1],
+		response, err := publishSuccessorForSelectedInterface(cmd.Context(), MustCpClient(cmd.Context()), orgID, args[0], args[1],
 			&cp.PublishStableModuleVersionSuccessorParams{IdempotencyKey: moduleCommandIdempotencyKey(cmd)}, *body)
 		if err != nil {
 			return errors.Wrap(err, "failed to publish stable Module Version successor")
