@@ -406,6 +406,14 @@ func announceLogsKey(cmd *cobra.Command, deploymentId uuid.UUID, key *age.X25519
 // and waits for it to complete. base is nil for an Environment without a
 // stateful Deployment.
 func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCreateBody, base *dp.DeploymentSummary, logsAgeKey *age.X25519Identity) (*dp.Deployment, error) {
+	var testValues []string
+	if cmd.Flags().Lookup(deployCmdDraftTestFlag) != nil {
+		testValues, _ = cmd.Flags().GetStringArray(deployCmdDraftTestFlag)
+	}
+	selectedTests, err := parseDraftTestSelections(testValues)
+	if err != nil {
+		return nil, err
+	}
 	if b, _ := cmd.Flags().GetBool(deployCmdNoPromptFlag); !b {
 		if err := PromptTextAndEnterToContinue(cmd.Context(), cmd.InOrStdin(), ""); err != nil {
 			return nil, err
@@ -423,9 +431,9 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 	} else {
 		infoMessageF("Creating %s deployment...", body.Mode)
 	}
-	if r, err := dpClient.CreateDeploymentWithResponse(cmd.Context(), orgId, &dp.CreateDeploymentParams{
+	if r, err := createDeploymentWithDraftSelection(cmd.Context(), dpClient, orgId, &dp.CreateDeploymentParams{
 		IdempotencyKey: ref.Ref(uuid.New().String()),
-	}, body); err != nil {
+	}, body, selectedTests); err != nil {
 		return nil, errors.Wrap(err, "failed to create deployment")
 	} else if r.StatusCode() == http.StatusConflict {
 		return nil, deploymentConflictError(r.JSON409, r.Body, body)

@@ -1,29 +1,20 @@
-# Core contract
+# Orchestrator Control Plane API contract
 
-`spec.yaml` is a byte-identical copy of the Control Plane OpenAPI document and
-the only input of the generated `cp` client.
+`spec.yaml` is a byte-identical copy of the selected source commit and the sole
+input of the generated client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-cp`
-- Commit: `d323f9b7ed2c81913856b55294ab92ece6b38b03`
+- Commit: `1a2a812e48ac35a478398747b37cf90f6d536c07`
 - File: `openapi/spec.yaml`
-- Git blob: `33976244f6045b196891383262ea01eb604bb777`
-- File SHA-256: `1cab2e88d1132b77d2865e43e8ddecdd44437a71146c788d168d5cc1245e39b3`
+- Git blob: `a8f6384df376398578fd88352d5187e3f84be01b`
+- File SHA-256: `cc9c8c3813be81bfa487fa8d8e38457c51cca8ef17f6eecf59d775ef89677875`
 
-The public source commit contains the Control Plane plugin contracts: platform
-principals as identities, several organizations per installation, organization
-mode, installation-wide licence grants and schema 48. This records the API
-source, not an application image release. To update this snapshot, copy
-`openapi/spec.yaml` from the selected public commit unchanged. Update the commit,
-blob and SHA-256 here, then run
-`make generate` and `make check-api-specs`.
+This contract adds revisioned Module Draft authoring, immutable scoped
+test snapshots and explicit test execution through the ordinary deployment
+engine, alongside exact Resource Type interface versions. Published Module
+Versions remain immutable. Saving a Draft does not execute it or reserve SemVer.
 
-Never edit `spec.yaml` or the generated client by hand, and never add schemas
-that Core does not publish. Plugin APIs have their own contracts, for example
-[Progressive Rollouts](../progressive-rollouts/SOURCE.md). Module publication,
-definition/detail and comparison snapshots all come from the exact Core schema.
-`output_schema` may be absent or a declared object, including `{}`;
-`resource_type` remains a catalogue binding, not a publication-body field.
-
-Publication status: this security source commit is prepared locally and is not
-published yet. Public-source verification must pass after the coordinated
-server-source publication, before this client is released.
+Before a client release, verify this immutable source through the unchanged
+public-source checks. A local Git comparison proves byte identity, not public
+availability. Regenerate through the repository official generators; do not
+hand-edit this snapshot or generated client.
