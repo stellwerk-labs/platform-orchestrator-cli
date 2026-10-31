@@ -29,39 +29,17 @@ var RootCmd = &cobra.Command{
 }
 
 func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
+	if FindCommandTreeAnnotation(cmd, "mcp-stdio") != "" {
+		return nil
+	}
 	d, _ := cmd.Flags().GetBool("debug")
 	d = d || strings.ToLower(os.Getenv("PO_CLI_DEBUG")) == stringTrue
 	internal.SetupLogging(d, cmd.ErrOrStderr())
 	color.Output = cmd.ErrOrStderr()
 
-	cfg, err := config.ReadFile()
+	cfg, err := commandConfiguration(cmd)
 	if err != nil {
-		return errors.Wrap(err, "failed to read configuration")
-	}
-	if v, ok := os.LookupEnv("PO_ORG_ID"); ok {
-		cfg.DefaultOrg = v
-	}
-
-	if v, ok := os.LookupEnv("PO_API_URL"); ok {
-		if apiUrl, err := url.Parse(v); err != nil {
-			return errors.Wrap(err, "failed to parse PO_API_URL")
-		} else {
-			cfg.ApiUrl = strings.TrimSuffix(apiUrl.String(), "/")
-		}
-	}
-	if v, ok := os.LookupEnv("PO_AUTH_TOKEN"); ok {
-		cfg.Token = v
-	}
-	org, err := cmd.Flags().GetString("org")
-	if err != nil {
-		return errors.Wrap(err, "failed to get org flag")
-	}
-	if org != "" {
-		cfg.DefaultOrg = org
-	}
-
-	if cfg.ApiUrl == "" {
-		cfg.ApiUrl = defaultApiUrl
+		return err
 	}
 
 	ctx := withConfiguration(cmd.Context(), cfg)
@@ -87,6 +65,9 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 }
 
 func rootPersistentPostRun(cmd *cobra.Command, args []string) {
+	if FindCommandTreeAnnotation(cmd, "mcp-stdio") != "" {
+		return
+	}
 	if versionCheckResult != nil {
 		if result := <-versionCheckResult; result != nil && result.NewVersionAvailable {
 			result.DisplayNotification(cmd.ErrOrStderr())
@@ -103,4 +84,38 @@ func init() {
 	RootCmd.AddGroup(CrudGroup)
 	RootCmd.AddCommand(CreateCmd, GetCmd, UpdateCmd, DeleteCmd)
 	RootCmd.AddCommand(ConfigCmd)
+}
+
+func commandConfiguration(cmd *cobra.Command) (config.Config, error) {
+	cfg, err := config.ReadFile()
+	if err != nil {
+		return config.Config{}, errors.Wrap(err, "failed to read configuration")
+	}
+	if v, ok := os.LookupEnv("PO_ORG_ID"); ok {
+		cfg.DefaultOrg = v
+	}
+
+	if v, ok := os.LookupEnv("PO_API_URL"); ok {
+		if apiUrl, err := url.Parse(v); err != nil {
+			return config.Config{}, errors.Wrap(err, "failed to parse PO_API_URL")
+		} else {
+			cfg.ApiUrl = strings.TrimSuffix(apiUrl.String(), "/")
+		}
+	}
+	if v, ok := os.LookupEnv("PO_AUTH_TOKEN"); ok {
+		cfg.Token = v
+	}
+	org, err := cmd.Flags().GetString("org")
+	if err != nil {
+		return config.Config{}, errors.Wrap(err, "failed to get org flag")
+	}
+	if org != "" {
+		cfg.DefaultOrg = org
+	}
+
+	if cfg.ApiUrl == "" {
+		cfg.ApiUrl = defaultApiUrl
+	}
+
+	return cfg, nil
 }

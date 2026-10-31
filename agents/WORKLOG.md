@@ -70,3 +70,33 @@ Root reviewed all nine changed paths. Application/Go/API/generator inputs and
 release publication semantics are unchanged. The metadata allowance fails
 closed on absent, malformed or mismatched evidence. This is a local source
 correction, not a shipping artifact, public contract consumer or release claim.
+
+## 2026-10-31: read-only MCP implementation
+
+Based on released CLI source 69f45b6b3c1e1fc745bfc05b7d36b8fb096eb609 in an
+isolated private-remote checkout. Implemented eight typed read-only metadata
+tools, bounded secure generated-client transport, shared configuration resolution,
+stdio command lifecycle, stderr errors and usage documentation. SDK pin and
+security boundaries are recorded in DECISIONS.md; hook/generator/lint findings
+are in LEARNINGS.md. Validation includes real SDK in-memory and subprocess stdio
+sessions, generated-client wire GET/scope checks, rejected arguments, secret
+redaction, redirects, cancellation, payload/count limits and loopback token
+requirements. Full CI-pinned checks and separate security review are recorded in
+the external task evidence directory before the local signed commit. Only the verified private feature branch may be pushed; no public push or
+publication is part of this iteration.
+
+Final local validation uses Go1.26.10 and the CI-pinned golangci-lint2.11.4:
+`make test` passed599tests; `make lint` passed0issues; `make build`, targeted
+race tests, format/diff checks, deterministic tidy, API-spec checks and actual
+multi-platform dependency notice collection passed. Release content and OCI
+contract suites passed; final qualification suite evidence is kept externally.
+The first full test attempt lacked the verified go-licenses PATH prerequisite;
+the first qualification attempt lacked the exact pinned Syft Docker image. Both
+prerequisites were restored without changing product code. Root review corrected
+the Resource Type field count to inspect JSON Schema properties, with real wire
+cases for one, two and absent properties. No public writes were performed.
+
+Root source and independent security review accepted the implementation. Source
+and built-binary govulncheck passed with no vulnerable imported packages or
+symbols; the module-only x/crypto/openpgp finding is not reachable. Documentation
+polish removed internal publication workflow language from product docs.
