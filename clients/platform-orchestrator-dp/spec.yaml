@@ -262,6 +262,71 @@ paths:
           $ref: "#/components/responses/400BadRequest"
         "409":
           $ref: "#/components/responses/409Conflict"
+  /orgs/{orgId}/module-test-deployments:
+    post:
+      operationId: createModuleTestDeployment
+      tags:
+        - Deployment
+      summary: Create a new deployment in the target project and environment.
+      description: |
+        Deploy and rollback requests mutate the Environment and run one at a time. A request that finds the Environment
+        busy waits in the Environment's deployment queue and the response is 202 with the queue item, unless it sets
+        `when_busy` to `reject`: then it fails with 409 and the error code `environment_busy`. Requests authorized by an
+        organization token cannot wait and always get that 409. Queued requests are promoted strictly in order and
+        resolved against the Environment state at promotion.
+
+        Plan-only requests and dry runs are never queued and ignore `when_busy`, `queue_ttl_seconds` and
+        `halt_on_failure`. A dry run is answered while Deployments run or wait. A plan-only request starts while
+        requests wait in the queue, but not while a deploy, rollback, destroy or another plan runs, because their Runners
+        would contend for the Environment's state lock; it then fails with 409 `environment_busy`. Either response
+        carries `pending_changes` when Deployments that run or wait will change the Environment first, so the plan or
+        diff may still change.
+
+        Conflicts carry a stable error code: `environment_busy`, `deployment_queue_full`, `outcome_unreconciled` (a failed
+        plugin-dispatched Deployment awaits acknowledgement of its outcome), `environment_deleting` and
+        `deployment_base_changed`. Other conflicts keep the code `HTTP-409`.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: |
+            Ensures that the deployment request is only accepted once per idempotency key per 24 hours. A uuid or similar is recommended.
+            When the key matches the key in last deployment and the environment and manifest is the same, this will return the last deployment.
+            When the key matches a queued request, this returns its queue item until it is dispatched, and its Deployment afterwards.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModuleTestDeploymentCreateBody"
+      responses:
+        "200":
+          description: Successful dry run create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentDryRun"
+        "201":
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "202":
+          description: The Environment is busy and the request waits in its deployment queue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentQueueItem"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
   /orgs/{orgId}/deployment-queue:
     get:
       operationId: listDeploymentQueueItems
@@ -1945,6 +2010,18 @@ components:
           minimum: 0
           example: 2
 
+    ModuleTestDeploymentCreateBody:
+      type: object
+      additionalProperties: false
+      required: [deployment, draft_test_snapshots]
+      properties:
+        deployment: {$ref: '#/components/schemas/DeploymentCreateBody'}
+        draft_test_snapshots:
+          type: object
+          minProperties: 1
+          maxProperties: 1000
+          description: Stable Module UUID to immutable captured test snapshot UUID. Draft heads and published Version references are not accepted here.
+          additionalProperties: {type: string, format: uuid}
     DeploymentCreateBody:
       type: object
       required:

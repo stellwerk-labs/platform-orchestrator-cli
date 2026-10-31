@@ -1,20 +1,20 @@
-# Data Plane contract
+# Orchestrator Data Plane API contract
 
-`spec.yaml` is a byte-identical copy of the Data Plane OpenAPI document and
-the only input of the generated `dp` client.
+`spec.yaml` is a byte-identical copy of the selected source commit and the sole
+input of the generated client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-dp`
-- Commit: `cad9716c8d441826b5fcb6b3715c32c153d86284`
+- Commit: `eee2fb607084ce5eef994726a2c3b88082e85397`
 - File: `openapi/spec.yaml`
-- Git blob: `47cfe212334619403f40f75b078e277658ce01d0`
-- File SHA-256: `410482810079b527428180a468ac943f98f1ca86368c8032d5eddc85791381ec`
+- Git blob: `8b5e32e7dad33fc9cd0e260fc1d085d05e54c353`
+- File SHA-256: `e2cb98ee7622a892a6cb20d67afeae70fc81e17cffd982757a227e3db24b38fa`
 
-The public source commit contains the Data Plane plugin contracts: deployment
-queue with `queue` as the default, `halt_on_failure`, `reason_deployment_id` on
-queue items, `pending_changes` on plans and dry runs, Environment fence and
-schema 35. This records the API source, not an application image release. To
-update this snapshot, copy `openapi/spec.yaml` from the selected public commit
-unchanged. Update the commit, blob and SHA-256 here, then run `make generate`
-and `make check-api-specs`.
+This contract adds revisioned Module Draft authoring, immutable scoped
+test snapshots and explicit test execution through the ordinary deployment
+engine, alongside exact Resource Type interface versions. Published Module
+Versions remain immutable. Saving a Draft does not execute it or reserve SemVer.
 
-Never edit `spec.yaml` or the generated client by hand.
+Before a client release, verify this immutable source through the unchanged
+public-source checks. A local Git comparison proves byte identity, not public
+availability. Regenerate through the repository official generators; do not
+hand-edit this snapshot or generated client.
