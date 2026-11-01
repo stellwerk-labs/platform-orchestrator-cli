@@ -15,7 +15,7 @@ func main() {
 	cobra.EnableTraverseRunHooks = true
 
 	if err := command.RootCmd.ExecuteContext(ctx); err != nil {
-		color.HiRed("Error: %s", err.Error())
+		_, _ = color.New(color.FgHiRed).Fprintf(os.Stderr, "Error: %s\n", err.Error())
 		os.Exit(1)
 	}
 }

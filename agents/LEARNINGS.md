@@ -24,3 +24,16 @@
   mutation does not turn later subtests into output-directory errors.
 - Verify immutable action commits against their official repository and inspect
   their implementation. A plausible forty-character pin can still be nonexistent.
+
+## 2026-10-31: MCP integration
+
+Cobra traversal hooks are explicitly enabled in main, so child pre-run handlers
+alone cannot isolate stdio startup from root version checks/client setup. A tree
+annotation bypasses root pre/post hooks. The stable source export omits ignored
+client mocks; `make generate` is needed before existing command tests compile.
+The module catalogue endpoint exposes stable module identities without fetching
+legacy inline module source. SDK typed struct schemas reject additional fields.
+Use the CI-pinned lint version; newer local lint versions produce different gates.
+Resource Type `output_schema` is JSON Schema, so output field counts must inspect
+its `properties` object, not count top-level schema keywords. Wire fixtures should
+represent the real contract, including `type`, `properties` and other keywords.

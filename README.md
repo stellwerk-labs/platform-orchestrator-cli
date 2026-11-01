@@ -163,3 +163,9 @@ Release-boundary tests require the checksum-verified tools from
 `scripts/release-tools.sh`. They perform no publication and skip no required
 scanner or cataloger behavior. Cross-platform archives, the actual multiarch
 image and public-consumer verification still require their own release run.
+
+### Read-only MCP integration
+
+Run `octl mcp serve` to expose eight metadata tools to a local MCP client over
+stdio, using your existing octl configuration and token. Every call requires an
+explicit organization ID. See [MCP setup and tool reference](docs/mcp.md).

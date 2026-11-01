@@ -43,3 +43,29 @@ Its version and help expose the existing sign-blob and verify-blob flags.
 The Linux/amd64 asset digest independently matches the action bootstrap pin
 `064954c5d8c7e3b28188eee5b1727b31c411550bc5fefd41aa672d3c761d103a`;
 that platform binary was not executed locally.
+
+## 2026-10-31: local read-only MCP metadata
+
+Use official `github.com/modelcontextprotocol/go-sdk` v1.8.0 (reviewed upstream
+pin), typed handlers and generated CP clients. Keep the existing Go directive and
+release toolchain pins. Expose eight fixed metadata tools over stdio only, with
+explicit organization/project/module scope. Metadata DTOs exclude schema values,
+configuration, code, outputs, labels, arbitrary descriptions and status messages.
+A dedicated transport avoids CLI debug-body logging, rejects non-GET requests,
+redirects and nonconfigured origins, bounds bodies and requires an existing
+Bearer token even on localhost. This avoids synthesizing a privileged internal
+identity. Root hooks skip version checks and interactive setup for MCP; the
+configuration resolver remains shared with normal CLI commands.
+
+The inherited module graph selected andybalholm/brotli v1.1.0. After verifying
+upstream GHSA-c9gr-gmg4-2vqv and official v1.2.7 proxy/SumDB provenance, narrowly
+pin v1.2.7 in this private branch. It is not an octl application package dependency
+according to `go mod why -m`; the inherited/tool graph still must meet the user's
+unaffected-dependency condition. The SDK did not introduce Brotli. Do not modify
+the already published v2.2.0 source or artifacts.
+
+## 2026-11-01: MCP release route
+
+Release MCP as part of the normal CLI, with explicit opt-in through `mcp serve`.
+Use the existing protected PR and main-push publisher rather than creating an
+additional tag or manual publisher. Keep the previously released CLI immutable.
