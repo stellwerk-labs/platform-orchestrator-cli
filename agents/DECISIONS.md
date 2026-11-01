@@ -63,3 +63,9 @@ pin v1.2.7 in this private branch. It is not an octl application package depende
 according to `go mod why -m`; the inherited/tool graph still must meet the user's
 unaffected-dependency condition. The SDK did not introduce Brotli. Do not modify
 the already published v2.2.0 source or artifacts.
+
+## 2026-11-01: MCP release route
+
+Release MCP as part of the normal CLI, with explicit opt-in through `mcp serve`.
+Use the existing protected PR and main-push publisher rather than creating an
+additional tag or manual publisher. Keep the previously released CLI immutable.

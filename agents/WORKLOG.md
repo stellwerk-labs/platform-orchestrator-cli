@@ -100,3 +100,12 @@ Root source and independent security review accepted the implementation. Source
 and built-binary govulncheck passed with no vulnerable imported packages or
 symbols; the module-only x/crypto/openpgp finding is not reachable. Documentation
 polish removed internal publication workflow language from product docs.
+
+## 2026-11-01: CLI 2.3.0 release preparation
+
+Finalize the MCP release notes and document stderr compatibility for startup
+errors. The implementation remains byte-identical to the qualified MCP commit:
+599 tests, race tests, pinned lint, release contracts, five target builds and
+actual stdio API checks passed. Use the normal main publisher after PR checks,
+then qualify the original public artifacts and distribution channels. No server
+or provider change belongs to this CLI release.
