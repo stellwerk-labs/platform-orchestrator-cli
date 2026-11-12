@@ -1674,9 +1674,16 @@ paths:
         - $ref: '#/components/parameters/envIdPathParam'
         - name: deleteRules
           in: query
-          description: Whether to delete all rules associated with the environment
+          description: Legacy fallback when canonical deletion policy is unknown. Persisted deletion policy takes precedence.
           schema:
             type: boolean
+          required: false
+        - name: expectedEnvUuid
+          in: query
+          description: When supplied, final deletion requires this exact Environment lifecycle UUID and known canonical deletion policy. A mismatch returns 409 before any deletion. Legacy callers omitting it remain unbound; unknown policy is accepted only by the active-Environment internal escape hatch.
+          schema:
+            type: string
+            format: uuid
           required: false
       responses:
         '204':
@@ -1744,12 +1751,13 @@ paths:
   /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployments/{deploymentId}/actions/acknowledge-outcome:
     post:
       operationId: acknowledgeDeploymentOutcome
-      summary: Acknowledge the unknown Runner outcome of a failed plugin-dispatched Deployment.
+      summary: Acknowledge an eligible retained Deployment with unknown Runner outcome.
       description: |
         Records, exactly once and attributed to the acting user, that an operator has confirmed the Runner attempt
-        of this failed plugin-dispatched Deployment of the Environment can no longer change it. The Data Plane
-        accepts only the current Environment head without Runner stop evidence after its Runner dispatch window
-        closed; the acknowledgement then lets the next Deployment of the Environment proceed. It does not change
+        of this eligible Deployment of the Environment can no longer change it. Eligibility includes retained
+        plugin-dispatched work and ordinary work retaining Runner capacity, including older non-head ownership,
+        only after the bounded Runner dispatch window has closed and without Runner stop evidence. The
+        acknowledgement releases that retained ownership and wakes Environment deletion. It does not change
         the Deployment's status or history. Requires the `deployment.outcome.acknowledge` permission on the
         Environment, with the organization as fallback. Organization tokens and the system user are rejected
         because the actor is the audit record. Repeating the identical request returns the stored acknowledgement
@@ -2133,7 +2141,11 @@ paths:
       operationId: deleteModuleProvider
       tags:
         - Providers
-      summary: Delete an existing module provider in the org if it is unused
+      summary: Request deletion of a module provider
+      description: |
+        Marks the Provider for deletion. Configuration remains available for
+        cleanup until state and admission checks prove it is unused.
+        Repeating this request preserves the original deletion timestamp.
       security:
         - userIdHeader: []
       parameters:
@@ -2141,8 +2153,12 @@ paths:
         - $ref: '#/components/parameters/providerTypePathParam'
         - $ref: '#/components/parameters/providerIdPathParam'
       responses:
+        '202':
+          description: Deletion requested; the Provider remains until safe cleanup completes.
+        '503':
+          description: Provider retirement has not been activated or its safety services are unavailable.
         '204':
-          description: Successful delete response.
+          description: Successful delete response from an older server.
         '404':
           $ref: '#/components/responses/404NotFound'
         '409':
@@ -5076,6 +5092,16 @@ components:
         - active
         - deleting
         - delete_failed
+    EnvironmentDeletionPolicy:
+      type: object
+      required: [force, delete_rules]
+      properties:
+        force:
+          type: boolean
+          description: Skip new ordinary Destroy work. Previously authorized work may still finish.
+        delete_rules:
+          type: boolean
+          description: Remove associated rules when this lifecycle is finally deleted.
     Environment:
       type: object
       description: An environment.
@@ -5089,6 +5115,11 @@ components:
         - env_type_id
         - status
       properties:
+        deletion_policy:
+          readOnly: true
+          description: Canonical accepted deletion options for this lifecycle. Omitted for legacy unknown policy, which requires an explicit DELETE before new Destroy admission. True flags cannot be undone by retries.
+          allOf:
+            - $ref: '#/components/schemas/EnvironmentDeletionPolicy'
         id:
           description: Environment identifier
           type: string
@@ -5555,6 +5586,13 @@ components:
         - source
         - created_at
       properties:
+        deletion_requested_at:
+          description: |
+            When deletion was requested. Present while waiting for managed state
+            and in-flight operations to release this Provider. Omitted while active.
+          type: string
+          format: date-time
+          readOnly: true
         org_id:
           description: The Organization ID
           type: string
@@ -6513,6 +6551,14 @@ components:
       description: A summary of the runner configuration.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Configured concurrent job limit. Absent means legacy unlimited admission.
+        supported_protocols:
+          type: array
+          items: {type: string}
+          description: Protocols explicitly declared by the configured Runner image.
         type:
           $ref: '#/components/schemas/RunnerType'
       required:
@@ -6521,6 +6567,18 @@ components:
       description: Runner configuration for a Kubernetes cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         job:
@@ -6535,6 +6593,18 @@ components:
       description: Runner configuration for a GKE cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         job:
@@ -6549,6 +6619,18 @@ components:
       description: Runner configuration for an EKS cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         job:
@@ -6563,6 +6645,18 @@ components:
       description: Runner configuration for a Kubernetes Agent.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         job:
@@ -6577,6 +6671,18 @@ components:
       description: Runner configuration for executing on AWS ECS Fargate.
       type: object
       properties:
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         auth:
@@ -6689,6 +6795,20 @@ components:
       description: Object to update an existing runner configuration for a Kubernetes cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          nullable: true
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          nullable: true
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
         job:
           $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
@@ -6701,6 +6821,20 @@ components:
       description: Object to update an existing runner configuration for a GKE cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          nullable: true
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          nullable: true
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
         job:
           $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
@@ -6713,6 +6847,20 @@ components:
       description: Object to update an existing runner configuration for an EKS cluster.
       type: object
       properties:
+        max_parallel_jobs:
+          nullable: true
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          nullable: true
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
         job:
           $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
@@ -6725,6 +6873,20 @@ components:
       description: Object to update an existing runner configuration for a Kubernetes Agent.
       type: object
       properties:
+        max_parallel_jobs:
+          nullable: true
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          nullable: true
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
         job:
           $ref: '#/components/schemas/K8sRunnerJobConfig'
         type:
@@ -6737,6 +6899,20 @@ components:
       description: Runner configuration for executing on AWS ECS Fargate.
       type: object
       properties:
+        max_parallel_jobs:
+          nullable: true
+          type: integer
+          minimum: 1
+          description: Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
+        supported_protocols:
+          nullable: true
+          type: array
+          uniqueItems: true
+          maxItems: 16
+          items:
+            type: string
+            maxLength: 128
+          description: Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
         type:
           $ref: '#/components/schemas/RunnerType'
         auth:

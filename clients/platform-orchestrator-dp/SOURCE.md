@@ -1,20 +1,23 @@
 # Orchestrator Data Plane API contract
 
-`spec.yaml` is a byte-identical copy of the selected source commit and the sole
-input of the generated client.
+`spec.yaml` is a byte-identical copy of the selected immutable public source
+commit and the sole input of the repository's pinned official generated client.
 
 - Repository: `stellwerk-labs/platform-orchestrator-dp`
-- Commit: `eee2fb607084ce5eef994726a2c3b88082e85397`
+- Commit: `79c303569075f9754eb0e767eca547ce62c65b13`
 - File: `openapi/spec.yaml`
-- Git blob: `8b5e32e7dad33fc9cd0e260fc1d085d05e54c353`
-- File SHA-256: `e2cb98ee7622a892a6cb20d67afeae70fc81e17cffd982757a227e3db24b38fa`
+- Git blob: `9944270842e357119ab951cda30a9eff661585e8`
+- File SHA-256: `f2ff4ac7567546113955089b564b649d22a4d4eb1caf7c7660497f4300a12d49`
 
-This contract adds revisioned Module Draft authoring, immutable scoped
-test snapshots and explicit test execution through the ordinary deployment
-engine, alongside exact Resource Type interface versions. Published Module
-Versions remain immutable. Saving a Draft does not execute it or reserve SemVer.
+This contract exposes conservative internal Provider usage proofs and typed
+installation maintenance controls while retaining Module Draft execution,
+observation and existing generated interfaces. The corresponding public SDK is
+DP shared/v3 v3.2.0.
 
-Before a client release, verify this immutable source through the unchanged
-public-source checks. A local Git comparison proves byte identity, not public
-availability. Regenerate through the repository official generators; do not
-hand-edit this snapshot or generated client.
+The exact source commit is publicly reachable. This source pin does not prove
+that a server artifact has been released or that a running installation supports
+the new behavior. Client publication requires the qualified coordinated server
+set and ordinary public-source checks without local specification overrides.
+Regenerate through the repository's official generators; do not hand-edit the
+snapshot or generated client. IAM's automation contract is unchanged in this
+train, so its existing public source pin is retained.

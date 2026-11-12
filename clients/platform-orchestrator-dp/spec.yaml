@@ -797,6 +797,46 @@ paths:
         404:
           $ref: "#/components/responses/404NotFound"
 
+  /internal/orgs/{orgId}/actions/check-provider-usage:
+    post:
+      summary: Report Provider bindings retained by managed deployment state.
+      description: |
+        Returns a complete, conservative organisation snapshot for Provider
+        retirement. Failed applies retain preceding bindings. Unknown history,
+        disabled admission protection or incomplete coverage returns 503.
+      operationId: internalCheckProviderUsage
+      tags:
+        - internal
+        - Providers
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [required_environment_uuids]
+              properties:
+                required_environment_uuids:
+                  type: array
+                  maxItems: 10000
+                  uniqueItems: true
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Complete managed-state Provider usage.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalProviderUsage'
+        '503':
+          description: A complete protected-state scan is unavailable.
+
   /internal/orgs/{orgId}/modules/{moduleId}/actions/check-usage:
     post:
       summary: Check whether a given module is in use in a resource graph.
@@ -1513,10 +1553,67 @@ components:
       pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
 
+    ObservationChange:
+      type: object
+      additionalProperties: false
+      required: [id, resource_type, actions]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[a-zA-Z0-9_-]+$'
+        resource_type:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-zA-Z][a-zA-Z0-9_]*$'
+        actions:
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            type: string
+            enum: [create, read, update, delete, no-op, forget]
+    ObservationResult:
+      type: object
+      additionalProperties: false
+      required: [schema_version, complete, tool, tool_version, observed_changes, proposed_changes, output_change_count]
+      properties:
+        schema_version:
+          type: string
+          enum: ['1']
+        complete:
+          type: boolean
+          enum: [true]
+        tool:
+          type: string
+          enum: [terraform, opentofu]
+        tool_version:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][a-zA-Z0-9.-]+)?$'
+        observed_changes:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: '#/components/schemas/ObservationChange'
+        proposed_changes:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: '#/components/schemas/ObservationChange'
+        output_change_count:
+          type: integer
+          minimum: 0
+          maximum: 1000000
     DeploymentResultsUpdateBody:
       description: The outcome of the runner execution.
       type: object
       properties:
+        observation_result:
+          $ref: "#/components/schemas/ObservationResult"
         outputs:
           type: string
           format: base64
@@ -2511,6 +2608,36 @@ components:
         - n
         - e
         - kid
+
+    InternalProviderUsage:
+      type: object
+      required: [protocol_version, org_id, environment_uuids, complete, busy, providers, environments_scanned]
+      properties:
+        org_id:
+          type: string
+        environment_uuids:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        protocol_version:
+          type: integer
+          enum: [1]
+        complete:
+          type: boolean
+        busy:
+          type: boolean
+          description: A state writer or unresolved execution outcome prevents finalisation.
+        providers:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+          description: Exact provider_type.id values still retained by managed state.
+        environments_scanned:
+          type: integer
+          minimum: 0
 
     InternalModuleUsage:
       type: object
