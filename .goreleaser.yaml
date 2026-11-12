@@ -22,7 +22,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w
+      - -w
       - -X github.com/stellwerk-labs/platform-orchestrator-cli/internal.ModuleVersion={{ .Version }}
     env:
       - CGO_ENABLED=0
@@ -72,7 +72,7 @@ sboms:
     cmd: qualify-release-content.sh
     args: []
     env:
-      - GOTOOLCHAIN=go1.26.10
+      - GOTOOLCHAIN=go1.26.11
       - GOWORK=off
       - GOENV=off
       - QUALIFY_SOURCE_SHA={{ .FullCommit }}

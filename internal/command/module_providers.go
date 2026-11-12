@@ -73,7 +73,8 @@ var DeleteModuleProvider = &cobra.Command{
 	Use:     moduleProviderUse,
 	Aliases: ObjectTypeProviderAliasesSingular,
 	Args:    cobra.ExactArgs(2),
-	Short:   "Delete a module provider",
+	Short:   "Request deletion of a module provider",
+	Long:    "Mark a Provider for deletion. Its configuration stays available until managed resources and in-flight operations release it.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
 		cpc := MustCpClient(cmd.Context())
@@ -88,6 +89,9 @@ var DeleteModuleProvider = &cobra.Command{
 			return errors.Errorf("module provider '%s' '%s' not found in org '%s'", args[0], args[1], orgId)
 		} else if res.StatusCode() == http.StatusConflict {
 			return errors.Errorf("module provider '%s' '%s' cannot be deleted: %s", args[0], args[1], res.JSON409.Message)
+		} else if res.StatusCode() == http.StatusAccepted {
+			changedMessageF("Deletion requested for module provider %s.%s in organization %s. Configuration is retained until cleanup completes.", args[0], args[1], orgId)
+			return nil
 		} else if res.StatusCode() != http.StatusNoContent {
 			return errors.Errorf("unexpected status code %d when deleting module provider: %s", res.StatusCode(), string(res.Body))
 		}

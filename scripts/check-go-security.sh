@@ -21,6 +21,12 @@ case "${1:-source}" in
   binary)
     [ "$#" -eq 2 ] && [ -f "$2" ] || exit 2
     case "$2" in /*) binary="$2" ;; *) binary="$PWD/$2" ;; esac
+    unset GOOS GOARCH
+    symbols="$(go tool nm "$binary")"
+    if ! printf '%s\n' "$symbols" | grep '[[:space:]]main\.main$' >/dev/null; then
+      printf 'binary is missing Go function symbols\n' >&2
+      exit 1
+    fi
     # Keep text mode: the scanner's JSON mode reports findings with exit zero.
     go run "$checker" -mode=binary "$binary"
     ;;

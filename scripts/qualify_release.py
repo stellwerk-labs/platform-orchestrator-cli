@@ -181,7 +181,7 @@ def inspect_archive(archive, output, own, expected_notices=None):
     info = json.loads(checked(["go", "version", "-m", "-json", str(binaries[0])]))
     settings = {item["Key"]: item["Value"] for item in info.get("Settings", [])}
     target = settings.get("GOOS", "") + "/" + settings.get("GOARCH", "")
-    if (info.get("GoVersion") != "go1.26.10" or info.get("Path") != own or target not in graphs
+    if (info.get("GoVersion") != "go1.26.11" or info.get("Path") != own or target not in graphs
             or settings.get("-trimpath") != "true" or settings.get("CGO_ENABLED") != "0"):
         raise ValueError("archive binary has wrong source/toolchain/target/flags")
     graph = graphs[target]
@@ -192,6 +192,11 @@ def inspect_archive(archive, output, own, expected_notices=None):
         dependencies[dependency["Path"]] = dependency["Version"]
     if dependencies != graph:
         raise ValueError("compiled binary dependencies differ from collected target graph")
+    try:
+        subprocess.run(["sh", str(ROOT / "scripts/check-go-security.sh"), "binary", str(binaries[0])],
+                       check=True, timeout=120)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        raise ValueError("archive binary security qualification failed") from error
     return {"target": target, "filesystem": filesystem, "binary": binaries[0],
             "binarySHA256": sha(binaries[0]), "dependencies": dependencies, "graphs": graphs}
 
@@ -248,7 +253,7 @@ def generate_spdx(filesystem, output, archive_hash, producer, source_kind="dir",
              "-o", "spdx-json=/output/" + output.name])
     document = json.loads(output.read_text())
     if (document.get("spdxVersion") != "SPDX-2.3" or document.get("SPDXID") != "SPDXRef-DOCUMENT"
-            or not any(package.get("name") == "stdlib" and package.get("versionInfo") == "go1.26.10"
+            or not any(package.get("name") == "stdlib" and package.get("versionInfo") == "go1.26.11"
                        for package in document.get("packages", []))):
         raise ValueError("SPDX document does not describe the inspected Go binary")
     packages = {(package.get("name"), package.get("versionInfo")) for package in document.get("packages", [])}
@@ -279,7 +284,7 @@ def producer_statement(archive, spdx, inspection, producer):
                      "digest": {"gitCommit": producer["workflowSHA"]}},
                     {"uri": "oci://" + SYFT, "digest": {"sha256": SYFT.rsplit(":", 1)[1]}},
                 ],
-                "internalParameters": {"target": inspection["target"], "goVersion": "go1.26.10",
+                "internalParameters": {"target": inspection["target"], "goVersion": "go1.26.11",
                                        "goreleaserVersion": "2.18.1", "goLicensesVersion": "v2.0.1",
                                        "gitleaksVersion": "8.30.1", "binarySHA256": inspection["binarySHA256"],
                                        "compiledDependencies": inspection["dependencies"]},
