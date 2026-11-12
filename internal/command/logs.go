@@ -30,6 +30,8 @@ prints it. octl never takes the key itself as an argument: arguments end up in s
 The input holds exactly one age secret key. Blank lines and lines starting with '#' are ignored, so a key file written
 by 'age-keygen -o' works as is. Without --key-file the logs are returned encrypted.
 
+Decrypted logs are formatted and syntax highlighted in a terminal. Pipes and --raw keep the original bytes. Use --pretty to format redirected output. NO_COLOR and TERM=dumb disable colors, retaining readable formatting.
+
 $ octl logs 01234567-89ab-cdef-0123-456789abcdef --key-file runner-logs.key
 $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --key-file -
 `,
@@ -68,7 +70,11 @@ $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --ke
 			}
 			return errors.Errorf("unexpected status code %d when getting deployment logs: %s", outRes.StatusCode(), msg)
 		} else {
-			_, err = cmd.OutOrStdout().Write(outRes.Body)
+			body := outRes.Body
+			if params.DecryptKey != nil {
+				body = runnerLogsBody(cmd, body)
+			}
+			_, err = cmd.OutOrStdout().Write(body)
 			return err
 		}
 	},
@@ -99,6 +105,7 @@ func readLogsKey(stdin io.Reader, path string) (string, error) {
 }
 
 func init() {
+	setupRunnerLogsFlags(LogsCmd)
 	LogsCmd.Flags().String(logsCmdKeyFileFlag, "", "Read the secret key that decrypts the logs from this file, or from standard input with '-'. 'octl deploy --print-logs-key' prints the key.")
 	_ = LogsCmd.MarkFlagFilename(logsCmdKeyFileFlag)
 	oldHelp := LogsCmd.HelpFunc()

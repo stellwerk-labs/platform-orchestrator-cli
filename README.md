@@ -82,6 +82,13 @@ octl logs <deployment-id> --key-file runner-logs.key
 printenv RUNNER_LOGS_KEY | octl logs <deployment-id> --key-file -
 ```
 
+In a terminal, decrypted Runner and Terraform/OpenTofu logs show readable
+messages, compact metadata and highlighted JSON details. Pipes return the
+original bytes by default. Use `--pretty` for readable redirected output or
+`--raw` to retain original content. `NO_COLOR` and `TERM=dumb` suppress colors.
+The same flags apply to `octl rollout logs`; an explicit rollout `--out` keeps
+its existing raw-output behavior. Encrypted log responses are never formatted.
+
 ## Install
 
 Install directly into your Go bin (your `$PATH` should include `$GOPATH/bin`):

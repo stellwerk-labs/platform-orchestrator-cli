@@ -23,6 +23,7 @@ import (
 
 const (
 	logsTestCmd        = "logs"
+	prettyLogsFlag     = "--pretty"
 	logsTestOrg        = "logs-org"
 	logsTestDeployment = "00374e43-96b5-416f-977b-514b9e267f89"
 	logsTestText       = `Deployment succeeded after 1s: it was successful!`
@@ -184,4 +185,36 @@ func TestLogsNeverTakesTheKeyAsAnArgument(t *testing.T) {
 	require.EqualError(t, err, "unknown flag: --key")
 	assert.Empty(t, fixture.requestKeys())
 	assert.Nil(t, LogsCmd.Flags().Lookup("key"))
+}
+
+func TestLogsPresentationPreservesMachineAndEncryptedBytes(t *testing.T) {
+	body := "\n" + `{"time":"2026-11-12T20:00:00Z","level":"INFO","msg":"readable message","cost":{"monthly":42}}` + "\npartial\xff"
+	for _, tc := range []struct {
+		name      string
+		decrypt   bool
+		flags     []string
+		formatted bool
+	}{
+		{name: "pipe", decrypt: true},
+		{name: "pretty", decrypt: true, flags: []string{prettyLogsFlag}, formatted: true},
+		{name: "raw", decrypt: true, flags: []string{"--raw"}},
+		{name: "encrypted pretty", flags: []string{prettyLogsFlag}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, ctx := newLogsServer(t, http.StatusOK, body)
+			flags := append([]string{}, tc.flags...)
+			if tc.decrypt {
+				flags = append(flags, keyFileFlag, "-")
+			}
+			stdout, _, err := runLogs(ctx, t, newLogsKey(t), flags...)
+			require.NoError(t, err)
+			if tc.formatted {
+				assert.Contains(t, stdout, "INFO\nreadable message\n")
+				assert.Contains(t, stdout, `"monthly": 42`)
+				assert.Contains(t, stdout, `partial\xff`)
+			} else {
+				assert.Equal(t, body, stdout)
+			}
+		})
+	}
 }
