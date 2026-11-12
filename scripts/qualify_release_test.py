@@ -84,6 +84,17 @@ class QualificationTest(unittest.TestCase):
                 self.assertEqual(inspection["binarySHA256"], release.sha(self.binary))
                 shutil.rmtree(self.root / "payload")
 
+    def test_stripped_archive_fails_before_producer_evidence(self):
+        binary = self.root / "stripped-client"
+        source = type(self).root / "source"
+        environment = {**os.environ, "GOTOOLCHAIN": "go1.26.11", "GOWORK": "off", "GOENV": "off",
+                       "GOOS": "linux", "GOARCH": "amd64", "CGO_ENABLED": "0", "GOFLAGS": "", "GOEXPERIMENT": ""}
+        subprocess.run(["go", "build", "-trimpath", "-ldflags=-s -w", "-o", str(binary), "."],
+                       cwd=source, env=environment, check=True, capture_output=True, timeout=120)
+        self.binary = binary
+        with self.assertRaisesRegex(ValueError, "archive binary security qualification failed"):
+            release.inspect_archive(self.archive(), self.root / "extract", self.module)
+
     def test_notice_manifest_covers_nested_same_named_file(self):
         self.files["dependency/notices.sha256.json"] = b"Nested required bytes"
         bundle = self.root / "licenses"

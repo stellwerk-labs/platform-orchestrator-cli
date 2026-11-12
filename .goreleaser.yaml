@@ -22,7 +22,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w
+      - -w
       - -X github.com/stellwerk-labs/platform-orchestrator-cli/internal.ModuleVersion={{ .Version }}
     env:
       - CGO_ENABLED=0

@@ -192,6 +192,11 @@ def inspect_archive(archive, output, own, expected_notices=None):
         dependencies[dependency["Path"]] = dependency["Version"]
     if dependencies != graph:
         raise ValueError("compiled binary dependencies differ from collected target graph")
+    try:
+        subprocess.run(["sh", str(ROOT / "scripts/check-go-security.sh"), "binary", str(binaries[0])],
+                       check=True, timeout=120)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        raise ValueError("archive binary security qualification failed") from error
     return {"target": target, "filesystem": filesystem, "binary": binaries[0],
             "binarySHA256": sha(binaries[0]), "dependencies": dependencies, "graphs": graphs}
 
