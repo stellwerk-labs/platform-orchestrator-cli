@@ -41,3 +41,8 @@ represent the real contract, including `type`, `properties` and other keywords.
 ## 2026-11-13: Managed deployment logs
 
 DP client generation is `go generate ./clients/platform-orchestrator-dp`, using pinned oapi-codegen and mockgen. An unreleased coordinated API snapshot must be marked candidate provenance until its immutable public commit is available.
+
+
+## 2026-11-13: API provenance after SDK publication
+
+A public nested SDK tag makes its immutable parent-source API contract reachable, but does not prove a released server. Run the existing public check-api-specs gate and official generator rather than retaining local-candidate provenance or editing generated models. The normal generator also refreshes ignored mocks needed by command tests.
