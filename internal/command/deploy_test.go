@@ -67,6 +67,7 @@ func TestNominal_deploy_fresh(t *testing.T) {
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId: testProjectId,
 			EnvId:     testEnvId,
@@ -149,7 +150,7 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating deploy deployment...
 Deployment %[2]s created.
-Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
+Read runner logs after completion with 'octl logs %[2]s'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 Retrieved outputs, writing to destination '%[5]s'
@@ -197,6 +198,7 @@ func TestNominal_deploy_fresh_with_deprecated_variables(t *testing.T) {
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId: testProjectId,
 			EnvId:     testEnvId,
@@ -279,7 +281,7 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating deploy deployment...
 Deployment %[2]s created.
-Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
+Read runner logs after completion with 'octl logs %[2]s'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 Retrieved outputs, writing to destination '%[5]s'
@@ -419,8 +421,10 @@ func TestNominal_deploy_dry_plan(t *testing.T) {
 		assert.NotEmpty(t, params.IdempotencyKey)
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
 		bod.EncryptedOutputsRecipient = nil
-		assert.NotEmpty(t, bod.EncryptedLogsRecipient)
+		assert.Nil(t, bod.EncryptedLogsRecipient)
+		assert.Nil(t, bod.ManagedLogs)
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId:      testProjectId,
 			EnvId:          testEnvId,
@@ -503,9 +507,11 @@ func TestNominal_merge_deployment(t *testing.T) {
 	dpc.EXPECT().CreateDeploymentWithResponse(gomock.Any(), orgId, gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, orgId string, params *dp.CreateDeploymentParams, bod dp.DeploymentCreateBody, _ ...dp.RequestEditorFn) (*dp.CreateDeploymentResponse, error) {
 		assert.NotEmpty(t, params.IdempotencyKey)
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
-		assert.NotEmpty(t, bod.EncryptedLogsRecipient)
+		assert.Nil(t, bod.EncryptedLogsRecipient)
+		assert.Nil(t, bod.ManagedLogs)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId: testProjectId,
 			EnvId:     testEnvId,
@@ -600,6 +606,7 @@ func TestNominal_deploy_with_show_logs(t *testing.T) {
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId:      testProjectId,
 			EnvId:          testEnvId,
@@ -631,7 +638,7 @@ func TestNominal_deploy_with_show_logs(t *testing.T) {
 	logsText := "Deployment logs content"
 
 	dpc.EXPECT().GetDeploymentLogsWithResponse(gomock.Any(), orgId, newDepId, &dp.GetDeploymentLogsParams{
-		DecryptKey: ref.Ref(lk.String()),
+		Decrypt: ref.Ref(true),
 	}).Return(&dp.GetDeploymentLogsResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 		Body:         []byte(logsText),
@@ -700,6 +707,7 @@ func TestNominal_deploy_with_show_logs_error(t *testing.T) {
 		assert.NotEmpty(t, bod.EncryptedOutputsRecipient)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId:      testProjectId,
 			EnvId:          testEnvId,
@@ -732,7 +740,7 @@ func TestNominal_deploy_with_show_logs_error(t *testing.T) {
 
 	// Test the case where the logs API call fails
 	dpc.EXPECT().GetDeploymentLogsWithResponse(gomock.Any(), orgId, newDepId, &dp.GetDeploymentLogsParams{
-		DecryptKey: ref.Ref(lk.String()),
+		Decrypt: ref.Ref(true),
 	}).Return(&dp.GetDeploymentLogsResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusBadRequest},
 		Body:         []byte(errorMessage),

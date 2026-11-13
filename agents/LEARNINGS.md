@@ -37,3 +37,7 @@ Use the CI-pinned lint version; newer local lint versions produce different gate
 Resource Type `output_schema` is JSON Schema, so output field counts must inspect
 its `properties` object, not count top-level schema keywords. Wire fixtures should
 represent the real contract, including `type`, `properties` and other keywords.
+
+## 2026-11-13: Managed deployment logs
+
+DP client generation is `go generate ./clients/platform-orchestrator-dp`, using pinned oapi-codegen and mockgen. An unreleased coordinated API snapshot must be marked candidate provenance until its immutable public commit is available.

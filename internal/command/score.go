@@ -2,14 +2,12 @@ package command
 
 import (
 	"fmt"
-	"log/slog"
 	"maps"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
-	"filippo.io/age"
 	"github.com/pkg/errors"
 	"github.com/score-spec/score-go/framework"
 	"github.com/score-spec/score-go/loader"
@@ -248,18 +246,11 @@ but never removed. Use other commands to remove workloads from the deployment ma
 		}
 		queue.apply(&body)
 
-		var logsAgeKey *age.X25519Identity
+		logsAgeKey, err := configureDeploymentLogs(cmd, &body)
+		if err != nil {
+			return err
+		}
 		if !body.IsDryRun {
-			if v, _ := cmd.Flags().GetBool(deployCmdSkipLogsFlag); !v {
-				if e, ok := cmd.Context().Value("logsAgeKey").(*age.X25519Identity); ok {
-					logsAgeKey = e
-				} else if logsAgeKey, err = age.GenerateX25519Identity(); err != nil {
-					return errors.Wrap(err, "failed to generate age key for logs encryption")
-				}
-				body.EncryptedLogsRecipient = ref.Ref(logsAgeKey.Recipient().String())
-				slog.Debug("generated logs encryption identity", slog.String("public recipient", logsAgeKey.Recipient().String()))
-			}
-
 			if v, _ := cmd.Flags().GetString(deployCmdRunnerLogsLevelFlag); !slices.Contains(validRunnerLogsLevels, v) {
 				return errors.Errorf("unsupported value %s for %s flag", v, deployCmdRunnerLogsLevelFlag)
 			} else {

@@ -69,3 +69,7 @@ the already published v2.2.0 source or artifacts.
 Release MCP as part of the normal CLI, with explicit opt-in through `mcp serve`.
 Use the existing protected PR and main-push publisher rather than creating an
 additional tag or manual publisher. Keep the previously released CLI immutable.
+
+## 2026-11-13: Managed deployment logs
+
+Managed deployment logs default to server-owned encryption. `--print-logs-key` explicitly selects caller-owned encryption; context fixture keys never implicitly select it. `octl logs` requests authenticated decryption, while `--encrypted` preserves ciphertext downloads. No automatic fallback changes key ownership.
