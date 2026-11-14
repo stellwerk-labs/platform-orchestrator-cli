@@ -109,3 +109,15 @@ errors. The implementation remains byte-identical to the qualified MCP commit:
 actual stdio API checks passed. Use the normal main publisher after PR checks,
 then qualify the original public artifacts and distribution channels. No server
 or provider change belongs to this CLI release.
+
+
+## 2026-11-13: CLI 2.5.0 public release preparation
+
+Consolidated managed encryption defaults, legacy key flags, permission rollout, terminal formatting and TLS policy in 2.5.0 notes; updated README and removed superseded draft. Updated CP public schema/client and CP/DP provenance, plus identical IAM schema's public verification revision. See DECISIONS.md and LEARNINGS.md. Existing generate and public API source checks, focused command/printer/module/TLS tests, root compile, 27 candidate/stable contracts and pinned golangci-lint 2.11.4 passed. No dependency or workflow change. Hosted release qualification remains pending.
+
+## 2026-11-13: Qualified IAM successor in release guidance
+
+Updated the coordinated upgrade prerequisite from IAM2.8.0 to2.8.1 after the
+unsigned2.8.0 source producer was cancelled before image publication. This is a
+release-note correction only; API snapshots, generated clients and behavior are
+unchanged. The existing2.5.0 source qualification remains recorded separately.

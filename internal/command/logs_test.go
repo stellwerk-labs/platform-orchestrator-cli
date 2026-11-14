@@ -23,6 +23,7 @@ import (
 
 const (
 	logsTestCmd        = "logs"
+	prettyLogsFlag     = "--pretty"
 	logsTestOrg        = "logs-org"
 	logsTestDeployment = "00374e43-96b5-416f-977b-514b9e267f89"
 	logsTestText       = `Deployment succeeded after 1s: it was successful!`
@@ -31,10 +32,11 @@ const (
 // logsServer is a Data Plane that answers the runner logs route of one
 // deployment and records the DecryptKey header of every request.
 type logsServer struct {
-	mu     sync.Mutex
-	status int
-	body   any
-	keys   []string
+	mu      sync.Mutex
+	status  int
+	body    any
+	keys    []string
+	decrypt []string
 }
 
 func newLogsServer(t *testing.T, status int, body any) (*logsServer, context.Context) {
@@ -45,6 +47,7 @@ func newLogsServer(t *testing.T, status int, body any) (*logsServer, context.Con
 		defer fixture.mu.Unlock()
 		assert.Equal(t, "GET /orgs/"+logsTestOrg+"/deployments/"+logsTestDeployment+"/actions/get-logs", r.Method+" "+r.URL.Path)
 		fixture.keys = append(fixture.keys, r.Header.Get("DecryptKey"))
+		fixture.decrypt = append(fixture.decrypt, r.URL.Query().Get("decrypt"))
 		if text, ok := fixture.body.(string); ok {
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(fixture.status)
@@ -105,8 +108,9 @@ func TestLogs(t *testing.T) {
 func TestLogs_without_decryption(t *testing.T) {
 	fixture, ctx := newLogsServer(t, http.StatusOK, `<ENCRYPTED_LOGS>`)
 
-	stdout, _, err := runLogs(ctx, t, "")
+	stdout, _, err := runLogs(ctx, t, "", "--encrypted")
 	require.NoError(t, err)
+	assert.Equal(t, []string{""}, fixture.decrypt)
 	assert.Equal(t, `<ENCRYPTED_LOGS>`, stdout)
 	assert.Equal(t, []string{""}, fixture.requestKeys(), "no DecryptKey header without --key-file")
 }
@@ -184,4 +188,54 @@ func TestLogsNeverTakesTheKeyAsAnArgument(t *testing.T) {
 	require.EqualError(t, err, "unknown flag: --key")
 	assert.Empty(t, fixture.requestKeys())
 	assert.Nil(t, LogsCmd.Flags().Lookup("key"))
+}
+
+func TestLogsPresentationPreservesMachineAndEncryptedBytes(t *testing.T) {
+	body := "\n" + `{"time":"2026-11-12T20:00:00Z","level":"INFO","msg":"readable message","cost":{"monthly":42}}` + "\npartial\xff"
+	for _, tc := range []struct {
+		name      string
+		decrypt   bool
+		flags     []string
+		formatted bool
+	}{
+		{name: "pipe", decrypt: true},
+		{name: "pretty", decrypt: true, flags: []string{prettyLogsFlag}, formatted: true},
+		{name: "raw", decrypt: true, flags: []string{"--raw"}},
+		{name: "encrypted pretty", flags: []string{prettyLogsFlag}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, ctx := newLogsServer(t, http.StatusOK, body)
+			flags := append([]string{}, tc.flags...)
+			if tc.decrypt {
+				flags = append(flags, keyFileFlag, "-")
+			} else {
+				flags = append(flags, "--encrypted")
+			}
+			stdout, _, err := runLogs(ctx, t, newLogsKey(t), flags...)
+			require.NoError(t, err)
+			if tc.formatted {
+				assert.Contains(t, stdout, "INFO\nreadable message\n")
+				assert.Contains(t, stdout, `"monthly": 42`)
+				assert.Contains(t, stdout, `partial\xff`)
+			} else {
+				assert.Equal(t, body, stdout)
+			}
+		})
+	}
+}
+
+func TestLogsDecryptsManagedLogsByDefault(t *testing.T) {
+	fixture, ctx := newLogsServer(t, http.StatusOK, logsTestText)
+	stdout, _, err := runLogs(ctx, t, "")
+	require.NoError(t, err)
+	assert.Equal(t, logsTestText, stdout)
+	assert.Equal(t, []string{"true"}, fixture.decrypt)
+	assert.Equal(t, []string{""}, fixture.requestKeys())
+}
+
+func TestLogsRejectsEncryptedWithCallerKey(t *testing.T) {
+	fixture, ctx := newLogsServer(t, http.StatusOK, logsTestText)
+	_, _, err := runLogs(ctx, t, "", "--encrypted", keyFileFlag, "-")
+	require.ErrorContains(t, err, "none of the others can be")
+	assert.Empty(t, fixture.requestKeys())
 }

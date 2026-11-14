@@ -2635,13 +2635,19 @@ type ModuleCatalogueCreateBody struct {
 
 // ModuleCatalogueEntry defines model for ModuleCatalogueEntry.
 type ModuleCatalogueEntry struct {
-	ArchiveReason              *string               `json:"archive_reason,omitempty"`
-	ArchivedAt                 *time.Time            `json:"archived_at,omitempty"`
-	ArchivedBy                 *openapi_types.UUID   `json:"archived_by,omitempty"`
-	CreatedAt                  time.Time             `json:"created_at"`
-	CurrentDefaultVersionUuid  *openapi_types.UUID   `json:"current_default_version_uuid,omitempty"`
-	Description                string                `json:"description"`
-	DisplayName                string                `json:"display_name"`
+	ArchiveReason             *string             `json:"archive_reason,omitempty"`
+	ArchivedAt                *time.Time          `json:"archived_at,omitempty"`
+	ArchivedBy                *openapi_types.UUID `json:"archived_by,omitempty"`
+	CreatedAt                 time.Time           `json:"created_at"`
+	CurrentDefaultVersionUuid *openapi_types.UUID `json:"current_default_version_uuid,omitempty"`
+
+	// DefaultVerified Whether the current Default version is verified. False when there is no Default. Only returned by catalogue listing with module.version.read; absent means unknown. Current verification status only supports unverified, so this is currently always false.
+	DefaultVerified *bool  `json:"default_verified,omitempty"`
+	Description     string `json:"description"`
+	DisplayName     string `json:"display_name"`
+
+	// HasProposed Whether any version is Proposed. Only returned by catalogue listing with module.version.read; absent means unknown.
+	HasProposed                *bool                 `json:"has_proposed,omitempty"`
 	ManagedDefaultGeneration   int64                 `json:"managed_default_generation"`
 	OrgId                      string                `json:"org_id"`
 	PreviousDefaultVersionUuid *openapi_types.UUID   `json:"previous_default_version_uuid,omitempty"`
@@ -7607,7 +7613,7 @@ type ClientInterface interface {
 
 	// GetPluginDeploymentMaterial Retrieve plugin-owned Deployment material using the caller's independent Orchestrator permission.
 	//
-	// Requires current ordinary deployment_read authorization. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
+	// Requires current deployment_logs_read authorization for plaintext logs and deployment_read authorization for outputs. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
 	//
 	// Corresponds with GET /orgs/{orgId}/plugins/{pluginId}/projects/{projectUuid}/envs/{environmentUuid}/deployments/{deploymentId}/{materialKind} (the `GetPluginDeploymentMaterial` operationId).
 	GetPluginDeploymentMaterial(ctx context.Context, orgId OrgIdPathParam, pluginId string, projectUuid openapi_types.UUID, environmentUuid openapi_types.UUID, deploymentId openapi_types.UUID, materialKind GetPluginDeploymentMaterialParamsMaterialKind, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -10594,7 +10600,7 @@ func (c *Client) ReadPluginResourceEvents(ctx context.Context, orgId OrgIdPathPa
 
 // GetPluginDeploymentMaterial Retrieve plugin-owned Deployment material using the caller's independent Orchestrator permission.
 //
-// Requires current ordinary deployment_read authorization. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
+// Requires current deployment_logs_read authorization for plaintext logs and deployment_read authorization for outputs. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
 //
 // Corresponds with GET /orgs/{orgId}/plugins/{pluginId}/projects/{projectUuid}/envs/{environmentUuid}/deployments/{deploymentId}/{materialKind} (the `GetPluginDeploymentMaterial` operationId).
 func (c *Client) GetPluginDeploymentMaterial(ctx context.Context, orgId OrgIdPathParam, pluginId string, projectUuid openapi_types.UUID, environmentUuid openapi_types.UUID, deploymentId openapi_types.UUID, materialKind GetPluginDeploymentMaterialParamsMaterialKind, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -21814,7 +21820,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetPluginDeploymentMaterialWithResponse Retrieve plugin-owned Deployment material using the caller's independent Orchestrator permission.
 	//
-	// Requires current ordinary deployment_read authorization. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
+	// Requires current deployment_logs_read authorization for plaintext logs and deployment_read authorization for outputs. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -33181,7 +33187,7 @@ func (c *ClientWithResponses) ReadPluginResourceEventsWithResponse(ctx context.C
 
 // GetPluginDeploymentMaterialWithResponse Retrieve plugin-owned Deployment material using the caller's independent Orchestrator permission.
 //
-// Requires current ordinary deployment_read authorization. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
+// Requires current deployment_logs_read authorization for plaintext logs and deployment_read authorization for outputs. Plugin capabilities and operation grants never authorize this endpoint. Core signs an exact immutable-scope Data Plane request; DP decrypts retained material without exposing a private key. Plugin service and admission-checker principals are explicitly denied. Historical retrieval does not depend on a live Environment or the plugin's entitlement. No material is sent through the plugin backend or invocation envelope.
 //
 // Returns a wrapper object for the known response body format(s).
 //

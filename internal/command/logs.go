@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	logsCmdKeyFileFlag = "key-file"
+	logsCmdKeyFileFlag   = "key-file"
+	logsCmdEncryptedFlag = "encrypted"
 )
 
 var LogsCmd = &cobra.Command{
@@ -23,12 +24,14 @@ var LogsCmd = &cobra.Command{
 	Short: "Get logs for a deployment",
 	Long: `Get logs for a deployment.
 
-Runner logs are encrypted. To read them decrypted, pass the age secret key that decrypts them with --key-file, from a
-file or, with '-', from standard input. The key is created during the deployment; 'octl deploy --print-logs-key'
-prints it. octl never takes the key itself as an argument: arguments end up in shell history and the process list.
+Runner logs are decrypted automatically with your authenticated account's deployment log permission.
+Use --encrypted to download the encrypted bytes instead.
 
-The input holds exactly one age secret key. Blank lines and lines starting with '#' are ignored, so a key file written
-by 'age-keygen -o' works as is. Without --key-file the logs are returned encrypted.
+For deployments created with a caller-owned key, pass --key-file from a file or, with '-', from standard input.
+'octl deploy --print-logs-key' opts into that mode and prints its secret key. Arguments never accept secret keys.
+The input holds exactly one age secret key. Blank lines and lines starting with '#' are ignored.
+
+Decrypted logs are formatted and syntax highlighted in a terminal. Pipes and --raw keep the original bytes. Use --pretty to format redirected output. NO_COLOR and TERM=dumb disable colors, retaining readable formatting.
 
 $ octl logs 01234567-89ab-cdef-0123-456789abcdef --key-file runner-logs.key
 $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --key-file -
@@ -47,6 +50,9 @@ $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --ke
 				return err
 			}
 			params.DecryptKey = &secretKey
+		} else if encrypted, _ := cmd.Flags().GetBool(logsCmdEncryptedFlag); !encrypted {
+			decrypt := true
+			params.Decrypt = &decrypt
 		}
 
 		orgId, err := ShouldOrg(cmd.Context())
@@ -68,7 +74,11 @@ $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --ke
 			}
 			return errors.Errorf("unexpected status code %d when getting deployment logs: %s", outRes.StatusCode(), msg)
 		} else {
-			_, err = cmd.OutOrStdout().Write(outRes.Body)
+			body := outRes.Body
+			if params.DecryptKey != nil || params.Decrypt != nil {
+				body = runnerLogsBody(cmd, body)
+			}
+			_, err = cmd.OutOrStdout().Write(body)
 			return err
 		}
 	},
@@ -99,7 +109,10 @@ func readLogsKey(stdin io.Reader, path string) (string, error) {
 }
 
 func init() {
+	setupRunnerLogsFlags(LogsCmd)
 	LogsCmd.Flags().String(logsCmdKeyFileFlag, "", "Read the secret key that decrypts the logs from this file, or from standard input with '-'. 'octl deploy --print-logs-key' prints the key.")
+	LogsCmd.Flags().Bool(logsCmdEncryptedFlag, false, "Download encrypted logs without decryption.")
+	LogsCmd.MarkFlagsMutuallyExclusive(logsCmdKeyFileFlag, logsCmdEncryptedFlag)
 	_ = LogsCmd.MarkFlagFilename(logsCmdKeyFileFlag)
 	oldHelp := LogsCmd.HelpFunc()
 	LogsCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {

@@ -701,6 +701,9 @@ type DeploymentCreateBody struct {
 	// IsDryRun Whether to just validate the request and not persist or execute it.
 	IsDryRun bool `json:"is_dry_run,omitempty"`
 
+	// ManagedLogs Capture encrypted runner logs with a server-managed key. Set true for automatic plaintext retrieval with deployment_logs_read; cannot be combined with encrypted_logs_recipient. Omitted or false preserves legacy skip-logs behavior.
+	ManagedLogs *bool `json:"managed_logs,omitempty"`
+
 	// Manifest The manifest associated with a deployment
 	Manifest *DeploymentManifest `json:"manifest,omitempty"`
 
@@ -1794,6 +1797,9 @@ type CalculateDeploymentDiffParams struct {
 
 // GetDeploymentLogsParams defines parameters for GetDeploymentLogs.
 type GetDeploymentLogsParams struct {
+	// Decrypt Return plaintext using the server-managed log identity. Requires deployment_logs_read on the deployment Environment (or organization). Cannot be combined with DecryptKey; returns 409 when no managed identity is retained.
+	Decrypt *bool `form:"decrypt,omitempty" json:"decrypt,omitempty"`
+
 	// DecryptKey The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
 	DecryptKey *string `json:"DecryptKey,omitempty"`
 }
@@ -2159,8 +2165,8 @@ type ClientInterface interface {
 
 	// GetDeploymentLogs Get the logs produced by the runner execution during the deployment.
 	//
-	// These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
-	// decryption key query parameter.
+	// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+	// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 	//
 	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs (the `GetDeploymentLogs` operationId).
 	GetDeploymentLogs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2775,8 +2781,8 @@ func (c *Client) CalculateDeploymentDiff(ctx context.Context, orgId OrgIdPathPar
 
 // GetDeploymentLogs Get the logs produced by the runner execution during the deployment.
 //
-// These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
-// decryption key query parameter.
+// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 //
 // Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs (the `GetDeploymentLogs` operationId).
 func (c *Client) GetDeploymentLogs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -4241,6 +4247,33 @@ func NewGetDeploymentLogsRequest(server string, orgId OrgIdPathParam, deployment
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Decrypt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "decrypt", *params.Decrypt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -5708,8 +5741,8 @@ type ClientWithResponsesInterface interface {
 
 	// GetDeploymentLogsWithResponse Get the logs produced by the runner execution during the deployment.
 	//
-	// These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
-	// decryption key query parameter.
+	// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+	// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -6780,7 +6813,9 @@ func (r CalculateDeploymentDiffResponse) ContentType() string {
 
 // GetDeploymentLogsResponse200Headers the declared response headers of an HTTP 200 response for GetDeploymentLogs
 type GetDeploymentLogsResponse200Headers struct {
-	ContentDisposition *string
+	CacheControl        *string
+	ContentDisposition  *string
+	XContentTypeOptions *string
 }
 
 type GetDeploymentLogsResponse struct {
@@ -6790,6 +6825,8 @@ type GetDeploymentLogsResponse struct {
 	JSON400 *N400BadRequest
 	// JSON404 the response for an HTTP 404 `application/json` response
 	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
 	// Headers200 the parsed response headers for an HTTP 200 response
 	Headers200 *GetDeploymentLogsResponse200Headers
 }
@@ -6802,6 +6839,11 @@ func (r GetDeploymentLogsResponse) GetJSON400() *N400BadRequest {
 // GetJSON404 returns the response for an HTTP 404 `application/json` response
 func (r GetDeploymentLogsResponse) GetJSON404() *N404NotFound {
 	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r GetDeploymentLogsResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
 }
 
 // GetBody returns the raw response body bytes
@@ -8250,8 +8292,8 @@ func (c *ClientWithResponses) CalculateDeploymentDiffWithResponse(ctx context.Co
 
 // GetDeploymentLogsWithResponse Get the logs produced by the runner execution during the deployment.
 //
-// These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
-// decryption key query parameter.
+// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -9296,17 +9338,38 @@ func ParseGetDeploymentLogsResponse(rsp *http.Response) (*GetDeploymentLogsRespo
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	}
 
 	switch {
 	case rsp.StatusCode == 200:
 		var headers GetDeploymentLogsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
 		if values := rsp.Header.Values("Content-Disposition"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Disposition", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			}
 			headers.ContentDisposition = &value
+		}
+		if values := rsp.Header.Values("X-Content-Type-Options"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Content-Type-Options", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XContentTypeOptions = &value
 		}
 		response.Headers200 = &headers
 	}

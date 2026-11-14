@@ -71,16 +71,27 @@ requires normal hostname verification and TLS 1.2 or newer.
 
 ## Deployment runner logs
 
-Runner logs are encrypted with a key created for each deployment. `octl deploy`,
-`octl rollback` and `octl score deploy` print that key only with
-`--print-logs-key`, after a warning. `octl logs` reads it from a file or from
-standard input, never from the command line, where it would end up in shell
-history and the process list:
+`octl deploy`, `octl rollback` and `octl score deploy` use server-managed
+encryption by default. `octl logs <deployment-id>` and `--show-logs` retrieve
+plaintext using the authenticated account and `deployment_logs_read` permission.
+`--encrypted` retrieves ciphertext; `--skip-logs` disables capture.
+
+`--print-logs-key` explicitly selects caller-owned encryption and prints its key
+after a warning. Historical caller-owned logs require that original key.
+`octl logs` reads it from a file or standard input, never from the command line,
+where it would end up in shell history and the process list:
 
 ```bash
 octl logs <deployment-id> --key-file runner-logs.key
 printenv RUNNER_LOGS_KEY | octl logs <deployment-id> --key-file -
 ```
+
+In a terminal, decrypted Runner and Terraform/OpenTofu logs show readable
+messages, compact metadata and highlighted JSON details. Pipes return the
+original bytes by default. Use `--pretty` for readable redirected output or
+`--raw` to retain original content. `NO_COLOR` and `TERM=dumb` suppress colors.
+The same flags apply to `octl rollout logs`; an explicit rollout `--out` keeps
+its existing raw-output behavior. Encrypted log responses are never formatted.
 
 ## Install
 

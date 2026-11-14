@@ -95,14 +95,9 @@ Like 'deploy', this command supports --plan-only, --dry-run, the deployment queu
 		}
 		body.EncryptedOutputsRecipient = ref.Ref(outputsAgeKey.Recipient().String())
 
-		var logsAgeKey *age.X25519Identity
-		if v, _ := cmd.Flags().GetBool(deployCmdSkipLogsFlag); !v {
-			if e, ok := cmd.Context().Value("logsAgeKey").(*age.X25519Identity); ok {
-				logsAgeKey = e
-			} else if logsAgeKey, err = age.GenerateX25519Identity(); err != nil {
-				return fmt.Errorf("failed to generate age key for logs encryption: %w", err)
-			}
-			body.EncryptedLogsRecipient = ref.Ref(logsAgeKey.Recipient().String())
+		logsAgeKey, err := configureDeploymentLogs(cmd, &body)
+		if err != nil {
+			return err
 		}
 
 		if v, _ := cmd.Flags().GetString(deployCmdRunnerLogsLevelFlag); !slices.Contains(validRunnerLogsLevels, v) {

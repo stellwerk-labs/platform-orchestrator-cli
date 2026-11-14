@@ -69,3 +69,12 @@ the already published v2.2.0 source or artifacts.
 Release MCP as part of the normal CLI, with explicit opt-in through `mcp serve`.
 Use the existing protected PR and main-push publisher rather than creating an
 additional tag or manual publisher. Keep the previously released CLI immutable.
+
+## 2026-11-13: Managed deployment logs
+
+Managed deployment logs default to server-owned encryption. `--print-logs-key` explicitly selects caller-owned encryption; context fixture keys never implicitly select it. `octl logs` requests authenticated decryption, while `--encrypted` preserves ciphertext downloads. No automatic fallback changes key ownership.
+
+
+## 2026-11-13: CLI 2.5.0 public contracts
+
+Consolidate managed-log behavior into 2.5.0 notes and remove the superseded draft. Pin the public CP c5d1b57 contract and regenerate with existing oapi-codegen v2.8.0, preserving optional catalogue fields. Mark DP 6eea872 as public after shared/v3.3.0 qualification. IAM dc0f37d retains byte-identical schema, so only its verification revision changes. Keep coordinated server qualification separate from SDK public availability.

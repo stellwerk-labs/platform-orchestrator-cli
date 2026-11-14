@@ -64,6 +64,8 @@ type deployQueueServer struct {
 	queueQueries []string
 	cancels      []dp.DeploymentQueueCancelBody
 	acks         []string
+	logsQueries  []string
+	logsKeys     []string
 }
 
 func newDeployQueueServer(t *testing.T) (*deployQueueServer, context.Context) {
@@ -170,6 +172,13 @@ func (f *deployQueueServer) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		completed.Status = deployTestStatusSucceeded
 		completed.CompletedAt = ref.Ref(completed.CreatedAt.Add(time.Second))
 		write(http.StatusOK, completed)
+	case r.Method == http.MethodGet && path == org+"/deployments/"+f.deployment.Id.String()+"/actions/get-logs":
+		f.logsQueries = append(f.logsQueries, r.URL.Query().Get("decrypt"))
+		f.logsKeys = append(f.logsKeys, r.Header.Get("DecryptKey"))
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(logsTestText))
+		assert.NoError(f.t, err)
 	case r.Method == http.MethodPost && strings.HasSuffix(path, "/actions/acknowledge-outcome"):
 		var body cp.DeploymentOutcomeAcknowledgementBody
 		assert.NoError(f.t, json.NewDecoder(r.Body).Decode(&body))

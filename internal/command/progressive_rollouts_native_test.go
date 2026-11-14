@@ -17,6 +17,7 @@ import (
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	rollouts "github.com/stellwerk-labs/platform-orchestrator-cli/clients/progressive-rollouts"
 	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/config"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/internal/printer"
 )
 
 const (
@@ -307,4 +308,70 @@ func TestRolloutForwardCommandSaysWhenTheLicenceExpired(t *testing.T) {
 	_, stderr, err := executeAndResetCommand(ctx, RootCmd, []string{orgFlag, nativeTestOrg, "rollout", "resume", uuid.NewString(), "--" + rolloutExpectedVersionFlag, "3", noPromptFlag})
 	require.EqualError(t, err, licenceTestPrefix+"The licence for feature progressive-rollouts expired at 2026-10-07T22:54:33Z; its grace period ended at 2026-10-07T23:04:33Z."+licenceTestAction)
 	require.NotContains(t, stderr, "Warning:")
+}
+
+func TestProgressiveRolloutEvidenceLogFormattingAndOutputCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		kind      string
+		flags     []string
+		formatted bool
+	}{
+		{kind: logsTestCmd, flags: []string{prettyLogsFlag}, formatted: true},
+		{kind: logsTestCmd, flags: []string{"--raw"}},
+		{kind: logsTestCmd},
+		{kind: logsTestCmd, flags: []string{"--out", "json", prettyLogsFlag}},
+		{kind: "outputs"},
+	} {
+		t.Run(fmt.Sprintf("%s/%v", tc.kind, tc.flags), func(t *testing.T) {
+			t.Run("explicit reference", func(t *testing.T) { testRolloutEvidencePresentation(t, tc.kind, tc.flags, tc.formatted, true) })
+			t.Run("discovered reference", func(t *testing.T) { testRolloutEvidencePresentation(t, tc.kind, tc.flags, tc.formatted, false) })
+		})
+	}
+}
+
+func testRolloutEvidencePresentation(t *testing.T, kind string, flags []string, formatted, explicit bool) {
+	t.Helper()
+	projectID := uuid.MustParse("11111111-1111-4111-8111-111111111111")
+	environmentID := uuid.MustParse("22222222-2222-4222-8222-222222222222")
+	deploymentID := uuid.MustParse("33333333-3333-4333-8333-333333333333")
+	rolloutID := "44444444-4444-4444-8444-444444444444"
+	body := `{"@level":"info","@message":"applied fixture","type":"apply_complete","cost":{"monthly":42}}`
+	detail := rollouts.ProgressiveRolloutDetail{
+		Executions: []rollouts.ProgressiveRolloutEnvironmentExecution{{EnvironmentId: environmentID, DeploymentId: &deploymentID}},
+		Plan:       &rollouts.ProgressiveRolloutPlan{Environments: []rollouts.ProgressiveRolloutPlannedEnvironment{{Uuid: environmentID, ProjectUuid: projectID}}},
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch request.URL.Path {
+		case nativeTestDiscoveryPath:
+			_, _ = fmt.Fprintf(w, `{"contract_level":"v1alpha","items":[{"id":%q,"display_name":"Progressive Rollouts","state":"available","mode":"full","operations":[{"id":"getProgressiveRollout","method":"GET","mutating":false}]}]}`, progressiveRolloutsPluginID)
+		case "/orgs/demo/plugins/" + progressiveRolloutsPluginID + "/invoke":
+			assert.NoError(t, json.NewEncoder(w).Encode(map[string]any{"status": 200, "body": detail}))
+		default:
+			assert.Equal(t, "/orgs/demo/plugins/"+progressiveRolloutsPluginID+"/projects/"+projectID.String()+"/envs/"+environmentID.String()+"/deployments/"+deploymentID.String()+"/"+kind, request.URL.Path)
+			w.Header().Set("Content-Type", "text/plain")
+			_, _ = fmt.Fprint(w, body)
+		}
+	}))
+	t.Cleanup(server.Close)
+	ctx := context.WithValue(cpClientContext(t, server), ConfigContextKey, config.Config{DefaultOrg: nativeTestOrg})
+	command := newProgressiveRolloutEvidenceCommand(kind)
+	printer.SetupSingleOutputFormatFlag(command.Flags())
+	command.SetContext(ctx)
+	var output strings.Builder
+	command.SetOut(&output)
+	args := []string{rolloutID, deploymentID.String()}
+	command.Flags().String("project-uuid", "", "")
+	command.Flags().String("environment-uuid", "", "")
+	if explicit {
+		args = append(args, "--project-uuid", projectID.String(), "--environment-uuid", environmentID.String())
+	}
+	command.SetArgs(append(args, flags...))
+	require.NoError(t, command.Execute())
+	if formatted {
+		assert.Contains(t, output.String(), "apply_complete\napplied fixture\n")
+		assert.Contains(t, output.String(), `"monthly": 42`)
+	} else {
+		assert.Equal(t, body+"\n", output.String())
+	}
 }

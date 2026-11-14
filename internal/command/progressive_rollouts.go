@@ -581,7 +581,7 @@ var ProgressiveRolloutEvents = &cobra.Command{
 }
 
 func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
-	return &cobra.Command{
+	command := &cobra.Command{
 		Use:   kind + " <rollout-id> <deployment-id>",
 		Args:  cobra.ExactArgs(2),
 		Short: "Retrieve authorised, decrypted Rollout deployment " + kind,
@@ -618,6 +618,9 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 				if status != http.StatusOK {
 					return rolloutResponseError("get protected rollout deployment "+kind, status, body)
 				}
+				if kind == runnerLogsKind {
+					body = runnerLogsBody(cmd, body)
+				}
 				if _, err := cmd.OutOrStdout().Write(body); err != nil {
 					return err
 				}
@@ -642,6 +645,9 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 				return rolloutResponseError("get protected rollout deployment "+kind, response.StatusCode(), response.Body)
 			}
 			body := response.Body
+			if kind == runnerLogsKind {
+				body = runnerLogsBody(cmd, body)
+			}
 			if _, err := cmd.OutOrStdout().Write(body); err != nil {
 				return err
 			}
@@ -651,6 +657,11 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 			return err
 		},
 	}
+	if kind == runnerLogsKind {
+		setupRunnerLogsFlags(command)
+		command.Long = command.Short + ". Logs are formatted in terminals; pipes, --raw and explicit --out retain original log content. Use --pretty to format redirected output."
+	}
+	return command
 }
 
 func init() {

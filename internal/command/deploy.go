@@ -104,7 +104,7 @@ By default, the command will prompt for confirmation of the diff before proceedi
 
 Deployments of one environment run one at a time. If another deployment is running or requests are already waiting, the request waits in the environment's deployment queue and starts in order once the environment is free; the command shows its position until then. Use --queue-ttl to bound the wait, or --no-queue to fail with environment_busy instead. With --halt-on-failure the request does not start if the deployment it waits for fails: it is rejected with previous_deployment_failed. Plan-only requests and dry runs are never queued: a dry run is answered while other deployments run or wait, and a plan-only request starts while requests wait but not while another deployment of the environment runs. Both say when deployments that run or wait may still change their result. A queued request is resolved against the environment as it is when it starts, so a confirmed diff and manifests derived with --merge, --drop-workload or --drop-shared name their base deployment: if another deployment changed the environment in the meantime, the request fails with deployment_base_changed instead of reverting that change.
 
-Once a deployment is created, the CLI shows a URL which can be used to download the runner logs when the deployment completes. The level of the log produced by the runner might be defined with the --runner-logs-level flag, while the CLI will not produce any URL and logs will not be downloadable if the flag --skip-logs is set.
+Runner logs use managed encryption and can be read after completion with octl logs <deployment-id>. Set the log level with --runner-logs-level, or disable log collection with --skip-logs. Use --print-logs-key to explicitly choose a caller-owned key instead.
 `,
 	Args: cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -219,15 +219,9 @@ Once a deployment is created, the CLI shows a URL which can be used to download 
 		body.EncryptedOutputsRecipient = ref.Ref(ageKey.Recipient().String())
 		slog.Debug("generated outputs encryption identity", slog.String("public recipient", ageKey.Recipient().String()))
 
-		var logsAgeKey *age.X25519Identity
-		if v, _ := cmd.Flags().GetBool(deployCmdSkipLogsFlag); !v {
-			if e, ok := cmd.Context().Value("logsAgeKey").(*age.X25519Identity); ok {
-				logsAgeKey = e
-			} else if logsAgeKey, err = age.GenerateX25519Identity(); err != nil {
-				return errors.Wrap(err, "failed to generate age key for logs encryption")
-			}
-			body.EncryptedLogsRecipient = ref.Ref(logsAgeKey.Recipient().String())
-			slog.Debug("generated logs encryption identity", slog.String("public recipient", logsAgeKey.Recipient().String()))
+		logsAgeKey, err := configureDeploymentLogs(cmd, &body)
+		if err != nil {
+			return err
 		}
 
 		if v, _ := cmd.Flags().GetString(deployCmdRunnerLogsLevelFlag); !slices.Contains(validRunnerLogsLevels, v) {
@@ -379,11 +373,34 @@ func commonDeployCmdDiff(newManifest dp.DeploymentManifest, lastDeploymentManife
 	return nil
 }
 
+// configureDeploymentLogs leaves key ownership with the server unless the user
+// explicitly requests a portable, caller-owned key.
+func configureDeploymentLogs(cmd *cobra.Command, body *dp.DeploymentCreateBody) (*age.X25519Identity, error) {
+	if skip, _ := cmd.Flags().GetBool(deployCmdSkipLogsFlag); skip || body.IsDryRun {
+		return nil, nil
+	}
+	if printKey, _ := cmd.Flags().GetBool(deployCmdPrintLogsKeyFlag); !printKey {
+		body.ManagedLogs = ref.Ref(true)
+		return nil, nil
+	}
+	key, ok := cmd.Context().Value("logsAgeKey").(*age.X25519Identity)
+	if !ok {
+		var err error
+		key, err = age.GenerateX25519Identity()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to generate age key for logs encryption")
+		}
+	}
+	body.ManagedLogs = ref.Ref(false)
+	body.EncryptedLogsRecipient = ref.Ref(key.Recipient().String())
+	return key, nil
+}
+
 // addPrintLogsKeyFlag offers the only way to see the key that decrypts a
 // deployment's runner logs. It is never printed by default: terminal output
 // ends up in CI logs and scrollback, and whoever reads it can read the logs.
 func addPrintLogsKeyFlag(cmd *cobra.Command) {
-	cmd.Flags().Bool(deployCmdPrintLogsKeyFlag, false, "Print the secret key that decrypts this deployment's runner logs, for 'octl logs --key-file'. Anyone who can read the output can read the logs.")
+	cmd.Flags().Bool(deployCmdPrintLogsKeyFlag, false, "Use a caller-owned encryption key and print the secret key that decrypts this deployment's runner logs, for 'octl logs --key-file'. Anyone who can read the output can read the logs.")
 	cmd.MarkFlagsMutuallyExclusive(deployCmdSkipLogsFlag, deployCmdPrintLogsKeyFlag)
 }
 
@@ -397,7 +414,7 @@ func announceLogsKey(cmd *cobra.Command, deploymentId uuid.UUID, key *age.X25519
 		return
 	}
 	if show, _ := cmd.Flags().GetBool(deployCmdShowLogsFlag); !show {
-		infoMessageF("Runner logs are encrypted with a key that is not printed; pass --%s to print it for 'octl logs'.", deployCmdPrintLogsKeyFlag)
+		infoMessageF("Read runner logs after completion with 'octl logs %s'.", deploymentId)
 	}
 }
 
@@ -459,7 +476,7 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 	}
 	successMessageF("Deployment %s created.", deployment.Id)
 	warnPendingChanges(deployment.PendingChanges)
-	if logsAgeKey != nil {
+	if logsAgeKey != nil || (body.ManagedLogs != nil && *body.ManagedLogs) {
 		announceLogsKey(cmd, deployment.Id, logsAgeKey)
 	}
 
@@ -483,10 +500,13 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 		}
 	}
 
-	if v, _ := cmd.Flags().GetBool(deployCmdShowLogsFlag); v && logsAgeKey != nil {
+	if v, _ := cmd.Flags().GetBool(deployCmdShowLogsFlag); v && (logsAgeKey != nil || (body.ManagedLogs != nil && *body.ManagedLogs)) {
 		infoMessageF("\nRunner logs:")
-		params := &dp.GetDeploymentLogsParams{
-			DecryptKey: ref.Ref(logsAgeKey.String()),
+		params := &dp.GetDeploymentLogsParams{}
+		if logsAgeKey != nil {
+			params.DecryptKey = ref.Ref(logsAgeKey.String())
+		} else {
+			params.Decrypt = ref.Ref(true)
 		}
 
 		// Log availability depends on the internet connection and GCP ingestion latency,

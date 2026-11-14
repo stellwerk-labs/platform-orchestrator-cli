@@ -228,6 +228,7 @@ func TestScoreDeploy_custom_class(t *testing.T) {
 		assert.NotEmpty(t, params.IdempotencyKey)
 		bod.EncryptedOutputsRecipient = nil
 		bod.EncryptedLogsRecipient = nil
+		bod.ManagedLogs = nil
 		assert.Equal(t, dp.DeploymentCreateBody{
 			ProjectId:                testProjectId,
 			EnvId:                    testEnvId,
@@ -307,7 +308,7 @@ Manifest changes detected:
 Add     /workloads/test-sample
 Creating plan_only deployment...
 Deployment %[2]s created.
-Runner logs are encrypted with a key that is not printed; pass --print-logs-key to print it for 'octl logs'.
+Read runner logs after completion with 'octl logs %[2]s'.
 Waiting for deployment %[2]s to complete (0s)...
 Deployment %[2]s succeeded after 0s: it was successful!
 `, lastDepId, newDepId, orgId, lk.String(), td+"/score.yaml", testApiUrl), stderr)
