@@ -106,7 +106,7 @@ var Login = &cobra.Command{
 		}
 
 		successMessageF("Login successful!")
-		successMessageF("Token expires at: %s", acceptedRequest.ExpiresAt.Format(time.RFC3339))
+		successMessageF("Token expires at: %s", acceptedRequest.TokenExpiresAt.Format(time.RFC3339))
 
 		cu, err := iamClient.GetCurrentUserWithResponse(cmd.Context(), func(ctx context.Context, req *http.Request) error {
 			req.Header.Set("Authorization", "Bearer "+acceptedRequest.Token)
