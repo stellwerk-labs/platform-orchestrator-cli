@@ -78,3 +78,7 @@ Managed deployment logs default to server-owned encryption. `--print-logs-key` e
 ## 2026-11-13: CLI 2.5.0 public contracts
 
 Consolidate managed-log behavior into 2.5.0 notes and remove the superseded draft. Pin the public CP c5d1b57 contract and regenerate with existing oapi-codegen v2.8.0, preserving optional catalogue fields. Mark DP 6eea872 as public after shared/v3.3.0 qualification. IAM dc0f37d retains byte-identical schema, so only its verification revision changes. Keep coordinated server qualification separate from SDK public availability.
+
+## Native pipeline source export
+
+Prepare Native pipeline application changes as a source export with all product code, tests, documentation and release controls retained.

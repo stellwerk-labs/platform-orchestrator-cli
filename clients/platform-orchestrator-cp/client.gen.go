@@ -60,9 +60,11 @@ func (e DeploymentAdmissionReceiptState) Valid() bool {
 
 // Defines values for DeploymentAdmissionRequestMode.
 const (
-	AdmissionModeDeploy   DeploymentAdmissionRequestMode = "deploy"
-	AdmissionModeDestroy  DeploymentAdmissionRequestMode = "destroy"
-	AdmissionModeRollback DeploymentAdmissionRequestMode = "rollback"
+	AdmissionModeDeploy       DeploymentAdmissionRequestMode = "deploy"
+	AdmissionModeDestroy      DeploymentAdmissionRequestMode = "destroy"
+	AdmissionModePlanOnly     DeploymentAdmissionRequestMode = "plan_only"
+	AdmissionModeRollback     DeploymentAdmissionRequestMode = "rollback"
+	AdmissionModeRollbackPlan DeploymentAdmissionRequestMode = "rollback_plan"
 )
 
 // Valid indicates whether the value is a known member of the DeploymentAdmissionRequestMode enum.
@@ -72,7 +74,11 @@ func (e DeploymentAdmissionRequestMode) Valid() bool {
 		return true
 	case AdmissionModeDestroy:
 		return true
+	case AdmissionModePlanOnly:
+		return true
 	case AdmissionModeRollback:
+		return true
+	case AdmissionModeRollbackPlan:
 		return true
 	default:
 		return false
@@ -496,6 +502,36 @@ func (e ModuleVersionSemanticStatus) Valid() bool {
 	}
 }
 
+// Defines values for NativeExecutionTargetReferencePipelineVersion.
+const (
+	NativeTargetPipelineV2 NativeExecutionTargetReferencePipelineVersion = "stellwerk.pipeline/v2"
+)
+
+// Valid indicates whether the value is a known member of the NativeExecutionTargetReferencePipelineVersion enum.
+func (e NativeExecutionTargetReferencePipelineVersion) Valid() bool {
+	switch e {
+	case NativeTargetPipelineV2:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NativeExecutionTargetReferenceRuntimeVersion.
+const (
+	NativeTargetRuntimeV2 NativeExecutionTargetReferenceRuntimeVersion = "stellwerk.runner.rollout/v2"
+)
+
+// Valid indicates whether the value is a known member of the NativeExecutionTargetReferenceRuntimeVersion enum.
+func (e NativeExecutionTargetReferenceRuntimeVersion) Valid() bool {
+	switch e {
+	case NativeTargetRuntimeV2:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for OrganizationStatus.
 const (
 	OrganizationStatusActive       OrganizationStatus = "active"
@@ -514,6 +550,21 @@ func (e OrganizationStatus) Valid() bool {
 	case OrganizationStatusDeleted:
 		return true
 	case OrganizationStatusDeleting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PipelineReferenceBuiltin.
+const (
+	Default PipelineReferenceBuiltin = "default"
+)
+
+// Valid indicates whether the value is a known member of the PipelineReferenceBuiltin enum.
+func (e PipelineReferenceBuiltin) Valid() bool {
+	switch e {
+	case Default:
 		return true
 	default:
 		return false
@@ -609,22 +660,22 @@ func (e PluginContractLevel) Valid() bool {
 
 // Defines values for PluginContributionMode.
 const (
-	Full       PluginContributionMode = "full"
-	Hidden     PluginContributionMode = "hidden"
-	ReadOnly   PluginContributionMode = "read_only"
-	SafetyOnly PluginContributionMode = "safety_only"
+	PluginContributionModeFull       PluginContributionMode = "full"
+	PluginContributionModeHidden     PluginContributionMode = "hidden"
+	PluginContributionModeReadOnly   PluginContributionMode = "read_only"
+	PluginContributionModeSafetyOnly PluginContributionMode = "safety_only"
 )
 
 // Valid indicates whether the value is a known member of the PluginContributionMode enum.
 func (e PluginContributionMode) Valid() bool {
 	switch e {
-	case Full:
+	case PluginContributionModeFull:
 		return true
-	case Hidden:
+	case PluginContributionModeHidden:
 		return true
-	case ReadOnly:
+	case PluginContributionModeReadOnly:
 		return true
-	case SafetyOnly:
+	case PluginContributionModeSafetyOnly:
 		return true
 	default:
 		return false
@@ -702,10 +753,11 @@ func (e PluginContributionUiSdkVersion) Valid() bool {
 
 // Defines values for PluginDeploymentReadRequestKind.
 const (
-	PluginDeploymentReadRequestKindDeployment PluginDeploymentReadRequestKind = "deployment"
-	PluginDeploymentReadRequestKindDispatch   PluginDeploymentReadRequestKind = "dispatch"
-	PluginDeploymentReadRequestKindPlan       PluginDeploymentReadRequestKind = "plan"
-	PluginDeploymentReadRequestKindReadiness  PluginDeploymentReadRequestKind = "readiness"
+	PluginDeploymentReadRequestKindDeployment      PluginDeploymentReadRequestKind = "deployment"
+	PluginDeploymentReadRequestKindDispatch        PluginDeploymentReadRequestKind = "dispatch"
+	PluginDeploymentReadRequestKindPipelineChoices PluginDeploymentReadRequestKind = "pipeline_choices"
+	PluginDeploymentReadRequestKindPlan            PluginDeploymentReadRequestKind = "plan"
+	PluginDeploymentReadRequestKindReadiness       PluginDeploymentReadRequestKind = "readiness"
 )
 
 // Valid indicates whether the value is a known member of the PluginDeploymentReadRequestKind enum.
@@ -714,6 +766,8 @@ func (e PluginDeploymentReadRequestKind) Valid() bool {
 	case PluginDeploymentReadRequestKindDeployment:
 		return true
 	case PluginDeploymentReadRequestKindDispatch:
+		return true
+	case PluginDeploymentReadRequestKindPipelineChoices:
 		return true
 	case PluginDeploymentReadRequestKindPlan:
 		return true
@@ -1159,12 +1213,88 @@ func (e ResourceTypeCatalogueStatus) Valid() bool {
 	}
 }
 
+// Defines values for RunnerExecutionCatalogueContractVersion.
+const (
+	StellwerkRunnerCataloguev1 RunnerExecutionCatalogueContractVersion = "stellwerk.runner.catalogue/v1"
+)
+
+// Valid indicates whether the value is a known member of the RunnerExecutionCatalogueContractVersion enum.
+func (e RunnerExecutionCatalogueContractVersion) Valid() bool {
+	switch e {
+	case StellwerkRunnerCataloguev1:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerExecutionCatalogueRuntimeVersion.
+const (
+	StellwerkRunnerRolloutv1 RunnerExecutionCatalogueRuntimeVersion = "stellwerk.runner.rollout/v1"
+	StellwerkRunnerRolloutv2 RunnerExecutionCatalogueRuntimeVersion = "stellwerk.runner.rollout/v2"
+)
+
+// Valid indicates whether the value is a known member of the RunnerExecutionCatalogueRuntimeVersion enum.
+func (e RunnerExecutionCatalogueRuntimeVersion) Valid() bool {
+	switch e {
+	case StellwerkRunnerRolloutv1:
+		return true
+	case StellwerkRunnerRolloutv2:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerExecutionToolPhase.
+const (
+	PlanCheck RunnerExecutionToolPhase = "plan_check"
+	PostApply RunnerExecutionToolPhase = "post_apply"
+	PrePlan   RunnerExecutionToolPhase = "pre_plan"
+)
+
+// Valid indicates whether the value is a known member of the RunnerExecutionToolPhase enum.
+func (e RunnerExecutionToolPhase) Valid() bool {
+	switch e {
+	case PlanCheck:
+		return true
+	case PostApply:
+		return true
+	case PrePlan:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerExecutionToolRetry.
+const (
+	RunnerExecutionToolRetryReadOnly RunnerExecutionToolRetry = "read_only"
+	RunnerExecutionToolRetryReceipt  RunnerExecutionToolRetry = "receipt"
+	RunnerExecutionToolRetryUnsafe   RunnerExecutionToolRetry = "unsafe"
+)
+
+// Valid indicates whether the value is a known member of the RunnerExecutionToolRetry enum.
+func (e RunnerExecutionToolRetry) Valid() bool {
+	switch e {
+	case RunnerExecutionToolRetryReadOnly:
+		return true
+	case RunnerExecutionToolRetryReceipt:
+		return true
+	case RunnerExecutionToolRetryUnsafe:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerType.
 const (
 	RunnerTypeKubernetes      RunnerType = "kubernetes"
 	RunnerTypeKubernetesAgent RunnerType = "kubernetes-agent"
 	RunnerTypeKubernetesEks   RunnerType = "kubernetes-eks"
 	RunnerTypeKubernetesGke   RunnerType = "kubernetes-gke"
+	RunnerTypeNativeAgent     RunnerType = "native-agent"
 	RunnerTypeServerlessEcs   RunnerType = "serverless-ecs"
 )
 
@@ -1178,6 +1308,8 @@ func (e RunnerType) Valid() bool {
 	case RunnerTypeKubernetesEks:
 		return true
 	case RunnerTypeKubernetesGke:
+		return true
+	case RunnerTypeNativeAgent:
 		return true
 	case RunnerTypeServerlessEcs:
 		return true
@@ -1587,6 +1719,15 @@ type CoreModuleVersionPage struct {
 	NextPageToken *string                   `json:"next_page_token,omitempty"`
 }
 
+// DeploymentAdmissionExternalDispatch defines model for DeploymentAdmissionExternalDispatch.
+type DeploymentAdmissionExternalDispatch struct {
+	DispatchId    string             `json:"dispatch_id"`
+	Fence         int64              `json:"fence"`
+	OperationId   openapi_types.UUID `json:"operation_id"`
+	PluginId      string             `json:"plugin_id"`
+	RequestDigest string             `json:"request_digest"`
+}
+
 // DeploymentAdmissionReceipt defines model for DeploymentAdmissionReceipt.
 type DeploymentAdmissionReceipt struct {
 	AdmissionId     openapi_types.UUID              `json:"admission_id"`
@@ -1613,14 +1754,27 @@ type DeploymentAdmissionRequest struct {
 	ConfirmedRestrictedVersionUuids *[]openapi_types.UUID `json:"confirmed_restricted_version_uuids,omitempty"`
 
 	// DraftTestSnapshots Explicit exact subset of module_versions whose UUIDs identify immutable Draft test snapshots bound to this Environment. Omission never turns an unknown published Version into a test. Fresh selections require current Module authoring authority.
-	DraftTestSnapshots *map[string]openapi_types.UUID `json:"draft_test_snapshots,omitempty"`
-	EnvironmentUuid    openapi_types.UUID             `json:"environment_uuid"`
-	Mode               DeploymentAdmissionRequestMode `json:"mode"`
+	DraftTestSnapshots *map[string]openapi_types.UUID       `json:"draft_test_snapshots,omitempty"`
+	EnvironmentUuid    openapi_types.UUID                   `json:"environment_uuid"`
+	ExternalDispatch   *DeploymentAdmissionExternalDispatch `json:"external_dispatch,omitempty"`
+	Mode               DeploymentAdmissionRequestMode       `json:"mode"`
 
 	// ModuleVersions Exact resolved Module UUID to Version UUID graph admitted for execution.
 	ModuleVersions map[string]openapi_types.UUID `json:"module_versions"`
-	ProjectUuid    openapi_types.UUID            `json:"project_uuid"`
-	RequestDigest  string                        `json:"request_digest"`
+
+	// NativeAdmissionWatermark Latest Core-checked non-absent Native admission known by the Data Plane. Omitted only for the first Native admission or historical legacy requests; it is not a state-head identifier.
+	NativeAdmissionWatermark *NativeAdmissionWatermark `json:"native_admission_watermark,omitempty"`
+
+	// NativeTarget Exact native Runner authority and typed state-configuration identity. The digest is not rendered backend HCL or retained artifact storage identity.
+	NativeTarget *NativeExecutionTargetReference `json:"native_target,omitempty"`
+	Pipeline     *struct {
+		Digest     string             `json:"digest"`
+		PipelineId openapi_types.UUID `json:"pipeline_id"`
+		Version    int                `json:"version"`
+		VersionId  openapi_types.UUID `json:"version_id"`
+	} `json:"pipeline,omitempty"`
+	ProjectUuid   openapi_types.UUID `json:"project_uuid"`
+	RequestDigest string             `json:"request_digest"`
 }
 
 // DeploymentAdmissionRequestMode defines model for DeploymentAdmissionRequest.Mode.
@@ -1673,6 +1827,9 @@ type Environment struct {
 
 	// Labels Labels used by module policy and add-on selectors.
 	Labels map[string]string `json:"labels,omitempty"`
+
+	// NativeFirstEligible Server-owned Native-first eligibility established only at Environment creation by its selected Native Runner rule. It is never enabled by refresh, labels or deployment input.
+	NativeFirstEligible *bool `json:"native_first_eligible,omitempty"`
 
 	// ProjectId Project identifier
 	//
@@ -2291,10 +2448,16 @@ type InternalRunner struct {
 	//
 	// Example: 2023-01-01T00:00:00Z
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// Uuid The server-issued immutable identity of this runner registration. Recreating a deleted runner creates a new identity.
+	Uuid *openapi_types.UUID `json:"uuid,omitempty"`
 }
 
 // K8sAgentRunnerConfiguration Runner configuration for a Kubernetes Agent.
 type K8sAgentRunnerConfiguration struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Job Properties of the Kubernetes Runner Job.
 	Job K8sRunnerJobConfig `json:"job"`
 
@@ -2308,6 +2471,9 @@ type K8sAgentRunnerConfiguration struct {
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
 
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
+
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
 
@@ -2317,6 +2483,9 @@ type K8sAgentRunnerConfiguration struct {
 
 // K8sAgentRunnerConfigurationUpdateBody Object to update an existing runner configuration for a Kubernetes Agent.
 type K8sAgentRunnerConfigurationUpdateBody struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Job Properties of the Kubernetes Runner Job.
 	Job *K8sRunnerJobConfig `json:"job,omitempty"`
 
@@ -2329,6 +2498,9 @@ type K8sAgentRunnerConfigurationUpdateBody struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Approved native execution inventory, limited to 64 KiB. Omission preserves it on update; explicit null clears it on update only. Dependent protocols and capabilities must remain consistent.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2346,6 +2518,9 @@ type K8sAgentRunnerKey = string
 
 // K8sEksRunnerConfiguration Runner configuration for an EKS cluster.
 type K8sEksRunnerConfiguration struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to access an EKS cluster.
 	Cluster K8sRunnerEksCluster `json:"cluster"`
 
@@ -2354,6 +2529,9 @@ type K8sEksRunnerConfiguration struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2364,6 +2542,9 @@ type K8sEksRunnerConfiguration struct {
 
 // K8sEksRunnerConfigurationUpdateBody Object to update an existing runner configuration for an EKS cluster.
 type K8sEksRunnerConfigurationUpdateBody struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to access an EKS cluster.
 	Cluster *K8sRunnerEksCluster `json:"cluster,omitempty"`
 
@@ -2372,6 +2553,9 @@ type K8sEksRunnerConfigurationUpdateBody struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Approved native execution inventory, limited to 64 KiB. Omission preserves it on update; explicit null clears it on update only. Dependent protocols and capabilities must remain consistent.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2382,6 +2566,9 @@ type K8sEksRunnerConfigurationUpdateBody struct {
 
 // K8sGkeRunnerConfiguration Runner configuration for a GKE cluster.
 type K8sGkeRunnerConfiguration struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to access a GKE cluster.
 	Cluster K8sRunnerGkeCluster `json:"cluster"`
 
@@ -2390,6 +2577,9 @@ type K8sGkeRunnerConfiguration struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2400,6 +2590,9 @@ type K8sGkeRunnerConfiguration struct {
 
 // K8sGkeRunnerConfigurationUpdateBody Object to update an existing runner configuration for a GKE cluster.
 type K8sGkeRunnerConfigurationUpdateBody struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to access a GKE cluster.
 	Cluster *K8sRunnerGkeCluster `json:"cluster,omitempty"`
 
@@ -2408,6 +2601,9 @@ type K8sGkeRunnerConfigurationUpdateBody struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Approved native execution inventory, limited to 64 KiB. Omission preserves it on update; explicit null clears it on update only. Dependent protocols and capabilities must remain consistent.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2418,6 +2614,9 @@ type K8sGkeRunnerConfigurationUpdateBody struct {
 
 // K8sRunnerConfiguration Runner configuration for a Kubernetes cluster.
 type K8sRunnerConfiguration struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to obtain access token to a generic K8s cluster with auth
 	Cluster K8sRunnerK8sCluster `json:"cluster"`
 
@@ -2426,6 +2625,9 @@ type K8sRunnerConfiguration struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -2436,6 +2638,9 @@ type K8sRunnerConfiguration struct {
 
 // K8sRunnerConfigurationUpdateBody Object to update an existing runner configuration for a Kubernetes cluster.
 type K8sRunnerConfigurationUpdateBody struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Cluster Configuration to obtain access token to a generic K8s cluster with auth
 	Cluster *K8sRunnerK8sCluster `json:"cluster,omitempty"`
 
@@ -2444,6 +2649,9 @@ type K8sRunnerConfigurationUpdateBody struct {
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Approved native execution inventory, limited to 64 KiB. Omission preserves it on update; explicit null clears it on update only. Dependent protocols and capabilities must remain consistent.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -3650,6 +3858,73 @@ type ModuleVersionUsageEnvironment struct {
 	ProjectId       string             `json:"project_id"`
 }
 
+// NativeAdmissionWatermark Latest Core-checked non-absent Native admission known by the Data Plane. Omitted only for the first Native admission or historical legacy requests; it is not a state-head identifier.
+type NativeAdmissionWatermark struct {
+	AdmissionId openapi_types.UUID `json:"admission_id"`
+	Epoch       int64              `json:"epoch"`
+}
+
+// NativeAgentRunnerConfiguration A runtime-independent native pool registration. Create requires approved inventory, capabilities and v2 pipeline protocols. Responses preserve absence after explicit clears. The public key, capacity and registration identity remain retained; metadata alone does not activate execution.
+type NativeAgentRunnerConfiguration struct {
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
+	// Key A public ed25519 key in PEM format. The caller must hold the matching private key.
+	//
+	// Example: -----BEGIN PUBLIC KEY-----
+	// MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
+	// -----END PUBLIC KEY-----
+	Key K8sAgentRunnerKey `json:"key"`
+
+	// MaxParallelJobs Explicit admission limit for the logical native pool. There is no unlimited native default. Updating this limit does not stop already admitted work.
+	MaxParallelJobs int `json:"max_parallel_jobs"`
+
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
+
+	// SupportedProtocols Create requires stellwerk.pipeline/v2 and stellwerk.pipeline.plan-apply/v2. Their legacy v1 variants are forbidden. This field may be absent after clearing a disabled registration.
+	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// NativeAgentRunnerConfigurationUpdateBody Updates a retained native registration. Omission preserves fields; clearing only native_execution disables new native admission. Key and capacity cannot be cleared.
+type NativeAgentRunnerConfigurationUpdateBody struct {
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
+	// Key A public ed25519 key in PEM format. The caller must hold the matching private key.
+	//
+	// Example: -----BEGIN PUBLIC KEY-----
+	// MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
+	// -----END PUBLIC KEY-----
+	Key                *K8sAgentRunnerKey        `json:"key,omitempty"`
+	MaxParallelJobs    *int                      `json:"max_parallel_jobs,omitempty"`
+	NativeExecution    *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
+	SupportedProtocols *[]string                 `json:"supported_protocols,omitempty"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// NativeExecutionTargetReference Exact native Runner authority and typed state-configuration identity. The digest is not rendered backend HCL or retained artifact storage identity.
+type NativeExecutionTargetReference struct {
+	PipelineVersion NativeExecutionTargetReferencePipelineVersion `json:"pipeline_version"`
+	RunnerId        string                                        `json:"runner_id"`
+	RunnerUuid      openapi_types.UUID                            `json:"runner_uuid"`
+	RuntimeVersion  NativeExecutionTargetReferenceRuntimeVersion  `json:"runtime_version"`
+
+	// StateBackendType Type of the Terraform Backend used by the runner.
+	StateBackendType         StateStorageType `json:"state_backend_type"`
+	StateConfigurationDigest string           `json:"state_configuration_digest"`
+	ToolsDigest              string           `json:"tools_digest"`
+}
+
+// NativeExecutionTargetReferencePipelineVersion defines model for NativeExecutionTargetReference.PipelineVersion.
+type NativeExecutionTargetReferencePipelineVersion string
+
+// NativeExecutionTargetReferenceRuntimeVersion defines model for NativeExecutionTargetReference.RuntimeVersion.
+type NativeExecutionTargetReferenceRuntimeVersion string
+
 // Organization The internal state of an organization known by the control plane.
 type Organization struct {
 	// CreatedAt The date and time when the org state was created.
@@ -3692,6 +3967,16 @@ type Organization struct {
 //
 // Example: active
 type OrganizationStatus string
+
+// PipelineReference defines model for PipelineReference.
+type PipelineReference struct {
+	Builtin   *PipelineReferenceBuiltin `json:"builtin,omitempty"`
+	Digest    string                    `json:"digest"`
+	VersionId *openapi_types.UUID       `json:"version_id,omitempty"`
+}
+
+// PipelineReferenceBuiltin defines model for PipelineReference.Builtin.
+type PipelineReferenceBuiltin string
 
 // PluginAuditEvent defines model for PluginAuditEvent.
 type PluginAuditEvent struct {
@@ -3881,18 +4166,24 @@ type PluginDeploymentReadRequest struct {
 		EnvId     string `json:"env_id"`
 		ProjectId string `json:"project_id"`
 	} `json:"environments"`
-	GrantFence *int64                          `json:"grant_fence,omitempty"`
-	Kind       PluginDeploymentReadRequestKind `json:"kind"`
+	ForwardOnly *bool                           `json:"forward_only,omitempty"`
+	GrantFence  *int64                          `json:"grant_fence,omitempty"`
+	Kind        PluginDeploymentReadRequestKind `json:"kind"`
 
 	// ModuleVersions For plan only. Module slug or UUID to exact immutable Version UUID. Core supplies the corresponding version coordinate and artifact digest.
 	ModuleVersions *map[string]openapi_types.UUID `json:"module_versions,omitempty"`
 
 	// OperationId Background inspection uses this immutable grant and grant_fence instead of a user proof. Current actor authorization is always rechecked.
 	OperationId *openapi_types.UUID    `json:"operation_id,omitempty"`
+	Pipeline    *PipelineReference     `json:"pipeline,omitempty"`
 	Proof       *PluginDelegationProof `json:"proof,omitempty"`
 
 	// RequestId Required for background inspection. Preserve across retries of the same logical inspection.
-	RequestId *string `json:"request_id,omitempty"`
+	RequestId        *string            `json:"request_id,omitempty"`
+	RollbackPipeline *PipelineReference `json:"rollback_pipeline,omitempty"`
+
+	// UseRollbackDefault Explicit opt-in during plan preparation to resolve a missing rollback pipeline from its own configured default. Absent or false retains legacy explicit rollback selection.
+	UseRollbackDefault bool `json:"use_rollback_default,omitempty"`
 }
 
 // PluginDeploymentReadRequestKind defines model for PluginDeploymentReadRequest.Kind.
@@ -3913,6 +4204,7 @@ type PluginDeploymentSubmitRequest struct {
 	FirstForwardDeploymentId *openapi_types.UUID               `json:"first_forward_deployment_id,omitempty"`
 	GrantFence               int64                             `json:"grant_fence"`
 	Mode                     PluginDeploymentSubmitRequestMode `json:"mode"`
+	Pipeline                 *PipelineReference                `json:"pipeline,omitempty"`
 	Plan                     *struct {
 		Fingerprint    string                        `json:"fingerprint"`
 		ModuleVersions map[string]openapi_types.UUID `json:"module_versions"`
@@ -4325,8 +4617,17 @@ type PluginOperationIntent struct {
 		EnvironmentId openapi_types.UUID `json:"environment_id"`
 		ProjectId     openapi_types.UUID `json:"project_id"`
 	} `json:"environments"`
-	Fingerprint string               `json:"fingerprint"`
+	Fingerprint string `json:"fingerprint"`
+
+	// ForwardOnly Explicit reviewed opt-out from rollback; absence identifies a retained legacy operation.
+	ForwardOnly *bool                `json:"forward_only,omitempty"`
 	Modules     []openapi_types.UUID `json:"modules"`
+	Pipelines   *[]struct {
+		EnvironmentUuid openapi_types.UUID `json:"environment_uuid"`
+		Forward         PipelineReference  `json:"forward"`
+		ProjectUuid     openapi_types.UUID `json:"project_uuid"`
+		Rollback        *PipelineReference `json:"rollback,omitempty"`
+	} `json:"pipelines,omitempty"`
 
 	// TargetVersions Exact Module UUID to immutable target Version UUID binding, with exactly one entry for every frozen Module.
 	TargetVersions map[string]openapi_types.UUID `json:"target_versions"`
@@ -4823,6 +5124,9 @@ type Runner struct {
 	//
 	// Example: 2023-01-01T00:00:00Z
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// Uuid The server-issued immutable identity of this runner registration. Recreating a deleted runner creates a new identity.
+	Uuid *openapi_types.UUID `json:"uuid,omitempty"`
 }
 
 // RunnerConfiguration The data needed to configure the runner.
@@ -4832,6 +5136,9 @@ type RunnerConfiguration struct {
 
 // RunnerConfigurationSummary A summary of the runner configuration.
 type RunnerConfigurationSummary struct {
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// MaxParallelJobs Configured concurrent job limit. Absent means legacy unlimited admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
 
@@ -4865,6 +5172,35 @@ type RunnerCreateBody struct {
 	// StateStorageConfiguration Configuration for the Terraform Backend used by the runner.
 	StateStorageConfiguration StateStorageConfiguration `json:"state_storage_configuration"`
 }
+
+// RunnerExecutionCatalogue Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+type RunnerExecutionCatalogue struct {
+	ContractVersion RunnerExecutionCatalogueContractVersion `json:"contract_version"`
+	RuntimeVersion  RunnerExecutionCatalogueRuntimeVersion  `json:"runtime_version"`
+	Tools           []RunnerExecutionTool                   `json:"tools"`
+	ToolsDigest     string                                  `json:"tools_digest"`
+}
+
+// RunnerExecutionCatalogueContractVersion defines model for RunnerExecutionCatalogue.ContractVersion.
+type RunnerExecutionCatalogueContractVersion string
+
+// RunnerExecutionCatalogueRuntimeVersion defines model for RunnerExecutionCatalogue.RuntimeVersion.
+type RunnerExecutionCatalogueRuntimeVersion string
+
+// RunnerExecutionTool Public metadata for one installed approved tool. Contains no executable, environment, credential or local path.
+type RunnerExecutionTool struct {
+	Id                   string                   `json:"id"`
+	Name                 string                   `json:"name"`
+	Phase                RunnerExecutionToolPhase `json:"phase"`
+	RequiredCapabilities []string                 `json:"required_capabilities"`
+	Retry                RunnerExecutionToolRetry `json:"retry"`
+}
+
+// RunnerExecutionToolPhase defines model for RunnerExecutionTool.Phase.
+type RunnerExecutionToolPhase string
+
+// RunnerExecutionToolRetry defines model for RunnerExecutionTool.Retry.
+type RunnerExecutionToolRetry string
 
 // RunnerPage A page of runners returned from the list api.
 type RunnerPage struct {
@@ -4972,6 +5308,9 @@ type RunnerSummary struct {
 	//
 	// Example: 2023-01-01T00:00:00Z
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// Uuid The server-issued immutable identity of this runner registration. Recreating a deleted runner creates a new identity.
+	Uuid *openapi_types.UUID `json:"uuid,omitempty"`
 }
 
 // RunnerType The Runner type.
@@ -5014,11 +5353,17 @@ type ServerlessEcsRunnerConfiguration struct {
 	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
 	Auth AwsTemporaryAuth `json:"auth"`
 
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Job Job details for the AWS ECS Runner
 	Job ServerlessEcsRunnerJob `json:"job"`
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves unlimited legacy admission. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Operator-approved public inventory. The digest binds private local configuration and executable bytes; it cannot be reconstructed from this projection. This metadata does not enroll a site or enable native execution by itself.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -5032,11 +5377,17 @@ type ServerlessEcsRunnerConfigurationUpdateBody struct {
 	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
 	Auth *AwsTemporaryAuth `json:"auth,omitempty"`
 
+	// Capabilities Operator-declared execution and connectivity capabilities of the configured Runner image and site. Omission preserves existing capabilities on update; null clears them on update only. Bundled software does not imply network access.
+	Capabilities *[]string `json:"capabilities,omitempty"`
+
 	// Job Job details for the AWS ECS Runner
 	Job *ServerlessEcsRunnerJob `json:"job,omitempty"`
 
 	// MaxParallelJobs Maximum concurrent jobs across all Environments using this Runner. Omission preserves the configured value. Explicit null clears the limit to unlimited. Reducing the limit drains existing jobs before new admission.
 	MaxParallelJobs *int `json:"max_parallel_jobs,omitempty"`
+
+	// NativeExecution Approved native execution inventory, limited to 64 KiB. Omission preserves it on update; explicit null clears it on update only. Dependent protocols and capabilities must remain consistent.
+	NativeExecution *RunnerExecutionCatalogue `json:"native_execution,omitempty"`
 
 	// SupportedProtocols Protocols explicitly supported by the configured Runner image. Omission preserves the configured value. Null clears the opt-in; an empty array declares no protocols. Observation requires environment-observation/v1.
 	SupportedProtocols *[]string `json:"supported_protocols,omitempty"`
@@ -6130,6 +6481,40 @@ func (t *RunnerConfiguration) MergeK8sAgentRunnerConfiguration(v K8sAgentRunnerC
 	return err
 }
 
+// AsNativeAgentRunnerConfiguration returns the union data inside the RunnerConfiguration as a NativeAgentRunnerConfiguration
+func (t RunnerConfiguration) AsNativeAgentRunnerConfiguration() (NativeAgentRunnerConfiguration, error) {
+	var body NativeAgentRunnerConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromNativeAgentRunnerConfiguration overwrites any union data inside the RunnerConfiguration as the provided NativeAgentRunnerConfiguration
+func (t *RunnerConfiguration) FromNativeAgentRunnerConfiguration(v NativeAgentRunnerConfiguration) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	b, err = runtime.JSONMerge(b, []byte(`{"type":"native-agent"}`))
+	t.union = b
+	return err
+}
+
+// MergeNativeAgentRunnerConfiguration performs a merge with any union data inside the RunnerConfiguration, using the provided NativeAgentRunnerConfiguration
+func (t *RunnerConfiguration) MergeNativeAgentRunnerConfiguration(v NativeAgentRunnerConfiguration) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	b, err = runtime.JSONMerge(b, []byte(`{"type":"native-agent"}`))
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsServerlessEcsRunnerConfiguration returns the union data inside the RunnerConfiguration as a ServerlessEcsRunnerConfiguration
 func (t RunnerConfiguration) AsServerlessEcsRunnerConfiguration() (ServerlessEcsRunnerConfiguration, error) {
 	var body ServerlessEcsRunnerConfiguration
@@ -6186,6 +6571,8 @@ func (t RunnerConfiguration) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sEksRunnerConfiguration()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfiguration()
+	case "native-agent":
+		return t.AsNativeAgentRunnerConfiguration()
 	case "serverless-ecs":
 		return t.AsServerlessEcsRunnerConfiguration()
 	default:
@@ -6339,6 +6726,40 @@ func (t *RunnerConfigurationUpdate) MergeK8sAgentRunnerConfigurationUpdateBody(v
 	return err
 }
 
+// AsNativeAgentRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a NativeAgentRunnerConfigurationUpdateBody
+func (t RunnerConfigurationUpdate) AsNativeAgentRunnerConfigurationUpdateBody() (NativeAgentRunnerConfigurationUpdateBody, error) {
+	var body NativeAgentRunnerConfigurationUpdateBody
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromNativeAgentRunnerConfigurationUpdateBody overwrites any union data inside the RunnerConfigurationUpdate as the provided NativeAgentRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) FromNativeAgentRunnerConfigurationUpdateBody(v NativeAgentRunnerConfigurationUpdateBody) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	b, err = runtime.JSONMerge(b, []byte(`{"type":"native-agent"}`))
+	t.union = b
+	return err
+}
+
+// MergeNativeAgentRunnerConfigurationUpdateBody performs a merge with any union data inside the RunnerConfigurationUpdate, using the provided NativeAgentRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) MergeNativeAgentRunnerConfigurationUpdateBody(v NativeAgentRunnerConfigurationUpdateBody) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	b, err = runtime.JSONMerge(b, []byte(`{"type":"native-agent"}`))
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsServerlessEcsRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a ServerlessEcsRunnerConfigurationUpdateBody
 func (t RunnerConfigurationUpdate) AsServerlessEcsRunnerConfigurationUpdateBody() (ServerlessEcsRunnerConfigurationUpdateBody, error) {
 	var body ServerlessEcsRunnerConfigurationUpdateBody
@@ -6395,6 +6816,8 @@ func (t RunnerConfigurationUpdate) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sEksRunnerConfigurationUpdateBody()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfigurationUpdateBody()
+	case "native-agent":
+		return t.AsNativeAgentRunnerConfigurationUpdateBody()
 	case "serverless-ecs":
 		return t.AsServerlessEcsRunnerConfigurationUpdateBody()
 	default:

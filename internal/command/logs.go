@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 
 	"filippo.io/age"
 	"github.com/google/uuid"
@@ -44,6 +45,9 @@ $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --ke
 		}
 
 		params := &dp.GetDeploymentLogsParams{}
+		if err := selectDeploymentLogs(cmd, params); err != nil {
+			return err
+		}
 		if keyFile, _ := cmd.Flags().GetString(logsCmdKeyFileFlag); keyFile != "" {
 			secretKey, err := readLogsKey(cmd.InOrStdin(), keyFile)
 			if err != nil {
@@ -84,6 +88,39 @@ $ printenv RUNNER_LOGS_KEY | octl logs 01234567-89ab-cdef-0123-456789abcdef --ke
 	},
 }
 
+func selectDeploymentLogs(cmd *cobra.Command, params *dp.GetDeploymentLogsParams) error {
+	phase, _ := cmd.Flags().GetString("phase")
+	execution, _ := cmd.Flags().GetString("execution-id")
+	capture, _ := cmd.Flags().GetInt64("capture-revision")
+	subject, _ := cmd.Flags().GetString("subject")
+	if phase != "" && phase != "plan" && phase != "apply" || cmd.Flags().Changed("phase") && phase == "" {
+		return errors.New("phase must be plan or apply")
+	}
+	if cmd.Flags().Changed("execution-id") && (!regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,128}$`).MatchString(execution) || execution == "." || execution == "..") {
+		return errors.New("execution-id must be a bounded captured execution identity")
+	}
+	if cmd.Flags().Changed("capture-revision") && capture < 1 {
+		return errors.New("capture-revision must be positive")
+	}
+	if cmd.Flags().Changed("subject") && subject != "" && !regexp.MustCompile(`^[a-f0-9]{64}$`).MatchString(subject) {
+		return errors.New("subject must be the exact Plan subject")
+	}
+	if phase != "" {
+		value := dp.GetDeploymentLogsParamsPhase(phase)
+		params.Phase = &value
+	}
+	if execution != "" {
+		params.ExecutionId = &execution
+	}
+	if cmd.Flags().Changed("capture-revision") {
+		params.CaptureRevision = &capture
+	}
+	if cmd.Flags().Changed("subject") {
+		params.Subject = &subject
+	}
+	return nil
+}
+
 // readLogsKey reads the age secret key that decrypts a deployment's runner
 // logs from the file at path, or from stdin for "-". The input is an age
 // identity file holding exactly one key. Errors never quote the input.
@@ -110,6 +147,10 @@ func readLogsKey(stdin io.Reader, path string) (string, error) {
 
 func init() {
 	setupRunnerLogsFlags(LogsCmd)
+	LogsCmd.Flags().String("phase", "", "Select Native plan or apply logs (defaults to the deployment's phase).")
+	LogsCmd.Flags().String("execution-id", "", "Select an exact captured Native execution.")
+	LogsCmd.Flags().Int64("capture-revision", 0, "Select an exact positive capture revision (defaults to greatest accepted).")
+	LogsCmd.Flags().String("subject", "", "Bind Plan logs to the exact displayed subject.")
 	LogsCmd.Flags().String(logsCmdKeyFileFlag, "", "Read the secret key that decrypts the logs from this file, or from standard input with '-'. 'octl deploy --print-logs-key' prints the key.")
 	LogsCmd.Flags().Bool(logsCmdEncryptedFlag, false, "Download encrypted logs without decryption.")
 	LogsCmd.MarkFlagsMutuallyExclusive(logsCmdKeyFileFlag, logsCmdEncryptedFlag)

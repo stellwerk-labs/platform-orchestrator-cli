@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -58,6 +59,13 @@ func requireRecordedSource(t *testing.T, dir, repository string) {
 	require.Equal(t, recordedSourceValue(t, dir, "File SHA-256"), fmt.Sprintf("%x", sha256.Sum256(raw)),
 		"spec.yaml must be the byte-identical document recorded in %s/SOURCE.md", dir)
 	require.Regexp(t, "^[0-9a-f]{40}$", recordedSourceValue(t, dir, "Commit"))
+	if recordedSourceValue(t, dir, "Qualification") == "local-candidate" {
+		variable := map[string]string{"stellwerk-labs/platform-orchestrator-cp": "CP_SPEC_PATH", "stellwerk-labs/platform-orchestrator-dp": "DP_SPEC_PATH"}[repository]
+		candidatePath := os.Getenv(variable)
+		require.NotEmpty(t, candidatePath, "unpublished candidate requires explicit %s", variable)
+		candidate := readVendoredFile(t, filepath.Dir(candidatePath), filepath.Base(candidatePath))
+		require.Equal(t, candidate, raw, "exact immutable source snapshot must match generator input")
+	}
 	blob := sha1.Sum(append([]byte(fmt.Sprintf("blob %d\x00", len(raw))), raw...)) //nolint:gosec // Git object IDs are SHA-1 by definition.
 	require.Equal(t, recordedSourceValue(t, dir, "Git blob"), fmt.Sprintf("%x", blob), "Git blob in %s/SOURCE.md", dir)
 	require.Equal(t, repository, recordedSourceValue(t, dir, "Repository"))

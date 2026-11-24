@@ -3,6 +3,166 @@ info:
   title: Stellwerk Data Plane API
   version: unreleased
 paths:
+  /orgs/{orgId}/deployments/{deploymentId}/pipeline:
+    get:
+      operationId: getDeploymentPipeline
+      tags: [Deployment]
+      summary: Read the retained pipeline execution and manual Plan eligibility.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/deploymentIdPathParam'
+      responses:
+        '200':
+          description: Public pipeline facts without private command or plan material.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineExecution'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls:
+    post:
+      operationId: createDeploymentPipelineControl
+      tags: [Deployment]
+      summary: Queue an immutable signed control for the accepted Native execution.
+      description: |
+        Returns a retained receipt, initially pending. Delivery may be disconnected;
+        acceptance does not mean the site applied the action. Retry the same intent
+        with the same Idempotency-Key. The key binds org, Deployment and actor across
+        actions, so changed intent conflicts. Actor and target are server captured.
+        New controls inherit the original execution expiry. Expired undelivered
+        controls remain pending uncertainty until an authenticated result arrives.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/deploymentIdPathParam'
+        - $ref: '#/components/parameters/pipelineIdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DeploymentPipelineControlIntent'}
+      responses:
+        '202':
+          description: Retained control receipt, including exact request replay.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineControlReceipt'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '413': {description: The action request exceeds the existing 1 MiB body limit.}
+        '503': {$ref: '#/components/responses/503Unavailable'}
+  /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls/{controlId}:
+    get:
+      operationId: getDeploymentPipelineControl
+      tags: [Deployment]
+      summary: Read retained control delivery or the immutable applied/refused result.
+      description: Current Environment read permission is required, including after Deployment retention.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/deploymentIdPathParam'
+        - {name: controlId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Metadata only; pending never promises immediate revocation or NoEffect.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineControlReceipt'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployment-pipelines:
+    get:
+      operationId: listDeploymentPipelines
+      tags: [Deployment]
+      summary: List project pipelines qualified for the Environment's selected Runner.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - {name: projectId, in: path, required: true, schema: {type: string}}
+        - {name: envId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Pipeline definitions, compatibility and current default policy.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineCatalogue'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '404': {$ref: '#/components/responses/404NotFound'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+  /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan:
+    post:
+      operationId: applyDeploymentPipelinePlan
+      tags: [Deployment]
+      summary: Apply this exact saved Plan once through ordinary Deployment admission.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/deploymentIdPathParam'
+        - $ref: '#/components/parameters/pipelineIdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [subject]
+              properties:
+                subject: {type: string, minLength: 1, maxLength: 128}
+      responses:
+        '201':
+          description: The single bound Apply Deployment, including exact request replay.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineActionResponse'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '413':
+          description: The action request exceeds the 1 MiB body limit.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '503': {$ref: '#/components/responses/503Unavailable'}
+  /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan:
+    post:
+      operationId: replanDeploymentPipelinePlan
+      tags: [Deployment]
+      summary: Create a new manual Plan without changing or applying this saved Plan.
+      security: [{userIdHeader: []}]
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/deploymentIdPathParam'
+        - $ref: '#/components/parameters/pipelineIdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, additionalProperties: false}
+      responses:
+        '201':
+          description: The new manual Plan Deployment, including exact request replay.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeploymentPipelineActionResponse'}
+        '400': {$ref: '#/components/responses/400BadRequest'}
+        '401': {$ref: '#/components/responses/401Unauthorized'}
+        '403': {$ref: '#/components/responses/403Forbidden'}
+        '409': {$ref: '#/components/responses/409Conflict'}
+        '413':
+          description: The action request exceeds the 1 MiB body limit.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '503': {$ref: '#/components/responses/503Unavailable'}
   /orgs/{orgId}/plugins/{pluginId}/external-deployments:
     post:
       operationId: admitExternalDeployment
@@ -182,11 +342,27 @@ paths:
         - $ref: "#/components/parameters/projectIdQueryParam"
         - $ref: "#/components/parameters/envIdQueryParam"
         # pagination
-        - $ref: "#/components/parameters/perPageQueryParam"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
         - $ref: "#/components/parameters/pageTokenQueryParam"
         # filter params
         - $ref: "#/components/parameters/byModeQueryParam"
         - $ref: "#/components/parameters/byStatusQueryParam"
+        - name: q
+          in: query
+          description: Literal search over deployment ID, creator ID, project/environment slug and pipeline name or ID.
+          schema:
+            type: string
+            maxLength: 200
+        - name: quick_filter
+          in: query
+          schema:
+            type: string
+            enum: [all, plans, unused_plans, deployments, needs_approval, needs_attention]
       responses:
         "200":
           description: Successful list response
@@ -534,7 +710,8 @@ paths:
         - Deployment
       summary: Get the logs produced by the runner execution during the deployment.
       description: |
-        Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+        Legacy responses remain encrypted without decrypt=true or DecryptKey and require deployment_read.
+        Native central logs require managed custody, decrypt=true, deployment_read and deployment_logs_read; availability depends on retained artifacts.
         Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
       security:
         - userIdHeader: []
@@ -547,6 +724,22 @@ paths:
           description: Return plaintext using the server-managed log identity. Requires deployment_logs_read on the deployment Environment (or organization). Cannot be combined with DecryptKey; returns 409 when no managed identity is retained.
           schema:
             type: boolean
+        - name: phase
+          in: query
+          description: Native phase; defaults to plan for a plan-only Deployment and apply otherwise.
+          schema: {type: string, enum: [plan, apply]}
+        - name: execution_id
+          in: query
+          description: Exact captured Native execution identity.
+          schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9_.:-]+$'}
+        - name: capture_revision
+          in: query
+          description: Exact positive Native capture revision; omitted selects the greatest accepted revision.
+          schema: {type: integer, format: int64, minimum: 1}
+        - name: subject
+          in: query
+          description: Exact displayed Plan subject; use an empty value for failed diagnostics without a subject.
+          schema: {type: string, maxLength: 64, pattern: '^([a-f0-9]{64})?$'}
         - name: DecryptKey
           description: The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
           in: header
@@ -1129,6 +1322,11 @@ components:
             $ref: "#/components/schemas/Error"
 
   parameters:
+    pipelineIdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[^\r\n]+$'}
     orgIdPathParam:
       name: orgId
       in: path
@@ -1244,6 +1442,36 @@ components:
             - succeeded
 
   schemas:
+    PipelineReference:
+      type: object
+      additionalProperties: false
+      required: [digest]
+      properties:
+        version_id: {type: string, format: uuid}
+        builtin: {type: string, enum: [default]}
+        digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+    DeploymentPipelineLifecycle:
+      type: object
+      additionalProperties: false
+      required: [reference, version, digest, phase, infrastructure_applied]
+      properties:
+        reference: {$ref: '#/components/schemas/PipelineReference'}
+        pipeline_id: {type: string, format: uuid}
+        version_id: {type: string, format: uuid}
+        version: {type: integer, minimum: 1}
+        digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+        phase: {type: string}
+        infrastructure_applied: {type: boolean}
+        attention_reason: {type: string}
+        plan_subject: {type: string}
+    DeploymentPipelineBindings:
+      type: object
+      additionalProperties: false
+      required: [forward, forward_only]
+      properties:
+        forward: {$ref: '#/components/schemas/PipelineReference'}
+        rollback: {$ref: '#/components/schemas/PipelineReference'}
+        forward_only: {type: boolean}
     ExternalEnvironmentRef:
       type: object
       additionalProperties: false
@@ -1410,6 +1638,7 @@ components:
       additionalProperties: false
       required: [snapshot_id, environment_uuid, effective_base_deployment_id, fingerprint, manifest, graph, diff, module_versions]
       properties:
+        pipelines: {$ref: '#/components/schemas/DeploymentPipelineBindings'}
         snapshot_id: {type: string, format: uuid}
         environment_uuid: {type: string, format: uuid}
         effective_base_deployment_id: {type: string, format: uuid}
@@ -1447,6 +1676,7 @@ components:
       additionalProperties: false
       required: [operation_ref, fence, project_id, env_id, project_uuid, environment_uuid, mode]
       properties:
+        pipeline: {$ref: '#/components/schemas/PipelineReference'}
         operation_ref: {type: string, format: uuid}
         first_forward_deployment_id: {type: string, format: uuid}
         fence: {type: integer, format: int64, minimum: 1}
@@ -1472,6 +1702,8 @@ components:
       additionalProperties: false
       required: [deployment_id, dispatch_id, operation_ref, fence, request_digest, project_id, env_id, project_uuid, environment_uuid, mode, status, status_message, module_versions, rollback_module_versions, created_at, receipt_created_at]
       properties:
+        pipeline: {$ref: '#/components/schemas/DeploymentPipelineLifecycle'}
+        admission_closed: {type: boolean}
         deployment_id: {type: string, format: uuid}
         first_forward_deployment_id: {type: string, format: uuid}
         rollback_base_deployment_id: {type: string, format: uuid}
@@ -1622,10 +1854,27 @@ components:
           type: integer
           minimum: 0
           maximum: 1000000
+    PipelineNoEffectReceipt:
+      description: Authenticated site evidence that a terminal imported pipeline claimed no mutating effect. Bound to the exact signed command payload.
+      type: object
+      additionalProperties: false
+      required: [version, command_sha256, effect]
+      properties:
+        version:
+          type: string
+          enum: [stellwerk.no-effect/v1]
+        command_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        effect:
+          type: string
+          enum: [not_started]
     DeploymentResultsUpdateBody:
       description: The outcome of the runner execution.
       type: object
       properties:
+        no_effect_receipt:
+          $ref: '#/components/schemas/PipelineNoEffectReceipt'
         observation_result:
           $ref: "#/components/schemas/ObservationResult"
         outputs:
@@ -1765,6 +2014,8 @@ components:
         - status_message
         - metrics
       properties:
+        pipeline:
+          $ref: '#/components/schemas/DeploymentPipelineSummary'
         org_id:
           $ref: "#/components/schemas/OrganizationId"
         project_id:
@@ -2133,6 +2384,333 @@ components:
           maxProperties: 1000
           description: Stable Module UUID to immutable captured test snapshot UUID. Draft heads and published Version references are not accepted here.
           additionalProperties: {type: string, format: uuid}
+    DeploymentPipelineControlIntent:
+      type: object
+      additionalProperties: false
+      required: [action]
+      description: Approve/deny require the exact subject; repair requires failed_step and revision. Cancel has no extra authority; it binds the accepted execution digest.
+      properties:
+        action: {type: string, enum: [approve, deny, cancel, repair]}
+        subject: {type: string, pattern: '^[0-9a-f]{64}$'}
+        failed_step: {type: string, minLength: 1, maxLength: 128}
+        revision: {type: integer, format: int64, minimum: 1}
+    DeploymentPipelineControlReceipt:
+      type: object
+      additionalProperties: false
+      required: [id, deployment_id, actor_id, action, status, created_at, expires_at]
+      properties:
+        id: {type: string, format: uuid}
+        deployment_id: {type: string, format: uuid}
+        actor_id: {type: string, format: uuid}
+        action: {type: string, enum: [approve, deny, cancel, repair]}
+        status: {type: string, enum: [pending, resolved]}
+        created_at: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        result: {$ref: '#/components/schemas/DeploymentPipelineControlResult'}
+    DeploymentPipelineControlResult:
+      type: object
+      additionalProperties: false
+      required: [version, control_id, rollout_id, request_digest, execution_digest, outcome, code, phase, revision]
+      properties:
+        version: {type: string, enum: [stellwerk.pipeline.control-result/v1]}
+        control_id: {type: string, format: uuid}
+        rollout_id: {type: string, format: uuid}
+        request_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+        execution_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+        outcome: {type: string, enum: [applied, refused]}
+        code: {type: string, maxLength: 128}
+        phase: {type: string, minLength: 1, maxLength: 64}
+        revision: {type: integer, format: int64, minimum: 1}
+    DeploymentPipelineExecution:
+      type: object
+      additionalProperties: false
+      required: [definition, progress]
+      properties:
+        available_controls:
+          description: Candidate Native actions from last observed progress; the site remains authoritative.
+          type: array
+          items: {type: string, enum: [approve, deny, cancel, repair]}
+        native_logs: {type: boolean, description: Captured Native execution uses retained central phase logs.}
+        definition: {$ref: '#/components/schemas/DeploymentPipelineDefinition'}
+        progress: {$ref: '#/components/schemas/DeploymentPipelineProgress'}
+        plan: {$ref: '#/components/schemas/DeploymentPipelinePlanStatus'}
+        origin: {$ref: '#/components/schemas/DeploymentPipelineOrigin'}
+        source_plan_id: {type: string, format: uuid}
+        replanned_from_id: {type: string, format: uuid}
+    DeploymentPipelineDefinition:
+      type: object
+      required: [id, version, name, strategy, steps]
+      properties:
+        id: {type: string}
+        version: {type: integer}
+        name: {type: string}
+        strategy: {type: string}
+        intended_strategy: {type: string}
+        steps:
+          type: array
+          items: {$ref: '#/components/schemas/DeploymentPipelineStep'}
+        required_capabilities: {type: array, items: {type: string}}
+        pipeline_id: {type: string}
+        project_id: {type: string}
+        digest: {type: string}
+        requested_selection: {$ref: '#/components/schemas/DeploymentPipelineSelection'}
+        request_identity_version: {type: integer}
+        approval: {$ref: '#/components/schemas/DeploymentPipelineApproval'}
+        cost: {$ref: '#/components/schemas/DeploymentPipelineCost'}
+    DeploymentPipelineStep:
+      type: object
+      additionalProperties: false
+      required: [id, tool_id, phase, parameters]
+      properties:
+        id: {type: string}
+        tool_id: {type: string}
+        phase: {type: string}
+        parameters: {type: object, additionalProperties: true}
+    DeploymentPipelineApproval:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode: {type: string}
+        policy_id: {type: string}
+        policy_version: {type: string}
+    DeploymentPipelineCost:
+      type: object
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled: {type: boolean}
+        policy_revision: {type: integer, format: int64}
+    PipelineResourceChanges:
+      type: object
+      additionalProperties: false
+      required: [add, change, remove]
+      properties:
+        add: {type: integer}
+        change: {type: integer}
+        remove: {type: integer}
+    DeploymentPipelinePostRepairAuthority:
+      description: Public metadata for an accepted signed post-task repair. It does not authorize Plan or Apply.
+      type: object
+      additionalProperties: false
+      required: [control_id, expires_at]
+      properties:
+        control_id: {type: string, format: uuid}
+        expires_at: {type: string, format: date-time}
+    DeploymentPipelineProgress:
+      type: object
+      additionalProperties: false
+      required: [id, environment_id, phase, revision, created_at, infrastructure_applied, steps]
+      properties:
+        post_repair: {$ref: '#/components/schemas/DeploymentPipelinePostRepairAuthority'}
+        id: {type: string, format: uuid}
+        environment_id: {type: string, format: uuid}
+        phase: {type: string}
+        subject: {type: string}
+        error_code: {type: string}
+        failed_step: {type: string}
+        log_capture: {$ref: '#/components/schemas/NativePhaseLogDescriptor'}
+        log_references:
+          type: array
+          maxItems: 128
+          items: {$ref: '#/components/schemas/NativePhaseLogDescriptor'}
+        log_references_limited: {type: boolean}
+        revision: {type: integer, format: int64}
+        created_at: {type: string, format: date-time}
+        last_received_at: {type: string, format: date-time}
+        infrastructure_applied: {type: boolean}
+        changes: {$ref: '#/components/schemas/PipelineResourceChanges'}
+        plan_changes: {$ref: '#/components/schemas/PipelineResourceChanges'}
+        apply_changes: {$ref: '#/components/schemas/PipelineResourceChanges'}
+        cost: {$ref: '#/components/schemas/DeploymentPipelineCostComparison'}
+        approval_decision: {$ref: '#/components/schemas/DeploymentPipelineApprovalDecision'}
+        steps:
+          type: array
+          nullable: true
+          items: {$ref: '#/components/schemas/DeploymentPipelineStepResult'}
+    NativePhaseLogDescriptor:
+      type: object
+      additionalProperties: false
+      required: [version, authority, status]
+      properties:
+        version: {type: integer, enum: [1]}
+        status: {type: string, enum: [pending_transfer, log_export_not_managed, log_export_unavailable, log_export_too_large]}
+        ciphertext_sha256: {type: string, pattern: '^[a-f0-9]{64}$'}
+        ciphertext_bytes: {type: integer, minimum: 1, maximum: 6356992}
+        object_key: {type: string, maxLength: 1024}
+        authority: {$ref: '#/components/schemas/NativePhaseLogAuthority'}
+    NativePhaseLogAuthority:
+      type: object
+      additionalProperties: false
+      required: [organization_id, environment_id, deployment_id, command_digest, target, phase, execution_id, capture_revision]
+      properties:
+        organization_id: {type: string, maxLength: 128}
+        environment_id: {type: string, format: uuid}
+        deployment_id: {type: string, format: uuid}
+        command_digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+        phase: {type: string, enum: [plan, apply]}
+        step_id: {type: string, maxLength: 0}
+        execution_id: {type: string, maxLength: 128}
+        capture_revision: {type: integer, format: int64, minimum: 1}
+        subject: {type: string, pattern: '^[a-f0-9]{64}$'}
+        source_plan_id: {type: string, format: uuid}
+        source_subject: {type: string, pattern: '^[a-f0-9]{64}$'}
+        inherited: {type: boolean}
+        target:
+          type: object
+          additionalProperties: false
+          required: [runner_id, runner_uuid, runtime_version, pipeline_version, tools_digest, state_backend_type, state_configuration_digest]
+          properties:
+            runner_id: {type: string, maxLength: 128}
+            runner_uuid: {type: string, format: uuid}
+            runtime_version: {type: string, maxLength: 128}
+            pipeline_version: {type: string, maxLength: 128}
+            tools_digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+            state_backend_type: {type: string, maxLength: 128}
+            state_configuration_digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+    DeploymentPipelineStepResult:
+      type: object
+      additionalProperties: false
+      required: [id, phase, status]
+      properties:
+        id: {type: string}
+        phase: {type: string}
+        status: {type: string}
+        code: {type: string}
+        outcome: {$ref: '#/components/schemas/DeploymentPipelineStepOutcome'}
+    DeploymentPipelineStepOutcome:
+      type: object
+      additionalProperties: false
+      required: [verdict]
+      properties:
+        verdict: {type: string}
+        meaning: {type: string}
+        tool_id: {type: string}
+        tool_name: {type: string}
+        tool_version: {type: string}
+    DeploymentPipelineApprovalDecision:
+      type: object
+      additionalProperties: false
+      required: [source, decision, decided_at, subject]
+      properties:
+        source: {type: string}
+        decision: {type: string}
+        actor_id: {type: string}
+        policy_id: {type: string}
+        policy_version: {type: string}
+        decided_at: {type: string, format: date-time}
+        reason: {type: string}
+        subject: {type: string}
+        evidence_digest: {type: string}
+    DeploymentPipelineCostCoverage:
+      type: object
+      additionalProperties: false
+      required: [resources, priced, free, unknown, unpriced, missing_usage]
+      properties:
+        resources: {type: integer}
+        priced: {type: integer}
+        free: {type: integer}
+        unknown: {type: integer}
+        unpriced: {type: integer}
+        missing_usage: {type: integer}
+    DeploymentPipelineCostComparison:
+      type: object
+      additionalProperties: false
+      required: [version, estimator, build, currency, status, before_coverage, after_coverage, generated_at]
+      properties:
+        version: {type: string}
+        estimator: {type: string}
+        build: {type: string}
+        currency: {type: string}
+        status: {type: string}
+        before_monthly: {type: string}
+        after_monthly: {type: string}
+        delta_monthly: {type: string}
+        before_coverage: {$ref: '#/components/schemas/DeploymentPipelineCostCoverage'}
+        after_coverage: {$ref: '#/components/schemas/DeploymentPipelineCostCoverage'}
+        reason: {type: string}
+        generated_at: {type: string, format: date-time}
+    DeploymentPipelinePlanStatus:
+      type: object
+      additionalProperties: false
+      required: [state, can_replan]
+      properties:
+        state: {type: string, enum: [ready, superseded, used, busy, unavailable, pending]}
+        subject: {type: string}
+        base_deployment_id: {type: string, format: uuid}
+        current_deployment_id: {type: string, format: uuid}
+        apply_deployment_id: {type: string, format: uuid}
+        reason: {type: string}
+        can_replan: {type: boolean}
+    DeploymentPipelineOrigin:
+      type: object
+      additionalProperties: false
+      required: [plugin_id, request_id]
+      properties:
+        plugin_id: {type: string}
+        request_id: {type: string}
+        operation_ref: {type: string}
+        observation_run_id: {type: string, format: uuid}
+    DeploymentPipelineCatalogueItem:
+      allOf:
+        - {$ref: '#/components/schemas/DeploymentPipelineDefinition'}
+        - type: object
+          required: [compatible, reason]
+          properties:
+            compatible: {type: boolean}
+            reason: {type: string}
+    DeploymentPipelineCatalogue:
+      type: object
+      additionalProperties: false
+      required: [items, default_pipeline_id]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/DeploymentPipelineCatalogueItem'}
+        default_pipeline_id: {type: string}
+        default_source: {type: string, enum: [environment, project, none]}
+        policy: {$ref: '#/components/schemas/DeploymentPipelinePolicy'}
+    DeploymentPipelinePolicy:
+      type: object
+      additionalProperties: false
+      required: [enabled, allowed_version_ids, resource_version]
+      properties:
+        enabled: {type: boolean}
+        allowed_version_ids: {type: array, items: {type: string, format: uuid}}
+        resource_version: {type: integer, format: int64}
+        default_version_id: {type: string, format: uuid}
+        environment_default_version_ids: {type: object, additionalProperties: {type: string, format: uuid}}
+        rollback_defaults: {$ref: '#/components/schemas/DeploymentPipelineRollbackDefaults'}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    DeploymentPipelineRollbackDefaults:
+      type: object
+      additionalProperties: false
+      properties:
+        default_version_id: {type: string, format: uuid}
+        environment_default_version_ids: {type: object, additionalProperties: {type: string, format: uuid}}
+    DeploymentPipelineActionResponse:
+      type: object
+      additionalProperties: false
+      required: [id]
+      properties:
+        id: {type: string, format: uuid}
+    DeploymentPipelineSummary:
+      type: object
+      required: [id, version, name, strategy, phase, infrastructure_applied]
+      properties:
+        id: {type: string}
+        version: {type: integer}
+        name: {type: string}
+        strategy: {type: string}
+        phase: {type: string}
+        infrastructure_applied: {type: boolean}
+    DeploymentPipelineSelection:
+      type: object
+      required: [id, version]
+      properties:
+        id: {type: string, minLength: 1, maxLength: 64, description: Immutable published pipeline Version UUID or an eligible builtin recipe ID.}
+        version: {type: integer, minimum: 1}
     DeploymentCreateBody:
       type: object
       required:
@@ -2140,6 +2718,8 @@ components:
         - project_id
         - env_id
       properties:
+        pipeline:
+          $ref: '#/components/schemas/DeploymentPipelineSelection'
         mode:
           description: |
             The mode of the deployment. Defaults to 'deploy'. Can be set to 'rollback' to rollback to the graph used in

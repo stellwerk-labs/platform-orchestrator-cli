@@ -46,3 +46,7 @@ DP client generation is `go generate ./clients/platform-orchestrator-dp`, using 
 ## 2026-11-13: API provenance after SDK publication
 
 A public nested SDK tag makes its immutable parent-source API contract reachable, but does not prove a released server. Run the existing public check-api-specs gate and official generator rather than retaining local-candidate provenance or editing generated models. The normal generator also refreshes ignored mocks needed by command tests.
+
+## Native pipeline source export
+
+Keep the released application source and its public SDK contracts aligned; preserve existing compatibility exports.

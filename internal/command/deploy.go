@@ -431,6 +431,10 @@ func commonDeployCmdInner(cmd *cobra.Command, orgId string, body dp.DeploymentCr
 	if err != nil {
 		return nil, err
 	}
+	body.Pipeline, err = deploymentPipelineFromFlag(cmd, orgId, body.ProjectId)
+	if err != nil {
+		return nil, err
+	}
 	if b, _ := cmd.Flags().GetBool(deployCmdNoPromptFlag); !b {
 		if err := PromptTextAndEnterToContinue(cmd.Context(), cmd.InOrStdin(), ""); err != nil {
 			return nil, err

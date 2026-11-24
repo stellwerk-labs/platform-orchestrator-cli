@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: Project deployment pipelines
+  version: 1.0.0
+security:
+  - userIdHeader: []
+paths:
+  /orgs/{orgId}/projects/{projectId}/pipelines:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+    get:
+      operationId: ListProjectPipelines
+      description: Authoring catalogue. Requires project pipeline_read; drafts are never deployment recipes.
+      responses:
+        '200':
+          description: Bounded project catalogue, policy and trusted tools.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineCatalogue'}
+    post:
+      operationId: CreateProjectPipeline
+      description: Requires project pipeline_write management permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PipelineDraftCreate'}
+          application/yaml:
+            schema: {$ref: '#/components/schemas/PipelineDraftCreate'}
+      responses:
+        '201':
+          description: New draft; does not publish or affect deployment policy.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDraft'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/schema:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+    get:
+      operationId: GetProjectPipelineSchema
+      description: Declarative document JSON Schema. Requires pipeline_read or pipeline_write.
+      responses:
+        '200':
+          description: Editor schema generated from the canonical OpenAPI document contract.
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /orgs/{orgId}/projects/{projectId}/pipelines/validate:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+    post:
+      operationId: ValidateProjectPipelineDocument
+      description: Validates bounded raw JSON or YAML without mutation. Requires pipeline_read or pipeline_write. No aliases, anchors, duplicate keys or multiple documents.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {}
+          application/yaml:
+            schema: {}
+      responses:
+        '200':
+          description: Syntax, schema and deployment-domain validation of this exact document.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDocumentValidation'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/{pipelineId}/document:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - $ref: '#/components/parameters/PipelineID'
+    get:
+      operationId: GetProjectPipelineDocument
+      responses:
+        '200':
+          description: Canonical authoring document. ETag is the draft resource version.
+          headers:
+            ETag:
+              required: true
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDraftCreate'}
+    put:
+      operationId: SaveProjectPipelineDocument
+      description: Updates an existing draft only. Slug is immutable; publication and policy are separate.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PipelineDraftCreate'}
+          application/yaml:
+            schema: {$ref: '#/components/schemas/PipelineDraftCreate'}
+      responses:
+        '200':
+          description: Updated draft metadata.
+          headers:
+            ETag:
+              required: true
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDraft'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/policy:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+    get:
+      operationId: GetProjectPipelinePolicy
+      responses:
+        '200':
+          description: Current project pipeline-use policy.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelinePolicy'}
+    put:
+      operationId: SetProjectPipelinePolicy
+      description: Requires pipeline.publish management permission. Default must be an allowed non-retired version in this project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PipelinePolicyWrite'}
+      responses:
+        '200':
+          description: Optimistically updated pipeline-use policy.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelinePolicy'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/{pipelineId}:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - $ref: '#/components/parameters/PipelineID'
+    get:
+      operationId: GetProjectPipelineDraft
+      responses:
+        '200':
+          description: Current authoring draft.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDraft'}
+    delete:
+      operationId: DeleteProjectPipelineDraft
+      description: Archives a draft, preserving immutable publications and history. Retire all versions and remove policy references first. Requires pipeline_write.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204':
+          description: Draft archived and no longer editable or publishable.
+    put:
+      operationId: SaveProjectPipelineDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PipelineDraftWrite'}
+      responses:
+        '200':
+          description: Draft updated only when resource version matches.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineDraft'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/{pipelineId}/publish:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - $ref: '#/components/parameters/PipelineID'
+    post:
+      operationId: PublishProjectPipeline
+      description: Publishes exact stored draft; idempotency is scoped to actor, project and request body. Requires pipeline.publish.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PipelinePublish'}
+      responses:
+        '200':
+          description: Immutable published version. Does not implicitly change default or allowed versions.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublishedPipelineVersion'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/versions/{versionId}:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - $ref: '#/components/parameters/VersionID'
+    get:
+      operationId: GetPublishedProjectPipeline
+      description: Published immutable recipe; deployment readers may inspect it, never drafts.
+      responses:
+        '200':
+          description: Immutable definition and separate retirement metadata.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublishedPipelineVersion'}
+  /orgs/{orgId}/projects/{projectId}/pipelines/versions/{versionId}/retire:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - $ref: '#/components/parameters/VersionID'
+    post:
+      operationId: RetireProjectPipeline
+      description: Requires pipeline.publish. Refuses an allowed/default version; remove it from policy first. Existing executions remain pinned.
+      responses:
+        '200':
+          description: Retired version.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublishedPipelineVersion'}
+  /orgs/{orgId}/projects/{projectId}/envs/{envId}/pipeline-choices:
+    parameters:
+      - $ref: '#/components/parameters/OrgID'
+      - $ref: '#/components/parameters/ProjectID'
+      - in: path
+        name: envId
+        required: true
+        schema: {type: string}
+    get:
+      operationId: ListEnvironmentPipelineChoices
+      description: Requires deployment_read or deployment_write at this environment. Returns only eligible published recipes and current policy, never drafts.
+      responses:
+        '200':
+          description: Safe deployment selector material. DP additionally validates Runner compatibility.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PipelineChoices'}
+components:
+  securitySchemes:
+    userIdHeader:
+      type: apiKey
+      in: header
+      name: From
+  parameters:
+    IfMatch:
+      in: header
+      name: If-Match
+      required: true
+      description: Exact quoted positive draft resource version returned as ETag, for example '"3"'. Wildcards and multiple tags are not accepted.
+      schema: {type: string, pattern: '^"[1-9][0-9]*"$'}
+    OrgID:
+      in: path
+      name: orgId
+      required: true
+      schema: {type: string}
+    ProjectID:
+      in: path
+      name: projectId
+      required: true
+      schema: {type: string}
+    PipelineID:
+      in: path
+      name: pipelineId
+      required: true
+      schema: {type: string, format: uuid}
+    VersionID:
+      in: path
+      name: versionId
+      required: true
+      schema: {type: string, format: uuid}
+  schemas:
+    PipelineReference:
+      type: object
+      additionalProperties: false
+      required: [digest]
+      properties:
+        version_id: {type: string, format: uuid}
+        builtin: {type: string, enum: [default]}
+        digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+    PipelineCompatibility:
+      type: object
+      required: [compatible]
+      properties:
+        compatible: {type: boolean}
+        reason: {type: string}
+    PipelineEligibility:
+      type: object
+      required: [version_id, deploy, rollback]
+      properties:
+        version_id: {type: string, format: uuid}
+        deploy: {$ref: '#/components/schemas/PipelineCompatibility'}
+        rollback: {$ref: '#/components/schemas/PipelineCompatibility'}
+    PipelineDocumentValidation:
+      type: object
+      required: [valid, errors]
+      properties:
+        valid: {type: boolean}
+        document: {$ref: '#/components/schemas/PipelineDraftCreate'}
+        errors:
+          type: array
+          items: {$ref: '#/components/schemas/PipelineDocumentError'}
+    PipelineDocumentError:
+      type: object
+      required: [path, code, message]
+      properties:
+        path: {type: string, description: JSON pointer; empty for source syntax errors.}
+        code: {type: string}
+        message: {type: string}
+    PipelineRecipe:
+      type: object
+      additionalProperties: false
+      required: [strategy, steps]
+      properties:
+        strategy: {type: string, enum: [apply, reviewed]}
+        steps:
+          type: array
+          maxItems: 16
+          items: {$ref: '#/components/schemas/PipelineRecipeStep'}
+        cost:
+          type: object
+          additionalProperties: false
+          required: [enabled]
+          properties:
+            enabled: {type: boolean}
+        approval:
+          type: object
+          additionalProperties: false
+          required: [mode]
+          properties:
+            mode: {type: string, enum: [local, cost_non_increasing]}
+    PipelineRecipeStep:
+      type: object
+      additionalProperties: false
+      required: [id, tool_id, phase, parameters]
+      properties:
+        id: {type: string, minLength: 1, maxLength: 64, pattern: '^[a-z][a-z0-9-]*$'}
+        tool_id: {type: string, enum: [validate-manifest, resource-policy, bootstrap-database, bootstrap-lost-ack]}
+        phase: {type: string, enum: [pre_plan, plan_check, post_apply]}
+        parameters:
+          type: object
+          additionalProperties: false
+    PipelineDraftCreate:
+      type: object
+      additionalProperties: false
+      required: [slug, name, definition]
+      properties:
+        slug: {type: string, maxLength: 64, pattern: '^[a-z][a-z0-9-]*$'}
+        name: {type: string, minLength: 1, maxLength: 120}
+        definition: {$ref: '#/components/schemas/PipelineRecipe'}
+    PipelineDraftWrite:
+      type: object
+      additionalProperties: false
+      required: [name, definition, expected_resource_version]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 120}
+        definition: {$ref: '#/components/schemas/PipelineRecipe'}
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+    PipelinePublish:
+      type: object
+      additionalProperties: false
+      required: [expected_resource_version, request_key]
+      properties:
+        expected_resource_version: {type: integer, format: int64, minimum: 1}
+        request_key: {type: string, minLength: 1, maxLength: 128}
+    PipelineDraft:
+      type: object
+      required: [id, project_id, slug, name, resource_version, definition, updated_at, updated_by]
+      properties:
+        id: {type: string, format: uuid}
+        project_id: {type: string}
+        slug: {type: string}
+        name: {type: string}
+        resource_version: {type: integer, format: int64}
+        definition: {$ref: '#/components/schemas/PipelineRecipe'}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    PublishedPipelineVersion:
+      type: object
+      required: [id, pipeline_id, project_id, version, name, digest, definition, published_at, published_by]
+      properties:
+        id: {type: string, format: uuid}
+        pipeline_id: {type: string, format: uuid}
+        project_id: {type: string}
+        version: {type: integer}
+        name: {type: string}
+        digest: {type: string}
+        definition: {$ref: '#/components/schemas/PipelineRecipe'}
+        published_at: {type: string, format: date-time}
+        published_by: {type: string, format: uuid}
+        retired_at: {type: string, format: date-time}
+    PipelineRollbackDefaults:
+      type: object
+      additionalProperties: false
+      properties:
+        default_version_id: {type: string, format: uuid}
+        environment_default_version_ids:
+          x-go-type-skip-optional-pointer: true
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+    PipelinePolicyWrite:
+      type: object
+      additionalProperties: false
+      required: [expected_resource_version, enabled, allowed_version_ids]
+      properties:
+        rollback_defaults:
+          description: Distinct rollback preferences. Omission on writes preserves existing preferences; an empty object clears them.
+          $ref: '#/components/schemas/PipelineRollbackDefaults'
+        expected_resource_version: {type: integer, format: int64, minimum: 0}
+        environment_default_version_ids:
+          x-go-type-skip-optional-pointer: true
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        enabled: {type: boolean}
+        default_version_id: {type: string, format: uuid}
+        allowed_version_ids:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    PipelinePolicy:
+      type: object
+      required: [resource_version, enabled, allowed_version_ids]
+      properties:
+        rollback_defaults:
+          description: Distinct rollback preferences. Omission on writes preserves existing preferences; an empty object clears them.
+          $ref: '#/components/schemas/PipelineRollbackDefaults'
+        resource_version: {type: integer, format: int64}
+        environment_default_version_ids:
+          x-go-type-skip-optional-pointer: true
+          type: object
+          maxProperties: 1000
+          additionalProperties: {type: string, format: uuid}
+        enabled: {type: boolean}
+        default_version_id: {type: string, format: uuid}
+        allowed_version_ids:
+          type: array
+          items: {type: string, format: uuid}
+        updated_at: {type: string, format: date-time}
+        updated_by: {type: string, format: uuid}
+    PipelineTool:
+      type: object
+      required: [id, name, phase, description, required_capabilities]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        phase: {type: string}
+        description: {type: string}
+        required_capabilities:
+          type: array
+          items: {type: string}
+    PipelineCatalogue:
+      type: object
+      required: [drafts, versions, policy, tools]
+      properties:
+        drafts:
+          type: array
+          items: {$ref: '#/components/schemas/PipelineDraft'}
+        versions:
+          type: array
+          items: {$ref: '#/components/schemas/PublishedPipelineVersion'}
+        policy: {$ref: '#/components/schemas/PipelinePolicy'}
+        tools:
+          type: array
+          items: {$ref: '#/components/schemas/PipelineTool'}
+    PipelineChoices:
+      type: object
+      required: [versions, policy]
+      properties:
+        effective_default: {$ref: '#/components/schemas/PipelineReference'}
+        default_source: {type: string, enum: [environment, project, none]}
+        effective_rollback_default: {$ref: '#/components/schemas/PipelineReference'}
+        rollback_default_source: {type: string, enum: [environment, project, none]}
+        eligibility:
+          type: array
+          items: {$ref: '#/components/schemas/PipelineEligibility'}
+        versions:
+          type: array
+          items: {$ref: '#/components/schemas/PublishedPipelineVersion'}
+        policy: {$ref: '#/components/schemas/PipelinePolicy'}

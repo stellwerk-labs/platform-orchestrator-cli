@@ -234,6 +234,102 @@ func (e ProgressiveRolloutPinSnapshotScopeType) Valid() bool {
 	}
 }
 
+// Defines values for ProgressiveRolloutPipelineChoicesDefaultSource.
+const (
+	ProgressiveRolloutPipelineChoicesDefaultSourceEnvironment ProgressiveRolloutPipelineChoicesDefaultSource = "environment"
+	ProgressiveRolloutPipelineChoicesDefaultSourceNone        ProgressiveRolloutPipelineChoicesDefaultSource = "none"
+	ProgressiveRolloutPipelineChoicesDefaultSourceProject     ProgressiveRolloutPipelineChoicesDefaultSource = "project"
+)
+
+// Valid indicates whether the value is a known member of the ProgressiveRolloutPipelineChoicesDefaultSource enum.
+func (e ProgressiveRolloutPipelineChoicesDefaultSource) Valid() bool {
+	switch e {
+	case ProgressiveRolloutPipelineChoicesDefaultSourceEnvironment:
+		return true
+	case ProgressiveRolloutPipelineChoicesDefaultSourceNone:
+		return true
+	case ProgressiveRolloutPipelineChoicesDefaultSourceProject:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProgressiveRolloutPipelineChoicesRollbackDefaultSource.
+const (
+	ProgressiveRolloutPipelineChoicesRollbackDefaultSourceEnvironment ProgressiveRolloutPipelineChoicesRollbackDefaultSource = "environment"
+	ProgressiveRolloutPipelineChoicesRollbackDefaultSourceNone        ProgressiveRolloutPipelineChoicesRollbackDefaultSource = "none"
+	ProgressiveRolloutPipelineChoicesRollbackDefaultSourceProject     ProgressiveRolloutPipelineChoicesRollbackDefaultSource = "project"
+)
+
+// Valid indicates whether the value is a known member of the ProgressiveRolloutPipelineChoicesRollbackDefaultSource enum.
+func (e ProgressiveRolloutPipelineChoicesRollbackDefaultSource) Valid() bool {
+	switch e {
+	case ProgressiveRolloutPipelineChoicesRollbackDefaultSourceEnvironment:
+		return true
+	case ProgressiveRolloutPipelineChoicesRollbackDefaultSourceNone:
+		return true
+	case ProgressiveRolloutPipelineChoicesRollbackDefaultSourceProject:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProgressiveRolloutPipelineIssueCode.
+const (
+	ProgressiveRolloutPipelineIssueCodePipelineIncompatible     ProgressiveRolloutPipelineIssueCode = "pipeline_incompatible"
+	ProgressiveRolloutPipelineIssueCodePipelineUnavailable      ProgressiveRolloutPipelineIssueCode = "pipeline_unavailable"
+	ProgressiveRolloutPipelineIssueCodeRollbackPipelineRequired ProgressiveRolloutPipelineIssueCode = "rollback_pipeline_required"
+)
+
+// Valid indicates whether the value is a known member of the ProgressiveRolloutPipelineIssueCode enum.
+func (e ProgressiveRolloutPipelineIssueCode) Valid() bool {
+	switch e {
+	case ProgressiveRolloutPipelineIssueCodePipelineIncompatible:
+		return true
+	case ProgressiveRolloutPipelineIssueCodePipelineUnavailable:
+		return true
+	case ProgressiveRolloutPipelineIssueCodeRollbackPipelineRequired:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProgressiveRolloutPipelineReferenceBuiltin.
+const (
+	ProgressiveRolloutPipelineReferenceBuiltinDefault ProgressiveRolloutPipelineReferenceBuiltin = "default"
+)
+
+// Valid indicates whether the value is a known member of the ProgressiveRolloutPipelineReferenceBuiltin enum.
+func (e ProgressiveRolloutPipelineReferenceBuiltin) Valid() bool {
+	switch e {
+	case ProgressiveRolloutPipelineReferenceBuiltinDefault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProgressiveRolloutPipelineSelectionMode.
+const (
+	ProgressiveRolloutPipelineSelectionModeCustom   ProgressiveRolloutPipelineSelectionMode = "custom"
+	ProgressiveRolloutPipelineSelectionModeDefaults ProgressiveRolloutPipelineSelectionMode = "defaults"
+)
+
+// Valid indicates whether the value is a known member of the ProgressiveRolloutPipelineSelectionMode enum.
+func (e ProgressiveRolloutPipelineSelectionMode) Valid() bool {
+	switch e {
+	case ProgressiveRolloutPipelineSelectionModeCustom:
+		return true
+	case ProgressiveRolloutPipelineSelectionModeDefaults:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ProgressiveRolloutPlanDefaultPromotion.
 const (
 	ProgressiveRolloutPlanDefaultPromotionAtStart   ProgressiveRolloutPlanDefaultPromotion = "atStart"
@@ -624,6 +720,7 @@ type ProgressiveRolloutEnvironmentExecution struct {
 	// FirstForwardDeploymentId Data Plane-owned first forward Deployment identity for this operation and Environment.
 	FirstForwardDeploymentId *openapi_types.UUID                   `json:"first_forward_deployment_id,omitempty"`
 	LastError                *string                               `json:"last_error,omitempty"`
+	PipelineProgress         *ProgressiveRolloutPipelineProgress   `json:"pipeline_progress,omitempty"`
 	PreDeploymentAttempts    int                                   `json:"pre_deployment_attempts"`
 	ProjectId                string                                `json:"project_id"`
 	Removal                  *ProgressiveRolloutEnvironmentRemoval `json:"removal,omitempty"`
@@ -772,6 +869,103 @@ type ProgressiveRolloutPinSnapshot struct {
 // ProgressiveRolloutPinSnapshotScopeType defines model for ProgressiveRolloutPinSnapshot.ScopeType.
 type ProgressiveRolloutPinSnapshotScopeType string
 
+// ProgressiveRolloutPipelineBindings defines model for ProgressiveRolloutPipelineBindings.
+type ProgressiveRolloutPipelineBindings struct {
+	// Forward Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Forward     ProgressiveRolloutPipelineReference `json:"forward"`
+	ForwardOnly bool                                `json:"forward_only"`
+
+	// Rollback Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Rollback *ProgressiveRolloutPipelineReference `json:"rollback,omitempty"`
+}
+
+// ProgressiveRolloutPipelineChoice defines model for ProgressiveRolloutPipelineChoice.
+type ProgressiveRolloutPipelineChoice struct {
+	Deploy     ProgressiveRolloutPipelineCompatibility `json:"deploy"`
+	Name       string                                  `json:"name"`
+	PipelineId *openapi_types.UUID                     `json:"pipeline_id,omitempty"`
+
+	// Reference Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Reference ProgressiveRolloutPipelineReference     `json:"reference"`
+	Rollback  ProgressiveRolloutPipelineCompatibility `json:"rollback"`
+	Version   int                                     `json:"version"`
+}
+
+// ProgressiveRolloutPipelineChoices defines model for ProgressiveRolloutPipelineChoices.
+type ProgressiveRolloutPipelineChoices struct {
+	DefaultSource ProgressiveRolloutPipelineChoicesDefaultSource `json:"default_source"`
+
+	// EffectiveDefault Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	EffectiveDefault *ProgressiveRolloutPipelineReference `json:"effective_default,omitempty"`
+
+	// EffectiveRollbackDefault Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	EffectiveRollbackDefault *ProgressiveRolloutPipelineReference                    `json:"effective_rollback_default,omitempty"`
+	RollbackDefaultSource    *ProgressiveRolloutPipelineChoicesRollbackDefaultSource `json:"rollback_default_source,omitempty"`
+	Versions                 []ProgressiveRolloutPipelineChoice                      `json:"versions"`
+}
+
+// ProgressiveRolloutPipelineChoicesDefaultSource defines model for ProgressiveRolloutPipelineChoices.DefaultSource.
+type ProgressiveRolloutPipelineChoicesDefaultSource string
+
+// ProgressiveRolloutPipelineChoicesRollbackDefaultSource defines model for ProgressiveRolloutPipelineChoices.RollbackDefaultSource.
+type ProgressiveRolloutPipelineChoicesRollbackDefaultSource string
+
+// ProgressiveRolloutPipelineCompatibility defines model for ProgressiveRolloutPipelineCompatibility.
+type ProgressiveRolloutPipelineCompatibility struct {
+	Compatible bool    `json:"compatible"`
+	Reason     *string `json:"reason,omitempty"`
+}
+
+// ProgressiveRolloutPipelineIssue defines model for ProgressiveRolloutPipelineIssue.
+type ProgressiveRolloutPipelineIssue struct {
+	Code ProgressiveRolloutPipelineIssueCode `json:"code"`
+}
+
+// ProgressiveRolloutPipelineIssueCode defines model for ProgressiveRolloutPipelineIssue.Code.
+type ProgressiveRolloutPipelineIssueCode string
+
+// ProgressiveRolloutPipelineOverride defines model for ProgressiveRolloutPipelineOverride.
+type ProgressiveRolloutPipelineOverride struct {
+	EnvironmentUuid openapi_types.UUID `json:"environment_uuid"`
+
+	// Forward Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Forward *ProgressiveRolloutPipelineReference `json:"forward,omitempty"`
+
+	// Rollback Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Rollback *ProgressiveRolloutPipelineReference `json:"rollback,omitempty"`
+}
+
+// ProgressiveRolloutPipelineProgress defines model for ProgressiveRolloutPipelineProgress.
+type ProgressiveRolloutPipelineProgress struct {
+	AdmissionClosed       bool    `json:"admission_closed"`
+	AttentionReason       *string `json:"attention_reason,omitempty"`
+	InfrastructureApplied bool    `json:"infrastructure_applied"`
+	Phase                 string  `json:"phase"`
+	PlanSubject           *string `json:"plan_subject,omitempty"`
+
+	// Reference Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Reference ProgressiveRolloutPipelineReference `json:"reference"`
+}
+
+// ProgressiveRolloutPipelineReference Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+type ProgressiveRolloutPipelineReference struct {
+	Builtin   *ProgressiveRolloutPipelineReferenceBuiltin `json:"builtin,omitempty"`
+	Digest    string                                      `json:"digest"`
+	VersionId *openapi_types.UUID                         `json:"version_id,omitempty"`
+}
+
+// ProgressiveRolloutPipelineReferenceBuiltin defines model for ProgressiveRolloutPipelineReference.Builtin.
+type ProgressiveRolloutPipelineReferenceBuiltin string
+
+// ProgressiveRolloutPipelineSelection Explicitly opt in to directional Core defaults; absent on retained legacy drafts. Omitted on update preserves the stored selection for older writers.
+type ProgressiveRolloutPipelineSelection struct {
+	Mode      ProgressiveRolloutPipelineSelectionMode `json:"mode"`
+	Overrides *[]ProgressiveRolloutPipelineOverride   `json:"overrides,omitempty"`
+}
+
+// ProgressiveRolloutPipelineSelectionMode defines model for ProgressiveRolloutPipelineSelection.Mode.
+type ProgressiveRolloutPipelineSelectionMode string
+
 // ProgressiveRolloutPlan defines model for ProgressiveRolloutPlan.
 type ProgressiveRolloutPlan struct {
 	Changes          []ProgressiveRolloutPlanModuleChange   `json:"changes"`
@@ -779,9 +973,12 @@ type ProgressiveRolloutPlan struct {
 	DefaultPromotion ProgressiveRolloutPlanDefaultPromotion `json:"default_promotion"`
 	Environments     []ProgressiveRolloutPlannedEnvironment `json:"environments"`
 	Fingerprint      string                                 `json:"fingerprint"`
-	Promotions       []ProgressiveRolloutPromotion          `json:"promotions"`
-	Revision         int                                    `json:"revision"`
-	Waves            []ProgressiveRolloutPlannedWave        `json:"waves"`
+
+	// ForwardOnly Explicit reviewed rollback opt-out; absent only on retained legacy plans.
+	ForwardOnly *bool                           `json:"forward_only,omitempty"`
+	Promotions  []ProgressiveRolloutPromotion   `json:"promotions"`
+	Revision    int                             `json:"revision"`
+	Waves       []ProgressiveRolloutPlannedWave `json:"waves"`
 }
 
 // ProgressiveRolloutPlanDefaultPromotion defines model for ProgressiveRolloutPlan.DefaultPromotion.
@@ -828,6 +1025,8 @@ type ProgressiveRolloutPlannedEnvironment struct {
 	LatestDeploymentId        *openapi_types.UUID                         `json:"latest_deployment_id,omitempty"`
 	Modules                   map[string]ProgressiveRolloutModuleSnapshot `json:"modules"`
 	Pins                      *map[string][]ProgressiveRolloutPinSnapshot `json:"pins,omitempty"`
+	PipelineIssue             *ProgressiveRolloutPipelineIssue            `json:"pipeline_issue,omitempty"`
+	Pipelines                 *ProgressiveRolloutPipelineBindings         `json:"pipelines,omitempty"`
 	PlanningBaseDeploymentId  *openapi_types.UUID                         `json:"planning_base_deployment_id,omitempty"`
 	PlanningFingerprint       *string                                     `json:"planning_fingerprint,omitempty"`
 	ProjectId                 string                                      `json:"project_id"`
@@ -866,6 +1065,16 @@ type ProgressiveRolloutPrepareBody struct {
 	ExpectedResourceVersion      int64    `json:"expected_resource_version"`
 }
 
+// ProgressiveRolloutProjectPipelines defines model for ProgressiveRolloutProjectPipelines.
+type ProgressiveRolloutProjectPipelines struct {
+	// Forward Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Forward   *ProgressiveRolloutPipelineReference `json:"forward,omitempty"`
+	ProjectId string                               `json:"project_id"`
+
+	// Rollback Exactly one published version_id or the policy-off builtin default, with its immutable recipe digest.
+	Rollback *ProgressiveRolloutPipelineReference `json:"rollback,omitempty"`
+}
+
 // ProgressiveRolloutPromotion defines model for ProgressiveRolloutPromotion.
 type ProgressiveRolloutPromotion struct {
 	ModuleId              string  `json:"module_id"`
@@ -898,9 +1107,16 @@ type ProgressiveRolloutSelector struct {
 type ProgressiveRolloutSpec struct {
 	Changes          []ProgressiveRolloutModuleChange       `json:"changes"`
 	DefaultPromotion ProgressiveRolloutSpecDefaultPromotion `json:"default_promotion"`
-	Name             string                                 `json:"name"`
-	Selector         ProgressiveRolloutSelector             `json:"selector"`
-	Waves            []ProgressiveRolloutWaveSpec           `json:"waves"`
+
+	// ForwardOnly Explicitly reviewed opt-out when no eligible rollback recipe is selected. Included in the immutable business approval and Core operation intent.
+	ForwardOnly *bool  `json:"forward_only,omitempty"`
+	Name        string `json:"name"`
+
+	// PipelineSelection Explicitly opt in to directional Core defaults; absent on retained legacy drafts. Omitted on update preserves the stored selection for older writers.
+	PipelineSelection *ProgressiveRolloutPipelineSelection  `json:"pipeline_selection,omitempty"`
+	Pipelines         *[]ProgressiveRolloutProjectPipelines `json:"pipelines,omitempty"`
+	Selector          ProgressiveRolloutSelector            `json:"selector"`
+	Waves             []ProgressiveRolloutWaveSpec          `json:"waves"`
 }
 
 // ProgressiveRolloutSpecDefaultPromotion defines model for ProgressiveRolloutSpec.DefaultPromotion.

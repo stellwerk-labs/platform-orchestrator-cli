@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	rolloutIDPathParameter     = "rolloutId"
-	planRevisionQueryParameter = "plan_revision"
+	rolloutIDPathParameter           = "rolloutId"
+	planRevisionQueryParameter       = "plan_revision"
+	rolloutEnvironmentQueryParameter = "env_id"
+	rolloutProjectQueryParameter     = "project_id"
 )
 
 type nativeRolloutOperation struct {
@@ -29,20 +31,21 @@ type nativeRolloutOperation struct {
 }
 
 var nativeRolloutOperations = map[string]nativeRolloutOperation{
-	"listProgressiveRollouts":           {method: http.MethodGet, queryParameters: []string{"per_page", "page", "state", "project", "module", "conflicts", "view", "history_visibility", "include_view_counts"}, responseStatus: http.StatusOK},
-	"getProgressiveRollout":             {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, responseStatus: http.StatusOK},
-	"previewProgressiveRollout":         {method: http.MethodPost, bodyRequired: true, responseStatus: http.StatusOK},
-	"createProgressiveRollout":          {method: http.MethodPost, mutating: true, bodyRequired: true, responseStatus: http.StatusCreated},
-	"updateProgressiveRolloutDraft":     {method: http.MethodPatch, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusOK},
-	"prepareProgressiveRollout":         {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusOK},
-	"commandProgressiveRollout":         {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter, "rolloutCommand"}, bodyRequired: true, responseStatus: http.StatusOK},
-	"approveProgressiveRolloutScope":    {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusCreated},
-	"revokeProgressiveRolloutApproval":  {method: http.MethodDelete, mutating: true, pathParameters: []string{rolloutIDPathParameter, "approvalId"}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusNoContent},
-	"resolveProgressiveRolloutConflict": {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter, "conflictId", "resolution"}, bodyRequired: true, responseStatus: http.StatusOK},
-	"listProgressiveRolloutApprovals":   {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusOK},
-	"listProgressiveRolloutConflicts":   {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusOK},
-	"getProgressiveRolloutPlan":         {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter, "planRevision"}, responseStatus: http.StatusOK},
-	"listProgressiveRolloutEvents":      {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{"after"}, responseStatus: http.StatusOK},
+	"listProgressiveRolloutPipelineChoices": {method: http.MethodGet, queryParameters: []string{rolloutProjectQueryParameter, rolloutEnvironmentQueryParameter}, responseStatus: http.StatusOK},
+	"listProgressiveRollouts":               {method: http.MethodGet, queryParameters: []string{"per_page", "page", "state", "project", "module", "conflicts", "view", "history_visibility", "include_view_counts"}, responseStatus: http.StatusOK},
+	"getProgressiveRollout":                 {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, responseStatus: http.StatusOK},
+	"previewProgressiveRollout":             {method: http.MethodPost, bodyRequired: true, responseStatus: http.StatusOK},
+	"createProgressiveRollout":              {method: http.MethodPost, mutating: true, bodyRequired: true, responseStatus: http.StatusCreated},
+	"updateProgressiveRolloutDraft":         {method: http.MethodPatch, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusOK},
+	"prepareProgressiveRollout":             {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusOK},
+	"commandProgressiveRollout":             {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter, "rolloutCommand"}, bodyRequired: true, responseStatus: http.StatusOK},
+	"approveProgressiveRolloutScope":        {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter}, bodyRequired: true, responseStatus: http.StatusCreated},
+	"revokeProgressiveRolloutApproval":      {method: http.MethodDelete, mutating: true, pathParameters: []string{rolloutIDPathParameter, "approvalId"}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusNoContent},
+	"resolveProgressiveRolloutConflict":     {method: http.MethodPost, mutating: true, pathParameters: []string{rolloutIDPathParameter, "conflictId", "resolution"}, bodyRequired: true, responseStatus: http.StatusOK},
+	"listProgressiveRolloutApprovals":       {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusOK},
+	"listProgressiveRolloutConflicts":       {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{planRevisionQueryParameter}, responseStatus: http.StatusOK},
+	"getProgressiveRolloutPlan":             {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter, "planRevision"}, responseStatus: http.StatusOK},
+	"listProgressiveRolloutEvents":          {method: http.MethodGet, pathParameters: []string{rolloutIDPathParameter}, queryParameters: []string{"after"}, responseStatus: http.StatusOK},
 }
 
 func validateNativeParameters(operationID string, operation nativeRolloutOperation, pathParameters map[string]string, query map[string][]string, body any, idempotencyKey string, expectedStatus int) error {
@@ -138,9 +141,9 @@ func requireNativeProgressiveRolloutsOperation(ctx context.Context, orgID, opera
 	if err := progressiveRolloutsPluginError(contribution, access); err != nil {
 		return err
 	}
-	if contribution.Mode == cp.Hidden ||
-		(access == progressiveRolloutsMutate && contribution.Mode != cp.Full) ||
-		(access == progressiveRolloutsSafety && contribution.Mode != cp.Full && contribution.Mode != cp.SafetyOnly) {
+	if contribution.Mode == cp.PluginContributionModeHidden ||
+		(access == progressiveRolloutsMutate && contribution.Mode != cp.PluginContributionModeFull) ||
+		(access == progressiveRolloutsSafety && contribution.Mode != cp.PluginContributionModeFull && contribution.Mode != cp.PluginContributionModeSafetyOnly) {
 		return errors.Errorf("plugin_operation_unavailable: Progressive Rollouts operation %q is unavailable in %s mode", operationID, contribution.Mode)
 	}
 	for _, operation := range contribution.Operations {

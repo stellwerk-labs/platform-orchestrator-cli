@@ -1,0 +1,16 @@
+slug: reviewed-deploy
+name: Plan and review
+# This document creates a draft. Publishing and allowing it are separate actions.
+definition:
+  strategy: reviewed
+  steps:
+    - id: validate
+      tool_id: validate-manifest
+      phase: pre_plan
+      parameters: {}
+    - id: policy
+      tool_id: resource-policy
+      phase: plan_check
+      parameters: {}
+  approval:
+    mode: local

@@ -7,9 +7,9 @@ Core publishes no Rollouts type.
 
 - Contract: `progressive-rollouts-v1alpha.openapi.yaml`
 - Contract level: `v1alpha`
-- File SHA-256: `bc1e49c348fc5c95a2c5eef6d5fd2f0bfb5a35ccbc374c3bab7a6fb76801a0fd`
+- File SHA-256: `b5f53a7717c3280dd62f6c9624bcb316c9396e17256b928be0ce7633a9da886d`
 
-The document has no `paths`. Its `x-stellwerk-operations` list holds the 15
+The document has no `paths`. Its `x-stellwerk-operations` list holds the 17
 plugin operations as OpenAPI Operation Objects with their method, mutation flag,
 licence feature and safety path values. The CLI invokes them by `operationId`
 through Core's `invokePluginOperation` after Core plugin discovery, so this
@@ -23,3 +23,5 @@ Replace `spec.yaml` only with a released revision of the contract, never by
 hand. Then update the SHA-256 here and run `make generate` and
 `make check-api-specs`. The plugin implementation is commercial and not part
 of this repository.
+
+Feature branch qualification uses the local candidate from `spike/plugin-pipelines-20261118`, based on qualified Rollouts `aff263b`. This candidate is not a published or released plugin contract. Its canonical owner is `rollouts/api/progressive-rollouts-v1alpha.openapi.yaml`; release requires coordinated qualification and publication.

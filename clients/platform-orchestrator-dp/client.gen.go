@@ -106,6 +106,180 @@ func (e DeploymentDiffChangeType) Valid() bool {
 	}
 }
 
+// Defines values for DeploymentPipelineCatalogueDefaultSource.
+const (
+	Environment DeploymentPipelineCatalogueDefaultSource = "environment"
+	None        DeploymentPipelineCatalogueDefaultSource = "none"
+	Project     DeploymentPipelineCatalogueDefaultSource = "project"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineCatalogueDefaultSource enum.
+func (e DeploymentPipelineCatalogueDefaultSource) Valid() bool {
+	switch e {
+	case Environment:
+		return true
+	case None:
+		return true
+	case Project:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineControlIntentAction.
+const (
+	DeploymentPipelineControlIntentActionApprove DeploymentPipelineControlIntentAction = "approve"
+	DeploymentPipelineControlIntentActionCancel  DeploymentPipelineControlIntentAction = "cancel"
+	DeploymentPipelineControlIntentActionDeny    DeploymentPipelineControlIntentAction = "deny"
+	DeploymentPipelineControlIntentActionRepair  DeploymentPipelineControlIntentAction = "repair"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineControlIntentAction enum.
+func (e DeploymentPipelineControlIntentAction) Valid() bool {
+	switch e {
+	case DeploymentPipelineControlIntentActionApprove:
+		return true
+	case DeploymentPipelineControlIntentActionCancel:
+		return true
+	case DeploymentPipelineControlIntentActionDeny:
+		return true
+	case DeploymentPipelineControlIntentActionRepair:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineControlReceiptAction.
+const (
+	DeploymentPipelineControlReceiptActionApprove DeploymentPipelineControlReceiptAction = "approve"
+	DeploymentPipelineControlReceiptActionCancel  DeploymentPipelineControlReceiptAction = "cancel"
+	DeploymentPipelineControlReceiptActionDeny    DeploymentPipelineControlReceiptAction = "deny"
+	DeploymentPipelineControlReceiptActionRepair  DeploymentPipelineControlReceiptAction = "repair"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineControlReceiptAction enum.
+func (e DeploymentPipelineControlReceiptAction) Valid() bool {
+	switch e {
+	case DeploymentPipelineControlReceiptActionApprove:
+		return true
+	case DeploymentPipelineControlReceiptActionCancel:
+		return true
+	case DeploymentPipelineControlReceiptActionDeny:
+		return true
+	case DeploymentPipelineControlReceiptActionRepair:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineControlReceiptStatus.
+const (
+	DeploymentPipelineControlReceiptStatusPending  DeploymentPipelineControlReceiptStatus = "pending"
+	DeploymentPipelineControlReceiptStatusResolved DeploymentPipelineControlReceiptStatus = "resolved"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineControlReceiptStatus enum.
+func (e DeploymentPipelineControlReceiptStatus) Valid() bool {
+	switch e {
+	case DeploymentPipelineControlReceiptStatusPending:
+		return true
+	case DeploymentPipelineControlReceiptStatusResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineControlResultOutcome.
+const (
+	Applied DeploymentPipelineControlResultOutcome = "applied"
+	Refused DeploymentPipelineControlResultOutcome = "refused"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineControlResultOutcome enum.
+func (e DeploymentPipelineControlResultOutcome) Valid() bool {
+	switch e {
+	case Applied:
+		return true
+	case Refused:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineControlResultVersion.
+const (
+	StellwerkPipelineControlResultv1 DeploymentPipelineControlResultVersion = "stellwerk.pipeline.control-result/v1"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineControlResultVersion enum.
+func (e DeploymentPipelineControlResultVersion) Valid() bool {
+	switch e {
+	case StellwerkPipelineControlResultv1:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelineExecutionAvailableControls.
+const (
+	DeploymentPipelineExecutionAvailableControlsApprove DeploymentPipelineExecutionAvailableControls = "approve"
+	DeploymentPipelineExecutionAvailableControlsCancel  DeploymentPipelineExecutionAvailableControls = "cancel"
+	DeploymentPipelineExecutionAvailableControlsDeny    DeploymentPipelineExecutionAvailableControls = "deny"
+	DeploymentPipelineExecutionAvailableControlsRepair  DeploymentPipelineExecutionAvailableControls = "repair"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelineExecutionAvailableControls enum.
+func (e DeploymentPipelineExecutionAvailableControls) Valid() bool {
+	switch e {
+	case DeploymentPipelineExecutionAvailableControlsApprove:
+		return true
+	case DeploymentPipelineExecutionAvailableControlsCancel:
+		return true
+	case DeploymentPipelineExecutionAvailableControlsDeny:
+		return true
+	case DeploymentPipelineExecutionAvailableControlsRepair:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DeploymentPipelinePlanStatusState.
+const (
+	DeploymentPipelinePlanStatusStateBusy        DeploymentPipelinePlanStatusState = "busy"
+	DeploymentPipelinePlanStatusStatePending     DeploymentPipelinePlanStatusState = "pending"
+	DeploymentPipelinePlanStatusStateReady       DeploymentPipelinePlanStatusState = "ready"
+	DeploymentPipelinePlanStatusStateSuperseded  DeploymentPipelinePlanStatusState = "superseded"
+	DeploymentPipelinePlanStatusStateUnavailable DeploymentPipelinePlanStatusState = "unavailable"
+	DeploymentPipelinePlanStatusStateUsed        DeploymentPipelinePlanStatusState = "used"
+)
+
+// Valid indicates whether the value is a known member of the DeploymentPipelinePlanStatusState enum.
+func (e DeploymentPipelinePlanStatusState) Valid() bool {
+	switch e {
+	case DeploymentPipelinePlanStatusStateBusy:
+		return true
+	case DeploymentPipelinePlanStatusStatePending:
+		return true
+	case DeploymentPipelinePlanStatusStateReady:
+		return true
+	case DeploymentPipelinePlanStatusStateSuperseded:
+		return true
+	case DeploymentPipelinePlanStatusStateUnavailable:
+		return true
+	case DeploymentPipelinePlanStatusStateUsed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeploymentQueueItemMode.
 const (
 	DeploymentQueueItemModeDeploy   DeploymentQueueItemMode = "deploy"
@@ -376,6 +550,63 @@ func (e MetadataKeySchemaType) Valid() bool {
 	}
 }
 
+// Defines values for NativePhaseLogAuthorityPhase.
+const (
+	NativePhaseLogAuthorityPhaseApply NativePhaseLogAuthorityPhase = "apply"
+	NativePhaseLogAuthorityPhasePlan  NativePhaseLogAuthorityPhase = "plan"
+)
+
+// Valid indicates whether the value is a known member of the NativePhaseLogAuthorityPhase enum.
+func (e NativePhaseLogAuthorityPhase) Valid() bool {
+	switch e {
+	case NativePhaseLogAuthorityPhaseApply:
+		return true
+	case NativePhaseLogAuthorityPhasePlan:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NativePhaseLogDescriptorStatus.
+const (
+	LogExportNotManaged  NativePhaseLogDescriptorStatus = "log_export_not_managed"
+	LogExportTooLarge    NativePhaseLogDescriptorStatus = "log_export_too_large"
+	LogExportUnavailable NativePhaseLogDescriptorStatus = "log_export_unavailable"
+	PendingTransfer      NativePhaseLogDescriptorStatus = "pending_transfer"
+)
+
+// Valid indicates whether the value is a known member of the NativePhaseLogDescriptorStatus enum.
+func (e NativePhaseLogDescriptorStatus) Valid() bool {
+	switch e {
+	case LogExportNotManaged:
+		return true
+	case LogExportTooLarge:
+		return true
+	case LogExportUnavailable:
+		return true
+	case PendingTransfer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NativePhaseLogDescriptorVersion.
+const (
+	NativePhaseLogDescriptorVersionN1 NativePhaseLogDescriptorVersion = 1
+)
+
+// Valid indicates whether the value is a known member of the NativePhaseLogDescriptorVersion enum.
+func (e NativePhaseLogDescriptorVersion) Valid() bool {
+	switch e {
+	case NativePhaseLogDescriptorVersionN1:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ObservationChangeActions.
 const (
 	Create ObservationChangeActions = "create"
@@ -469,6 +700,51 @@ func (e PendingEnvironmentChangesCode) Valid() bool {
 	}
 }
 
+// Defines values for PipelineNoEffectReceiptEffect.
+const (
+	NotStarted PipelineNoEffectReceiptEffect = "not_started"
+)
+
+// Valid indicates whether the value is a known member of the PipelineNoEffectReceiptEffect enum.
+func (e PipelineNoEffectReceiptEffect) Valid() bool {
+	switch e {
+	case NotStarted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PipelineNoEffectReceiptVersion.
+const (
+	StellwerkNoEffectv1 PipelineNoEffectReceiptVersion = "stellwerk.no-effect/v1"
+)
+
+// Valid indicates whether the value is a known member of the PipelineNoEffectReceiptVersion enum.
+func (e PipelineNoEffectReceiptVersion) Valid() bool {
+	switch e {
+	case StellwerkNoEffectv1:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PipelineReferenceBuiltin.
+const (
+	Default PipelineReferenceBuiltin = "default"
+)
+
+// Valid indicates whether the value is a known member of the PipelineReferenceBuiltin enum.
+func (e PipelineReferenceBuiltin) Valid() bool {
+	switch e {
+	case Default:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdateMetadataKeySchemaType.
 const (
 	UpdateMetadataKeySchemaTypeString UpdateMetadataKeySchemaType = "string"
@@ -526,6 +802,54 @@ func (e ListDeploymentsParamsByStatus) Valid() bool {
 	case Failed:
 		return true
 	case Succeeded:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListDeploymentsParamsQuickFilter.
+const (
+	All            ListDeploymentsParamsQuickFilter = "all"
+	Deployments    ListDeploymentsParamsQuickFilter = "deployments"
+	NeedsApproval  ListDeploymentsParamsQuickFilter = "needs_approval"
+	NeedsAttention ListDeploymentsParamsQuickFilter = "needs_attention"
+	Plans          ListDeploymentsParamsQuickFilter = "plans"
+	UnusedPlans    ListDeploymentsParamsQuickFilter = "unused_plans"
+)
+
+// Valid indicates whether the value is a known member of the ListDeploymentsParamsQuickFilter enum.
+func (e ListDeploymentsParamsQuickFilter) Valid() bool {
+	switch e {
+	case All:
+		return true
+	case Deployments:
+		return true
+	case NeedsApproval:
+		return true
+	case NeedsAttention:
+		return true
+	case Plans:
+		return true
+	case UnusedPlans:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetDeploymentLogsParamsPhase.
+const (
+	GetDeploymentLogsParamsPhaseApply GetDeploymentLogsParamsPhase = "apply"
+	GetDeploymentLogsParamsPhasePlan  GetDeploymentLogsParamsPhase = "plan"
+)
+
+// Valid indicates whether the value is a known member of the GetDeploymentLogsParamsPhase enum.
+func (e GetDeploymentLogsParamsPhase) Valid() bool {
+	switch e {
+	case GetDeploymentLogsParamsPhaseApply:
+		return true
+	case GetDeploymentLogsParamsPhasePlan:
 		return true
 	default:
 		return false
@@ -628,6 +952,7 @@ type Deployment struct {
 	// is now; those Deployments change it first, so the result may still change. Plan-only requests and dry runs are
 	// never queued.
 	PendingChanges *PendingEnvironmentChanges `json:"pending_changes,omitempty"`
+	Pipeline       *DeploymentPipelineSummary `json:"pipeline,omitempty"`
 
 	// PlanOnly Whether the deployment is executed in plan mode.
 	//
@@ -716,7 +1041,8 @@ type DeploymentCreateBody struct {
 	Mode DeploymentCreateBodyMode `json:"mode"`
 
 	// ModuleVersions Exact canonical SemVer selections by Module slug. Proposed versions require the scoped module.version.use-proposed capability.
-	ModuleVersions map[string]string `json:"module_versions,omitempty"`
+	ModuleVersions map[string]string            `json:"module_versions,omitempty"`
+	Pipeline       *DeploymentPipelineSelection `json:"pipeline,omitempty"`
 
 	// PlanOnly Whether the deployment should be planned only and not executed. This defaults to 'false' unless the mode is
 	// set to 'plan_only'.
@@ -933,6 +1259,313 @@ type DeploymentPage struct {
 	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
+// DeploymentPipelineActionResponse defines model for DeploymentPipelineActionResponse.
+type DeploymentPipelineActionResponse struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+// DeploymentPipelineApproval defines model for DeploymentPipelineApproval.
+type DeploymentPipelineApproval struct {
+	Mode          string  `json:"mode"`
+	PolicyId      *string `json:"policy_id,omitempty"`
+	PolicyVersion *string `json:"policy_version,omitempty"`
+}
+
+// DeploymentPipelineApprovalDecision defines model for DeploymentPipelineApprovalDecision.
+type DeploymentPipelineApprovalDecision struct {
+	ActorId        *string   `json:"actor_id,omitempty"`
+	DecidedAt      time.Time `json:"decided_at"`
+	Decision       string    `json:"decision"`
+	EvidenceDigest *string   `json:"evidence_digest,omitempty"`
+	PolicyId       *string   `json:"policy_id,omitempty"`
+	PolicyVersion  *string   `json:"policy_version,omitempty"`
+	Reason         *string   `json:"reason,omitempty"`
+	Source         string    `json:"source"`
+	Subject        string    `json:"subject"`
+}
+
+// DeploymentPipelineBindings defines model for DeploymentPipelineBindings.
+type DeploymentPipelineBindings struct {
+	Forward     PipelineReference  `json:"forward"`
+	ForwardOnly bool               `json:"forward_only"`
+	Rollback    *PipelineReference `json:"rollback,omitempty"`
+}
+
+// DeploymentPipelineCatalogue defines model for DeploymentPipelineCatalogue.
+type DeploymentPipelineCatalogue struct {
+	DefaultPipelineId string                                    `json:"default_pipeline_id"`
+	DefaultSource     *DeploymentPipelineCatalogueDefaultSource `json:"default_source,omitempty"`
+	Items             []DeploymentPipelineCatalogueItem         `json:"items"`
+	Policy            *DeploymentPipelinePolicy                 `json:"policy,omitempty"`
+}
+
+// DeploymentPipelineCatalogueDefaultSource defines model for DeploymentPipelineCatalogue.DefaultSource.
+type DeploymentPipelineCatalogueDefaultSource string
+
+// DeploymentPipelineCatalogueItem defines model for DeploymentPipelineCatalogueItem.
+type DeploymentPipelineCatalogueItem struct {
+	Approval               *DeploymentPipelineApproval  `json:"approval,omitempty"`
+	Compatible             bool                         `json:"compatible"`
+	Cost                   *DeploymentPipelineCost      `json:"cost,omitempty"`
+	Digest                 *string                      `json:"digest,omitempty"`
+	Id                     string                       `json:"id"`
+	IntendedStrategy       *string                      `json:"intended_strategy,omitempty"`
+	Name                   string                       `json:"name"`
+	PipelineId             *string                      `json:"pipeline_id,omitempty"`
+	ProjectId              *string                      `json:"project_id,omitempty"`
+	Reason                 string                       `json:"reason"`
+	RequestIdentityVersion *int                         `json:"request_identity_version,omitempty"`
+	RequestedSelection     *DeploymentPipelineSelection `json:"requested_selection,omitempty"`
+	RequiredCapabilities   *[]string                    `json:"required_capabilities,omitempty"`
+	Steps                  []DeploymentPipelineStep     `json:"steps"`
+	Strategy               string                       `json:"strategy"`
+	Version                int                          `json:"version"`
+}
+
+// DeploymentPipelineControlIntent Approve/deny require the exact subject; repair requires failed_step and revision. Cancel has no extra authority; it binds the accepted execution digest.
+type DeploymentPipelineControlIntent struct {
+	Action     DeploymentPipelineControlIntentAction `json:"action"`
+	FailedStep *string                               `json:"failed_step,omitempty"`
+	Revision   *int64                                `json:"revision,omitempty"`
+	Subject    *string                               `json:"subject,omitempty"`
+}
+
+// DeploymentPipelineControlIntentAction defines model for DeploymentPipelineControlIntent.Action.
+type DeploymentPipelineControlIntentAction string
+
+// DeploymentPipelineControlReceipt defines model for DeploymentPipelineControlReceipt.
+type DeploymentPipelineControlReceipt struct {
+	Action       DeploymentPipelineControlReceiptAction `json:"action"`
+	ActorId      openapi_types.UUID                     `json:"actor_id"`
+	CreatedAt    time.Time                              `json:"created_at"`
+	DeploymentId openapi_types.UUID                     `json:"deployment_id"`
+	ExpiresAt    time.Time                              `json:"expires_at"`
+	Id           openapi_types.UUID                     `json:"id"`
+	Result       *DeploymentPipelineControlResult       `json:"result,omitempty"`
+	Status       DeploymentPipelineControlReceiptStatus `json:"status"`
+}
+
+// DeploymentPipelineControlReceiptAction defines model for DeploymentPipelineControlReceipt.Action.
+type DeploymentPipelineControlReceiptAction string
+
+// DeploymentPipelineControlReceiptStatus defines model for DeploymentPipelineControlReceipt.Status.
+type DeploymentPipelineControlReceiptStatus string
+
+// DeploymentPipelineControlResult defines model for DeploymentPipelineControlResult.
+type DeploymentPipelineControlResult struct {
+	Code            string                                 `json:"code"`
+	ControlId       openapi_types.UUID                     `json:"control_id"`
+	ExecutionDigest string                                 `json:"execution_digest"`
+	Outcome         DeploymentPipelineControlResultOutcome `json:"outcome"`
+	Phase           string                                 `json:"phase"`
+	RequestDigest   string                                 `json:"request_digest"`
+	Revision        int64                                  `json:"revision"`
+	RolloutId       openapi_types.UUID                     `json:"rollout_id"`
+	Version         DeploymentPipelineControlResultVersion `json:"version"`
+}
+
+// DeploymentPipelineControlResultOutcome defines model for DeploymentPipelineControlResult.Outcome.
+type DeploymentPipelineControlResultOutcome string
+
+// DeploymentPipelineControlResultVersion defines model for DeploymentPipelineControlResult.Version.
+type DeploymentPipelineControlResultVersion string
+
+// DeploymentPipelineCost defines model for DeploymentPipelineCost.
+type DeploymentPipelineCost struct {
+	Enabled        bool   `json:"enabled"`
+	PolicyRevision *int64 `json:"policy_revision,omitempty"`
+}
+
+// DeploymentPipelineCostComparison defines model for DeploymentPipelineCostComparison.
+type DeploymentPipelineCostComparison struct {
+	AfterCoverage  DeploymentPipelineCostCoverage `json:"after_coverage"`
+	AfterMonthly   *string                        `json:"after_monthly,omitempty"`
+	BeforeCoverage DeploymentPipelineCostCoverage `json:"before_coverage"`
+	BeforeMonthly  *string                        `json:"before_monthly,omitempty"`
+	Build          string                         `json:"build"`
+	Currency       string                         `json:"currency"`
+	DeltaMonthly   *string                        `json:"delta_monthly,omitempty"`
+	Estimator      string                         `json:"estimator"`
+	GeneratedAt    time.Time                      `json:"generated_at"`
+	Reason         *string                        `json:"reason,omitempty"`
+	Status         string                         `json:"status"`
+	Version        string                         `json:"version"`
+}
+
+// DeploymentPipelineCostCoverage defines model for DeploymentPipelineCostCoverage.
+type DeploymentPipelineCostCoverage struct {
+	Free         int `json:"free"`
+	MissingUsage int `json:"missing_usage"`
+	Priced       int `json:"priced"`
+	Resources    int `json:"resources"`
+	Unknown      int `json:"unknown"`
+	Unpriced     int `json:"unpriced"`
+}
+
+// DeploymentPipelineDefinition defines model for DeploymentPipelineDefinition.
+type DeploymentPipelineDefinition struct {
+	Approval               *DeploymentPipelineApproval  `json:"approval,omitempty"`
+	Cost                   *DeploymentPipelineCost      `json:"cost,omitempty"`
+	Digest                 *string                      `json:"digest,omitempty"`
+	Id                     string                       `json:"id"`
+	IntendedStrategy       *string                      `json:"intended_strategy,omitempty"`
+	Name                   string                       `json:"name"`
+	PipelineId             *string                      `json:"pipeline_id,omitempty"`
+	ProjectId              *string                      `json:"project_id,omitempty"`
+	RequestIdentityVersion *int                         `json:"request_identity_version,omitempty"`
+	RequestedSelection     *DeploymentPipelineSelection `json:"requested_selection,omitempty"`
+	RequiredCapabilities   *[]string                    `json:"required_capabilities,omitempty"`
+	Steps                  []DeploymentPipelineStep     `json:"steps"`
+	Strategy               string                       `json:"strategy"`
+	Version                int                          `json:"version"`
+}
+
+// DeploymentPipelineExecution defines model for DeploymentPipelineExecution.
+type DeploymentPipelineExecution struct {
+	// AvailableControls Candidate Native actions from last observed progress; the site remains authoritative.
+	AvailableControls *[]DeploymentPipelineExecutionAvailableControls `json:"available_controls,omitempty"`
+	Definition        DeploymentPipelineDefinition                    `json:"definition"`
+
+	// NativeLogs Captured Native execution uses retained central phase logs.
+	NativeLogs      *bool                         `json:"native_logs,omitempty"`
+	Origin          *DeploymentPipelineOrigin     `json:"origin,omitempty"`
+	Plan            *DeploymentPipelinePlanStatus `json:"plan,omitempty"`
+	Progress        DeploymentPipelineProgress    `json:"progress"`
+	ReplannedFromId *openapi_types.UUID           `json:"replanned_from_id,omitempty"`
+	SourcePlanId    *openapi_types.UUID           `json:"source_plan_id,omitempty"`
+}
+
+// DeploymentPipelineExecutionAvailableControls defines model for DeploymentPipelineExecution.AvailableControls.
+type DeploymentPipelineExecutionAvailableControls string
+
+// DeploymentPipelineLifecycle defines model for DeploymentPipelineLifecycle.
+type DeploymentPipelineLifecycle struct {
+	AttentionReason       *string             `json:"attention_reason,omitempty"`
+	Digest                string              `json:"digest"`
+	InfrastructureApplied bool                `json:"infrastructure_applied"`
+	Phase                 string              `json:"phase"`
+	PipelineId            *openapi_types.UUID `json:"pipeline_id,omitempty"`
+	PlanSubject           *string             `json:"plan_subject,omitempty"`
+	Reference             PipelineReference   `json:"reference"`
+	Version               int                 `json:"version"`
+	VersionId             *openapi_types.UUID `json:"version_id,omitempty"`
+}
+
+// DeploymentPipelineOrigin defines model for DeploymentPipelineOrigin.
+type DeploymentPipelineOrigin struct {
+	ObservationRunId *openapi_types.UUID `json:"observation_run_id,omitempty"`
+	OperationRef     *string             `json:"operation_ref,omitempty"`
+	PluginId         string              `json:"plugin_id"`
+	RequestId        string              `json:"request_id"`
+}
+
+// DeploymentPipelinePlanStatus defines model for DeploymentPipelinePlanStatus.
+type DeploymentPipelinePlanStatus struct {
+	ApplyDeploymentId   *openapi_types.UUID               `json:"apply_deployment_id,omitempty"`
+	BaseDeploymentId    *openapi_types.UUID               `json:"base_deployment_id,omitempty"`
+	CanReplan           bool                              `json:"can_replan"`
+	CurrentDeploymentId *openapi_types.UUID               `json:"current_deployment_id,omitempty"`
+	Reason              *string                           `json:"reason,omitempty"`
+	State               DeploymentPipelinePlanStatusState `json:"state"`
+	Subject             *string                           `json:"subject,omitempty"`
+}
+
+// DeploymentPipelinePlanStatusState defines model for DeploymentPipelinePlanStatus.State.
+type DeploymentPipelinePlanStatusState string
+
+// DeploymentPipelinePolicy defines model for DeploymentPipelinePolicy.
+type DeploymentPipelinePolicy struct {
+	AllowedVersionIds            []openapi_types.UUID                `json:"allowed_version_ids"`
+	DefaultVersionId             *openapi_types.UUID                 `json:"default_version_id,omitempty"`
+	Enabled                      bool                                `json:"enabled"`
+	EnvironmentDefaultVersionIds *map[string]openapi_types.UUID      `json:"environment_default_version_ids,omitempty"`
+	ResourceVersion              int64                               `json:"resource_version"`
+	RollbackDefaults             *DeploymentPipelineRollbackDefaults `json:"rollback_defaults,omitempty"`
+	UpdatedAt                    *time.Time                          `json:"updated_at,omitempty"`
+	UpdatedBy                    *openapi_types.UUID                 `json:"updated_by,omitempty"`
+}
+
+// DeploymentPipelinePostRepairAuthority Public metadata for an accepted signed post-task repair. It does not authorize Plan or Apply.
+type DeploymentPipelinePostRepairAuthority struct {
+	ControlId openapi_types.UUID `json:"control_id"`
+	ExpiresAt time.Time          `json:"expires_at"`
+}
+
+// DeploymentPipelineProgress defines model for DeploymentPipelineProgress.
+type DeploymentPipelineProgress struct {
+	ApplyChanges          *PipelineResourceChanges            `json:"apply_changes,omitempty"`
+	ApprovalDecision      *DeploymentPipelineApprovalDecision `json:"approval_decision,omitempty"`
+	Changes               *PipelineResourceChanges            `json:"changes,omitempty"`
+	Cost                  *DeploymentPipelineCostComparison   `json:"cost,omitempty"`
+	CreatedAt             time.Time                           `json:"created_at"`
+	EnvironmentId         openapi_types.UUID                  `json:"environment_id"`
+	ErrorCode             *string                             `json:"error_code,omitempty"`
+	FailedStep            *string                             `json:"failed_step,omitempty"`
+	Id                    openapi_types.UUID                  `json:"id"`
+	InfrastructureApplied bool                                `json:"infrastructure_applied"`
+	LastReceivedAt        *time.Time                          `json:"last_received_at,omitempty"`
+	LogCapture            *NativePhaseLogDescriptor           `json:"log_capture,omitempty"`
+	LogReferences         *[]NativePhaseLogDescriptor         `json:"log_references,omitempty"`
+	LogReferencesLimited  *bool                               `json:"log_references_limited,omitempty"`
+	Phase                 string                              `json:"phase"`
+	PlanChanges           *PipelineResourceChanges            `json:"plan_changes,omitempty"`
+
+	// PostRepair Public metadata for an accepted signed post-task repair. It does not authorize Plan or Apply.
+	PostRepair *DeploymentPipelinePostRepairAuthority            `json:"post_repair,omitempty"`
+	Revision   int64                                             `json:"revision"`
+	Steps      nullable.Nullable[[]DeploymentPipelineStepResult] `json:"steps"`
+	Subject    *string                                           `json:"subject,omitempty"`
+}
+
+// DeploymentPipelineRollbackDefaults defines model for DeploymentPipelineRollbackDefaults.
+type DeploymentPipelineRollbackDefaults struct {
+	DefaultVersionId             *openapi_types.UUID            `json:"default_version_id,omitempty"`
+	EnvironmentDefaultVersionIds *map[string]openapi_types.UUID `json:"environment_default_version_ids,omitempty"`
+}
+
+// DeploymentPipelineSelection defines model for DeploymentPipelineSelection.
+type DeploymentPipelineSelection struct {
+	// Id Immutable published pipeline Version UUID or an eligible builtin recipe ID.
+	Id      string `json:"id"`
+	Version int    `json:"version"`
+}
+
+// DeploymentPipelineStep defines model for DeploymentPipelineStep.
+type DeploymentPipelineStep struct {
+	Id         string                 `json:"id"`
+	Parameters map[string]interface{} `json:"parameters"`
+	Phase      string                 `json:"phase"`
+	ToolId     string                 `json:"tool_id"`
+}
+
+// DeploymentPipelineStepOutcome defines model for DeploymentPipelineStepOutcome.
+type DeploymentPipelineStepOutcome struct {
+	Meaning     *string `json:"meaning,omitempty"`
+	ToolId      *string `json:"tool_id,omitempty"`
+	ToolName    *string `json:"tool_name,omitempty"`
+	ToolVersion *string `json:"tool_version,omitempty"`
+	Verdict     string  `json:"verdict"`
+}
+
+// DeploymentPipelineStepResult defines model for DeploymentPipelineStepResult.
+type DeploymentPipelineStepResult struct {
+	Code    *string                        `json:"code,omitempty"`
+	Id      string                         `json:"id"`
+	Outcome *DeploymentPipelineStepOutcome `json:"outcome,omitempty"`
+	Phase   string                         `json:"phase"`
+	Status  string                         `json:"status"`
+}
+
+// DeploymentPipelineSummary defines model for DeploymentPipelineSummary.
+type DeploymentPipelineSummary struct {
+	Id                    string `json:"id"`
+	InfrastructureApplied bool   `json:"infrastructure_applied"`
+	Name                  string `json:"name"`
+	Phase                 string `json:"phase"`
+	Strategy              string `json:"strategy"`
+	Version               int    `json:"version"`
+}
+
 // DeploymentQueueCancelBody defines model for DeploymentQueueCancelBody.
 type DeploymentQueueCancelBody struct {
 	// Reason Why the request is no longer wanted.
@@ -1028,7 +1661,10 @@ type DeploymentResultsUpdateBody struct {
 	Error *Error `json:"error,omitempty"`
 
 	// Metadata The metadata produced by the resources involved in the deployment.
-	Metadata          DeploymentResultMetadata `json:"metadata,omitempty"`
+	Metadata DeploymentResultMetadata `json:"metadata,omitempty"`
+
+	// NoEffectReceipt Authenticated site evidence that a terminal imported pipeline claimed no mutating effect. Bound to the exact signed command payload.
+	NoEffectReceipt   *PipelineNoEffectReceipt `json:"no_effect_receipt,omitempty"`
 	ObservationResult *ObservationResult       `json:"observation_result,omitempty"`
 
 	// Outputs The encrypted outputs produced by the runner.
@@ -1088,7 +1724,8 @@ type DeploymentSummary struct {
 	// OrgId The Organization ID
 	//
 	// Example: my-org
-	OrgId OrganizationId `json:"org_id"`
+	OrgId    OrganizationId             `json:"org_id"`
+	Pipeline *DeploymentPipelineSummary `json:"pipeline,omitempty"`
 
 	// PlanOnly Whether the deployment is executed in plan mode.
 	//
@@ -1205,6 +1842,7 @@ type ExternalDeploymentAdmissionBody struct {
 	FirstForwardDeploymentId *openapi_types.UUID                            `json:"first_forward_deployment_id,omitempty"`
 	Mode                     ExternalDeploymentAdmissionBodyMode            `json:"mode"`
 	OperationRef             openapi_types.UUID                             `json:"operation_ref"`
+	Pipeline                 *PipelineReference                             `json:"pipeline,omitempty"`
 	Plan                     *ExternalDeploymentAdmissionPlan               `json:"plan,omitempty"`
 	ProjectId                string                                         `json:"project_id"`
 	ProjectUuid              openapi_types.UUID                             `json:"project_uuid"`
@@ -1249,14 +1887,15 @@ type ExternalDeploymentPlanBody struct {
 // ExternalDeploymentPlanResponse defines model for ExternalDeploymentPlanResponse.
 type ExternalDeploymentPlanResponse struct {
 	// Diff Describes a diff between the resource graphs of two deployments.
-	Diff                      DeploymentDiff            `json:"diff"`
-	EffectiveBaseDeploymentId openapi_types.UUID        `json:"effective_base_deployment_id"`
-	EnvironmentUuid           openapi_types.UUID        `json:"environment_uuid"`
-	Fingerprint               string                    `json:"fingerprint"`
-	Graph                     ExternalGraphStructure    `json:"graph"`
-	Manifest                  ExternalManifestStructure `json:"manifest"`
-	ModuleVersions            []ExternalModuleInventory `json:"module_versions"`
-	SnapshotId                openapi_types.UUID        `json:"snapshot_id"`
+	Diff                      DeploymentDiff              `json:"diff"`
+	EffectiveBaseDeploymentId openapi_types.UUID          `json:"effective_base_deployment_id"`
+	EnvironmentUuid           openapi_types.UUID          `json:"environment_uuid"`
+	Fingerprint               string                      `json:"fingerprint"`
+	Graph                     ExternalGraphStructure      `json:"graph"`
+	Manifest                  ExternalManifestStructure   `json:"manifest"`
+	ModuleVersions            []ExternalModuleInventory   `json:"module_versions"`
+	Pipelines                 *DeploymentPipelineBindings `json:"pipelines,omitempty"`
+	SnapshotId                openapi_types.UUID          `json:"snapshot_id"`
 }
 
 // ExternalDeploymentReadinessBody defines model for ExternalDeploymentReadinessBody.
@@ -1272,6 +1911,7 @@ type ExternalDeploymentReadinessResponse struct {
 // ExternalDeploymentStatusResponse defines model for ExternalDeploymentStatusResponse.
 type ExternalDeploymentStatusResponse struct {
 	AdmissionBaseDeploymentId   *openapi_types.UUID                  `json:"admission_base_deployment_id,omitempty"`
+	AdmissionClosed             *bool                                `json:"admission_closed,omitempty"`
 	CompletedAt                 *time.Time                           `json:"completed_at,omitempty"`
 	CreatedAt                   time.Time                            `json:"created_at"`
 	DeploymentId                openapi_types.UUID                   `json:"deployment_id"`
@@ -1284,6 +1924,7 @@ type ExternalDeploymentStatusResponse struct {
 	Mode                        ExternalDeploymentStatusResponseMode `json:"mode"`
 	ModuleVersions              map[string]openapi_types.UUID        `json:"module_versions"`
 	OperationRef                openapi_types.UUID                   `json:"operation_ref"`
+	Pipeline                    *DeploymentPipelineLifecycle         `json:"pipeline,omitempty"`
 	ProjectId                   string                               `json:"project_id"`
 	ProjectUuid                 openapi_types.UUID                   `json:"project_uuid"`
 	ReceiptCreatedAt            time.Time                            `json:"receipt_created_at"`
@@ -1540,6 +2181,50 @@ type ModuleTestDeploymentCreateBody struct {
 	DraftTestSnapshots map[string]openapi_types.UUID `json:"draft_test_snapshots"`
 }
 
+// NativePhaseLogAuthority defines model for NativePhaseLogAuthority.
+type NativePhaseLogAuthority struct {
+	CaptureRevision int64                        `json:"capture_revision"`
+	CommandDigest   string                       `json:"command_digest"`
+	DeploymentId    openapi_types.UUID           `json:"deployment_id"`
+	EnvironmentId   openapi_types.UUID           `json:"environment_id"`
+	ExecutionId     string                       `json:"execution_id"`
+	Inherited       *bool                        `json:"inherited,omitempty"`
+	OrganizationId  string                       `json:"organization_id"`
+	Phase           NativePhaseLogAuthorityPhase `json:"phase"`
+	SourcePlanId    *openapi_types.UUID          `json:"source_plan_id,omitempty"`
+	SourceSubject   *string                      `json:"source_subject,omitempty"`
+	StepId          *string                      `json:"step_id,omitempty"`
+	Subject         *string                      `json:"subject,omitempty"`
+	Target          struct {
+		PipelineVersion          string             `json:"pipeline_version"`
+		RunnerId                 string             `json:"runner_id"`
+		RunnerUuid               openapi_types.UUID `json:"runner_uuid"`
+		RuntimeVersion           string             `json:"runtime_version"`
+		StateBackendType         string             `json:"state_backend_type"`
+		StateConfigurationDigest string             `json:"state_configuration_digest"`
+		ToolsDigest              string             `json:"tools_digest"`
+	} `json:"target"`
+}
+
+// NativePhaseLogAuthorityPhase defines model for NativePhaseLogAuthority.Phase.
+type NativePhaseLogAuthorityPhase string
+
+// NativePhaseLogDescriptor defines model for NativePhaseLogDescriptor.
+type NativePhaseLogDescriptor struct {
+	Authority        NativePhaseLogAuthority         `json:"authority"`
+	CiphertextBytes  *int                            `json:"ciphertext_bytes,omitempty"`
+	CiphertextSha256 *string                         `json:"ciphertext_sha256,omitempty"`
+	ObjectKey        *string                         `json:"object_key,omitempty"`
+	Status           NativePhaseLogDescriptorStatus  `json:"status"`
+	Version          NativePhaseLogDescriptorVersion `json:"version"`
+}
+
+// NativePhaseLogDescriptorStatus defines model for NativePhaseLogDescriptor.Status.
+type NativePhaseLogDescriptorStatus string
+
+// NativePhaseLogDescriptorVersion defines model for NativePhaseLogDescriptor.Version.
+type NativePhaseLogDescriptorVersion int
+
 // ObservationChange defines model for ObservationChange.
 type ObservationChange struct {
 	Actions      []ObservationChangeActions `json:"actions"`
@@ -1608,6 +2293,36 @@ type PendingEnvironmentChanges struct {
 // PendingEnvironmentChangesCode Example: result_may_change
 type PendingEnvironmentChangesCode string
 
+// PipelineNoEffectReceipt Authenticated site evidence that a terminal imported pipeline claimed no mutating effect. Bound to the exact signed command payload.
+type PipelineNoEffectReceipt struct {
+	CommandSha256 string                         `json:"command_sha256"`
+	Effect        PipelineNoEffectReceiptEffect  `json:"effect"`
+	Version       PipelineNoEffectReceiptVersion `json:"version"`
+}
+
+// PipelineNoEffectReceiptEffect defines model for PipelineNoEffectReceipt.Effect.
+type PipelineNoEffectReceiptEffect string
+
+// PipelineNoEffectReceiptVersion defines model for PipelineNoEffectReceipt.Version.
+type PipelineNoEffectReceiptVersion string
+
+// PipelineReference defines model for PipelineReference.
+type PipelineReference struct {
+	Builtin   *PipelineReferenceBuiltin `json:"builtin,omitempty"`
+	Digest    string                    `json:"digest"`
+	VersionId *openapi_types.UUID       `json:"version_id,omitempty"`
+}
+
+// PipelineReferenceBuiltin defines model for PipelineReference.Builtin.
+type PipelineReferenceBuiltin string
+
+// PipelineResourceChanges defines model for PipelineResourceChanges.
+type PipelineResourceChanges struct {
+	Add    int `json:"add"`
+	Change int `json:"change"`
+	Remove int `json:"remove"`
+}
+
 // ResourceClass A resource class requested by the resource graph. 'default' is the default value.
 //
 // Example: classic
@@ -1673,6 +2388,9 @@ type PageTokenQueryParam = string
 
 // PerPageQueryParam defines model for perPageQueryParam.
 type PerPageQueryParam = int
+
+// PipelineIdempotencyKeyHeader defines model for pipelineIdempotencyKeyHeader.
+type PipelineIdempotencyKeyHeader = string
 
 // PluginIdPathParam defines model for pluginIdPathParam.
 type PluginIdPathParam = string
@@ -1759,10 +2477,8 @@ type ListDeploymentsParams struct {
 	ProjectId *ProjectIdQueryParam `form:"project_id,omitempty" json:"project_id,omitempty"`
 
 	// EnvId The Environment ID
-	EnvId *EnvIdQueryParam `form:"env_id,omitempty" json:"env_id,omitempty"`
-
-	// PerPage The maximum number of items to return in a page of results
-	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+	EnvId   *EnvIdQueryParam `form:"env_id,omitempty" json:"env_id,omitempty"`
+	PerPage *int             `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Page The page token to request from
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
@@ -1772,6 +2488,10 @@ type ListDeploymentsParams struct {
 
 	// ByStatus Filter deployments by status
 	ByStatus *ByStatusQueryParam `form:"by_status,omitempty" json:"by_status,omitempty"`
+
+	// Q Literal search over deployment ID, creator ID, project/environment slug and pipeline name or ID.
+	Q           *string                           `form:"q,omitempty" json:"q,omitempty"`
+	QuickFilter *ListDeploymentsParamsQuickFilter `form:"quick_filter,omitempty" json:"quick_filter,omitempty"`
 }
 
 // ListDeploymentsParamsByMode defines parameters for ListDeployments.
@@ -1779,6 +2499,9 @@ type ListDeploymentsParamsByMode string
 
 // ListDeploymentsParamsByStatus defines parameters for ListDeployments.
 type ListDeploymentsParamsByStatus string
+
+// ListDeploymentsParamsQuickFilter defines parameters for ListDeployments.
+type ListDeploymentsParamsQuickFilter string
 
 // CreateDeploymentParams defines parameters for CreateDeployment.
 type CreateDeploymentParams struct {
@@ -1800,9 +2523,24 @@ type GetDeploymentLogsParams struct {
 	// Decrypt Return plaintext using the server-managed log identity. Requires deployment_logs_read on the deployment Environment (or organization). Cannot be combined with DecryptKey; returns 409 when no managed identity is retained.
 	Decrypt *bool `form:"decrypt,omitempty" json:"decrypt,omitempty"`
 
+	// Phase Native phase; defaults to plan for a plan-only Deployment and apply otherwise.
+	Phase *GetDeploymentLogsParamsPhase `form:"phase,omitempty" json:"phase,omitempty"`
+
+	// ExecutionId Exact captured Native execution identity.
+	ExecutionId *string `form:"execution_id,omitempty" json:"execution_id,omitempty"`
+
+	// CaptureRevision Exact positive Native capture revision; omitted selects the greatest accepted revision.
+	CaptureRevision *int64 `form:"capture_revision,omitempty" json:"capture_revision,omitempty"`
+
+	// Subject Exact displayed Plan subject; use an empty value for failed diagnostics without a subject.
+	Subject *string `form:"subject,omitempty" json:"subject,omitempty"`
+
 	// DecryptKey The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
 	DecryptKey *string `json:"DecryptKey,omitempty"`
 }
+
+// GetDeploymentLogsParamsPhase defines parameters for GetDeploymentLogs.
+type GetDeploymentLogsParamsPhase string
 
 // WaitForDeploymentCompleteParams defines parameters for WaitForDeploymentComplete.
 type WaitForDeploymentCompleteParams struct {
@@ -1813,6 +2551,29 @@ type WaitForDeploymentCompleteParams struct {
 // GetDeploymentBundleParams defines parameters for GetDeploymentBundle.
 type GetDeploymentBundleParams struct {
 	XDeploymentToken string `json:"X-Deployment-Token"`
+}
+
+// ApplyDeploymentPipelinePlanJSONBody defines parameters for ApplyDeploymentPipelinePlan.
+type ApplyDeploymentPipelinePlanJSONBody struct {
+	Subject string `json:"subject"`
+}
+
+// ApplyDeploymentPipelinePlanParams defines parameters for ApplyDeploymentPipelinePlan.
+type ApplyDeploymentPipelinePlanParams struct {
+	IdempotencyKey PipelineIdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// ReplanDeploymentPipelinePlanJSONBody defines parameters for ReplanDeploymentPipelinePlan.
+type ReplanDeploymentPipelinePlanJSONBody = map[string]interface{}
+
+// ReplanDeploymentPipelinePlanParams defines parameters for ReplanDeploymentPipelinePlan.
+type ReplanDeploymentPipelinePlanParams struct {
+	IdempotencyKey PipelineIdempotencyKeyHeader `json:"Idempotency-Key"`
+}
+
+// CreateDeploymentPipelineControlParams defines parameters for CreateDeploymentPipelineControl.
+type CreateDeploymentPipelineControlParams struct {
+	IdempotencyKey PipelineIdempotencyKeyHeader `json:"Idempotency-Key"`
 }
 
 // UpdateDeploymentResultsParams defines parameters for UpdateDeploymentResults.
@@ -1881,6 +2642,15 @@ type CancelDeploymentQueueItemJSONRequestBody = DeploymentQueueCancelBody
 
 // CreateDeploymentJSONRequestBody defines body for CreateDeployment for application/json ContentType.
 type CreateDeploymentJSONRequestBody = DeploymentCreateBody
+
+// ApplyDeploymentPipelinePlanJSONRequestBody defines body for ApplyDeploymentPipelinePlan for application/json ContentType.
+type ApplyDeploymentPipelinePlanJSONRequestBody ApplyDeploymentPipelinePlanJSONBody
+
+// ReplanDeploymentPipelinePlanJSONRequestBody defines body for ReplanDeploymentPipelinePlan for application/json ContentType.
+type ReplanDeploymentPipelinePlanJSONRequestBody = ReplanDeploymentPipelinePlanJSONBody
+
+// CreateDeploymentPipelineControlJSONRequestBody defines body for CreateDeploymentPipelineControl for application/json ContentType.
+type CreateDeploymentPipelineControlJSONRequestBody = DeploymentPipelineControlIntent
 
 // UpdateDeploymentResultsJSONRequestBody defines body for UpdateDeploymentResults for application/json ContentType.
 type UpdateDeploymentResultsJSONRequestBody = DeploymentResultsUpdateBody
@@ -2165,7 +2935,8 @@ type ClientInterface interface {
 
 	// GetDeploymentLogs Get the logs produced by the runner execution during the deployment.
 	//
-	// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+	// Legacy responses remain encrypted without decrypt=true or DecryptKey and require deployment_read.
+	// Native central logs require managed custody, decrypt=true, deployment_read and deployment_logs_read; availability depends on retained artifacts.
 	// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 	//
 	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs (the `GetDeploymentLogs` operationId).
@@ -2188,6 +2959,74 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/encrypted-outputs (the `GetDeploymentEncryptedOutputs` operationId).
 	GetDeploymentEncryptedOutputs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDeploymentPipeline Read the retained pipeline execution and manual Plan eligibility.
+	//
+	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline (the `GetDeploymentPipeline` operationId).
+	GetDeploymentPipeline(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyDeploymentPipelinePlanWithBody Apply this exact saved Plan once through ordinary Deployment admission.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+	ApplyDeploymentPipelinePlanWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyDeploymentPipelinePlan Apply this exact saved Plan once through ordinary Deployment admission.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+	ApplyDeploymentPipelinePlan(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, body ApplyDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplanDeploymentPipelinePlanWithBody Create a new manual Plan without changing or applying this saved Plan.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+	ReplanDeploymentPipelinePlanWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplanDeploymentPipelinePlan Create a new manual Plan without changing or applying this saved Plan.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+	ReplanDeploymentPipelinePlan(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, body ReplanDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateDeploymentPipelineControlWithBody Queue an immutable signed control for the accepted Native execution.
+	//
+	// Returns a retained receipt, initially pending. Delivery may be disconnected;
+	// acceptance does not mean the site applied the action. Retry the same intent
+	// with the same Idempotency-Key. The key binds org, Deployment and actor across
+	// actions, so changed intent conflicts. Actor and target are server captured.
+	// New controls inherit the original execution expiry. Expired undelivered
+	// controls remain pending uncertainty until an authenticated result arrives.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+	CreateDeploymentPipelineControlWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateDeploymentPipelineControl Queue an immutable signed control for the accepted Native execution.
+	//
+	// Returns a retained receipt, initially pending. Delivery may be disconnected;
+	// acceptance does not mean the site applied the action. Retry the same intent
+	// with the same Idempotency-Key. The key binds org, Deployment and actor across
+	// actions, so changed intent conflicts. Actor and target are server captured.
+	// New controls inherit the original execution expiry. Expired undelivered
+	// controls remain pending uncertainty until an authenticated result arrives.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+	CreateDeploymentPipelineControl(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, body CreateDeploymentPipelineControlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDeploymentPipelineControl Read retained control delivery or the immutable applied/refused result.
+	//
+	// Current Environment read permission is required, including after Deployment retention.
+	//
+	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls/{controlId} (the `GetDeploymentPipelineControl` operationId).
+	GetDeploymentPipelineControl(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, controlId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDeploymentResourceNodes List resource nodes for a deployment
 	//
@@ -2401,6 +3240,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}/outputs (the `GetExternalDeploymentOutputs` operationId).
 	GetExternalDeploymentOutputs(ctx context.Context, orgId OrgIdPathParam, pluginId PluginIdPathParam, projectUUID openapi_types.UUID, environmentUUID openapi_types.UUID, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDeploymentPipelines List project pipelines qualified for the Environment's selected Runner.
+	//
+	// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployment-pipelines (the `ListDeploymentPipelines` operationId).
+	ListDeploymentPipelines(ctx context.Context, orgId OrgIdPathParam, projectId string, envId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // GetJwks Show JSON Web Keys Set (JWKS).
@@ -2781,7 +3625,8 @@ func (c *Client) CalculateDeploymentDiff(ctx context.Context, orgId OrgIdPathPar
 
 // GetDeploymentLogs Get the logs produced by the runner execution during the deployment.
 //
-// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+// Legacy responses remain encrypted without decrypt=true or DecryptKey and require deployment_read.
+// Native central logs require managed custody, decrypt=true, deployment_read and deployment_logs_read; availability depends on retained artifacts.
 // Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 //
 // Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs (the `GetDeploymentLogs` operationId).
@@ -2835,6 +3680,154 @@ func (c *Client) GetDeploymentBundle(ctx context.Context, orgId OrgIdPathParam, 
 // Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/encrypted-outputs (the `GetDeploymentEncryptedOutputs` operationId).
 func (c *Client) GetDeploymentEncryptedOutputs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDeploymentEncryptedOutputsRequest(c.Server, orgId, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDeploymentPipeline Read the retained pipeline execution and manual Plan eligibility.
+//
+// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline (the `GetDeploymentPipeline` operationId).
+func (c *Client) GetDeploymentPipeline(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDeploymentPipelineRequest(c.Server, orgId, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ApplyDeploymentPipelinePlanWithBody Apply this exact saved Plan once through ordinary Deployment admission.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+func (c *Client) ApplyDeploymentPipelinePlanWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyDeploymentPipelinePlanRequestWithBody(c.Server, orgId, deploymentId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ApplyDeploymentPipelinePlan Apply this exact saved Plan once through ordinary Deployment admission.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+func (c *Client) ApplyDeploymentPipelinePlan(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, body ApplyDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyDeploymentPipelinePlanRequest(c.Server, orgId, deploymentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ReplanDeploymentPipelinePlanWithBody Create a new manual Plan without changing or applying this saved Plan.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+func (c *Client) ReplanDeploymentPipelinePlanWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplanDeploymentPipelinePlanRequestWithBody(c.Server, orgId, deploymentId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ReplanDeploymentPipelinePlan Create a new manual Plan without changing or applying this saved Plan.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+func (c *Client) ReplanDeploymentPipelinePlan(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, body ReplanDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplanDeploymentPipelinePlanRequest(c.Server, orgId, deploymentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateDeploymentPipelineControlWithBody Queue an immutable signed control for the accepted Native execution.
+//
+// Returns a retained receipt, initially pending. Delivery may be disconnected;
+// acceptance does not mean the site applied the action. Retry the same intent
+// with the same Idempotency-Key. The key binds org, Deployment and actor across
+// actions, so changed intent conflicts. Actor and target are server captured.
+// New controls inherit the original execution expiry. Expired undelivered
+// controls remain pending uncertainty until an authenticated result arrives.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+func (c *Client) CreateDeploymentPipelineControlWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateDeploymentPipelineControlRequestWithBody(c.Server, orgId, deploymentId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateDeploymentPipelineControl Queue an immutable signed control for the accepted Native execution.
+//
+// Returns a retained receipt, initially pending. Delivery may be disconnected;
+// acceptance does not mean the site applied the action. Retry the same intent
+// with the same Idempotency-Key. The key binds org, Deployment and actor across
+// actions, so changed intent conflicts. Actor and target are server captured.
+// New controls inherit the original execution expiry. Expired undelivered
+// controls remain pending uncertainty until an authenticated result arrives.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+func (c *Client) CreateDeploymentPipelineControl(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, body CreateDeploymentPipelineControlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateDeploymentPipelineControlRequest(c.Server, orgId, deploymentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDeploymentPipelineControl Read retained control delivery or the immutable applied/refused result.
+//
+// Current Environment read permission is required, including after Deployment retention.
+//
+// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls/{controlId} (the `GetDeploymentPipelineControl` operationId).
+func (c *Client) GetDeploymentPipelineControl(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, controlId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDeploymentPipelineControlRequest(c.Server, orgId, deploymentId, controlId)
 	if err != nil {
 		return nil, err
 	}
@@ -3288,6 +4281,21 @@ func (c *Client) GetExternalDeploymentLogs(ctx context.Context, orgId OrgIdPathP
 // Corresponds with GET /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}/outputs (the `GetExternalDeploymentOutputs` operationId).
 func (c *Client) GetExternalDeploymentOutputs(ctx context.Context, orgId OrgIdPathParam, pluginId PluginIdPathParam, projectUUID openapi_types.UUID, environmentUUID openapi_types.UUID, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetExternalDeploymentOutputsRequest(c.Server, orgId, pluginId, projectUUID, environmentUUID, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDeploymentPipelines List project pipelines qualified for the Environment's selected Runner.
+//
+// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployment-pipelines (the `ListDeploymentPipelines` operationId).
+func (c *Client) ListDeploymentPipelines(ctx context.Context, orgId OrgIdPathParam, projectId string, envId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDeploymentPipelinesRequest(c.Server, orgId, projectId, envId)
 	if err != nil {
 		return nil, err
 	}
@@ -4031,6 +5039,30 @@ func NewListDeploymentsRequest(server string, orgId OrgIdPathParam, params *List
 
 		}
 
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.QuickFilter != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "quick_filter", *params.QuickFilter, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if encoded := queryValues.Encode(); encoded != "" {
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
@@ -4270,6 +5302,54 @@ func NewGetDeploymentLogsRequest(server string, orgId OrgIdPathParam, deployment
 
 		}
 
+		if params.Phase != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "phase", *params.Phase, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.ExecutionId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "execution_id", *params.ExecutionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.CaptureRevision != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "capture_revision", *params.CaptureRevision, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Subject != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "subject", *params.Subject, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if encoded := queryValues.Encode(); encoded != "" {
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
@@ -4445,6 +5525,296 @@ func NewGetDeploymentEncryptedOutputsRequest(server string, orgId OrgIdPathParam
 	}
 
 	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/encrypted-outputs", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetDeploymentPipelineRequest constructs an http.Request for the GetDeploymentPipeline method
+func NewGetDeploymentPipelineRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "deploymentId", deploymentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/pipeline", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewApplyDeploymentPipelinePlanRequest calls the generic ApplyDeploymentPipelinePlan builder with application/json body
+func NewApplyDeploymentPipelinePlanRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, body ApplyDeploymentPipelinePlanJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewApplyDeploymentPipelinePlanRequestWithBody(server, orgId, deploymentId, params, "application/json", bodyReader)
+}
+
+// NewApplyDeploymentPipelinePlanRequestWithBody constructs an http.Request for the ApplyDeploymentPipelinePlan method, with any body, and a specified content type
+func NewApplyDeploymentPipelinePlanRequestWithBody(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "deploymentId", deploymentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/pipeline/actions/apply-plan", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewReplanDeploymentPipelinePlanRequest calls the generic ReplanDeploymentPipelinePlan builder with application/json body
+func NewReplanDeploymentPipelinePlanRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, body ReplanDeploymentPipelinePlanJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReplanDeploymentPipelinePlanRequestWithBody(server, orgId, deploymentId, params, "application/json", bodyReader)
+}
+
+// NewReplanDeploymentPipelinePlanRequestWithBody constructs an http.Request for the ReplanDeploymentPipelinePlan method, with any body, and a specified content type
+func NewReplanDeploymentPipelinePlanRequestWithBody(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "deploymentId", deploymentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/pipeline/actions/replan", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewCreateDeploymentPipelineControlRequest calls the generic CreateDeploymentPipelineControl builder with application/json body
+func NewCreateDeploymentPipelineControlRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, body CreateDeploymentPipelineControlJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateDeploymentPipelineControlRequestWithBody(server, orgId, deploymentId, params, "application/json", bodyReader)
+}
+
+// NewCreateDeploymentPipelineControlRequestWithBody constructs an http.Request for the CreateDeploymentPipelineControl method, with any body, and a specified content type
+func NewCreateDeploymentPipelineControlRequestWithBody(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "deploymentId", deploymentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/pipeline/controls", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "Idempotency-Key", params.IdempotencyKey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Idempotency-Key", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewGetDeploymentPipelineControlRequest constructs an http.Request for the GetDeploymentPipelineControl method
+func NewGetDeploymentPipelineControlRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, controlId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "deploymentId", deploymentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "controlId", controlId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/pipeline/controls/%s", pathParam0, pathParam1, pathParam2)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5487,6 +6857,54 @@ func NewGetExternalDeploymentOutputsRequest(server string, orgId OrgIdPathParam,
 	return req, nil
 }
 
+// NewListDeploymentPipelinesRequest constructs an http.Request for the ListDeploymentPipelines method
+func NewListDeploymentPipelinesRequest(server string, orgId OrgIdPathParam, projectId string, envId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "orgId", orgId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectId", projectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "envId", envId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/deployment-pipelines", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -5741,7 +7159,8 @@ type ClientWithResponsesInterface interface {
 
 	// GetDeploymentLogsWithResponse Get the logs produced by the runner execution during the deployment.
 	//
-	// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+	// Legacy responses remain encrypted without decrypt=true or DecryptKey and require deployment_read.
+	// Native central logs require managed custody, decrypt=true, deployment_read and deployment_logs_read; availability depends on retained artifacts.
 	// Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -5772,6 +7191,78 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/encrypted-outputs (the `GetDeploymentEncryptedOutputs` operationId).
 	GetDeploymentEncryptedOutputsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentEncryptedOutputsResponse, error)
+
+	// GetDeploymentPipelineWithResponse Read the retained pipeline execution and manual Plan eligibility.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline (the `GetDeploymentPipeline` operationId).
+	GetDeploymentPipelineWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentPipelineResponse, error)
+
+	// ApplyDeploymentPipelinePlanWithBodyWithResponse Apply this exact saved Plan once through ordinary Deployment admission.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+	ApplyDeploymentPipelinePlanWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyDeploymentPipelinePlanResponse, error)
+
+	// ApplyDeploymentPipelinePlanWithResponse Apply this exact saved Plan once through ordinary Deployment admission.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+	ApplyDeploymentPipelinePlanWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, body ApplyDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyDeploymentPipelinePlanResponse, error)
+
+	// ReplanDeploymentPipelinePlanWithBodyWithResponse Create a new manual Plan without changing or applying this saved Plan.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+	ReplanDeploymentPipelinePlanWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplanDeploymentPipelinePlanResponse, error)
+
+	// ReplanDeploymentPipelinePlanWithResponse Create a new manual Plan without changing or applying this saved Plan.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+	ReplanDeploymentPipelinePlanWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, body ReplanDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplanDeploymentPipelinePlanResponse, error)
+
+	// CreateDeploymentPipelineControlWithBodyWithResponse Queue an immutable signed control for the accepted Native execution.
+	//
+	// Returns a retained receipt, initially pending. Delivery may be disconnected;
+	// acceptance does not mean the site applied the action. Retry the same intent
+	// with the same Idempotency-Key. The key binds org, Deployment and actor across
+	// actions, so changed intent conflicts. Actor and target are server captured.
+	// New controls inherit the original execution expiry. Expired undelivered
+	// controls remain pending uncertainty until an authenticated result arrives.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+	CreateDeploymentPipelineControlWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateDeploymentPipelineControlResponse, error)
+
+	// CreateDeploymentPipelineControlWithResponse Queue an immutable signed control for the accepted Native execution.
+	//
+	// Returns a retained receipt, initially pending. Delivery may be disconnected;
+	// acceptance does not mean the site applied the action. Retry the same intent
+	// with the same Idempotency-Key. The key binds org, Deployment and actor across
+	// actions, so changed intent conflicts. Actor and target are server captured.
+	// New controls inherit the original execution expiry. Expired undelivered
+	// controls remain pending uncertainty until an authenticated result arrives.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+	CreateDeploymentPipelineControlWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, body CreateDeploymentPipelineControlJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateDeploymentPipelineControlResponse, error)
+
+	// GetDeploymentPipelineControlWithResponse Read retained control delivery or the immutable applied/refused result.
+	//
+	// Current Environment read permission is required, including after Deployment retention.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls/{controlId} (the `GetDeploymentPipelineControl` operationId).
+	GetDeploymentPipelineControlWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, controlId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDeploymentPipelineControlResponse, error)
 
 	// ListDeploymentResourceNodesWithResponse List resource nodes for a deployment
 	//
@@ -6005,6 +7496,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /orgs/{orgId}/plugins/{pluginId}/projects/{projectUUID}/envs/{environmentUUID}/external-deployments/{deploymentId}/outputs (the `GetExternalDeploymentOutputs` operationId).
 	GetExternalDeploymentOutputsWithResponse(ctx context.Context, orgId OrgIdPathParam, pluginId PluginIdPathParam, projectUUID openapi_types.UUID, environmentUUID openapi_types.UUID, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetExternalDeploymentOutputsResponse, error)
+
+	// ListDeploymentPipelinesWithResponse List project pipelines qualified for the Environment's selected Runner.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployment-pipelines (the `ListDeploymentPipelines` operationId).
+	ListDeploymentPipelinesWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId string, envId string, reqEditors ...RequestEditorFn) (*ListDeploymentPipelinesResponse, error)
 }
 
 type GetJwksResponse struct {
@@ -7026,6 +8524,379 @@ func (r GetDeploymentEncryptedOutputsResponse) ContentType() string {
 	return ""
 }
 
+type GetDeploymentPipelineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DeploymentPipelineExecution
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDeploymentPipelineResponse) GetJSON200() *DeploymentPipelineExecution {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetDeploymentPipelineResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetDeploymentPipelineResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetDeploymentPipelineResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDeploymentPipelineResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDeploymentPipelineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDeploymentPipelineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDeploymentPipelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ApplyDeploymentPipelinePlanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *DeploymentPipelineActionResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+	// JSON413 the response for an HTTP 413 `application/json` response
+	JSON413 *Error
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *N503Unavailable
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON201() *DeploymentPipelineActionResponse {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetJSON413 returns the response for an HTTP 413 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON413() *Error {
+	return r.JSON413
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r ApplyDeploymentPipelinePlanResponse) GetJSON503() *N503Unavailable {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r ApplyDeploymentPipelinePlanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ApplyDeploymentPipelinePlanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApplyDeploymentPipelinePlanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ApplyDeploymentPipelinePlanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ReplanDeploymentPipelinePlanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *DeploymentPipelineActionResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+	// JSON413 the response for an HTTP 413 `application/json` response
+	JSON413 *Error
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *N503Unavailable
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON201() *DeploymentPipelineActionResponse {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetJSON413 returns the response for an HTTP 413 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON413() *Error {
+	return r.JSON413
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r ReplanDeploymentPipelinePlanResponse) GetJSON503() *N503Unavailable {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r ReplanDeploymentPipelinePlanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ReplanDeploymentPipelinePlanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReplanDeploymentPipelinePlanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ReplanDeploymentPipelinePlanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateDeploymentPipelineControlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *DeploymentPipelineControlReceipt
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *N400BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *N503Unavailable
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON202() *DeploymentPipelineControlReceipt {
+	return r.JSON202
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON400() *N400BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r CreateDeploymentPipelineControlResponse) GetJSON503() *N503Unavailable {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateDeploymentPipelineControlResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateDeploymentPipelineControlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateDeploymentPipelineControlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateDeploymentPipelineControlResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDeploymentPipelineControlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DeploymentPipelineControlReceipt
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDeploymentPipelineControlResponse) GetJSON200() *DeploymentPipelineControlReceipt {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetDeploymentPipelineControlResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetDeploymentPipelineControlResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetDeploymentPipelineControlResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDeploymentPipelineControlResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDeploymentPipelineControlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDeploymentPipelineControlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDeploymentPipelineControlResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListDeploymentResourceNodesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7968,6 +9839,75 @@ func (r GetExternalDeploymentOutputsResponse) ContentType() string {
 	return ""
 }
 
+type ListDeploymentPipelinesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DeploymentPipelineCatalogue
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *N401Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *N403Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *N404NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *N409Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDeploymentPipelinesResponse) GetJSON200() *DeploymentPipelineCatalogue {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListDeploymentPipelinesResponse) GetJSON401() *N401Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListDeploymentPipelinesResponse) GetJSON403() *N403Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListDeploymentPipelinesResponse) GetJSON404() *N404NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ListDeploymentPipelinesResponse) GetJSON409() *N409Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDeploymentPipelinesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDeploymentPipelinesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDeploymentPipelinesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDeploymentPipelinesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetJwksWithResponse Show JSON Web Keys Set (JWKS).
 //
 // Returns a wrapper object for the known response body format(s).
@@ -8292,7 +10232,8 @@ func (c *ClientWithResponses) CalculateDeploymentDiffWithResponse(ctx context.Co
 
 // GetDeploymentLogsWithResponse Get the logs produced by the runner execution during the deployment.
 //
-// Logs are retained for 30 days. Without decrypt=true or DecryptKey, the response remains encrypted and requires deployment_read.
+// Legacy responses remain encrypted without decrypt=true or DecryptKey and require deployment_read.
+// Native central logs require managed custody, decrypt=true, deployment_read and deployment_logs_read; availability depends on retained artifacts.
 // Plaintext requests require deployment_logs_read. Use managed_logs:true when creating a Deployment to enable server-managed decryption.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -8346,6 +10287,126 @@ func (c *ClientWithResponses) GetDeploymentEncryptedOutputsWithResponse(ctx cont
 		return nil, err
 	}
 	return ParseGetDeploymentEncryptedOutputsResponse(rsp)
+}
+
+// GetDeploymentPipelineWithResponse Read the retained pipeline execution and manual Plan eligibility.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline (the `GetDeploymentPipeline` operationId).
+func (c *ClientWithResponses) GetDeploymentPipelineWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentPipelineResponse, error) {
+	rsp, err := c.GetDeploymentPipeline(ctx, orgId, deploymentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDeploymentPipelineResponse(rsp)
+}
+
+// ApplyDeploymentPipelinePlanWithBodyWithResponse Apply this exact saved Plan once through ordinary Deployment admission.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+func (c *ClientWithResponses) ApplyDeploymentPipelinePlanWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyDeploymentPipelinePlanResponse, error) {
+	rsp, err := c.ApplyDeploymentPipelinePlanWithBody(ctx, orgId, deploymentId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyDeploymentPipelinePlanResponse(rsp)
+}
+
+// ApplyDeploymentPipelinePlanWithResponse Apply this exact saved Plan once through ordinary Deployment admission.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/apply-plan (the `ApplyDeploymentPipelinePlan` operationId).
+func (c *ClientWithResponses) ApplyDeploymentPipelinePlanWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ApplyDeploymentPipelinePlanParams, body ApplyDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyDeploymentPipelinePlanResponse, error) {
+	rsp, err := c.ApplyDeploymentPipelinePlan(ctx, orgId, deploymentId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyDeploymentPipelinePlanResponse(rsp)
+}
+
+// ReplanDeploymentPipelinePlanWithBodyWithResponse Create a new manual Plan without changing or applying this saved Plan.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+func (c *ClientWithResponses) ReplanDeploymentPipelinePlanWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplanDeploymentPipelinePlanResponse, error) {
+	rsp, err := c.ReplanDeploymentPipelinePlanWithBody(ctx, orgId, deploymentId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplanDeploymentPipelinePlanResponse(rsp)
+}
+
+// ReplanDeploymentPipelinePlanWithResponse Create a new manual Plan without changing or applying this saved Plan.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/actions/replan (the `ReplanDeploymentPipelinePlan` operationId).
+func (c *ClientWithResponses) ReplanDeploymentPipelinePlanWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *ReplanDeploymentPipelinePlanParams, body ReplanDeploymentPipelinePlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplanDeploymentPipelinePlanResponse, error) {
+	rsp, err := c.ReplanDeploymentPipelinePlan(ctx, orgId, deploymentId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplanDeploymentPipelinePlanResponse(rsp)
+}
+
+// CreateDeploymentPipelineControlWithBodyWithResponse Queue an immutable signed control for the accepted Native execution.
+//
+// Returns a retained receipt, initially pending. Delivery may be disconnected;
+// acceptance does not mean the site applied the action. Retry the same intent
+// with the same Idempotency-Key. The key binds org, Deployment and actor across
+// actions, so changed intent conflicts. Actor and target are server captured.
+// New controls inherit the original execution expiry. Expired undelivered
+// controls remain pending uncertainty until an authenticated result arrives.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+func (c *ClientWithResponses) CreateDeploymentPipelineControlWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateDeploymentPipelineControlResponse, error) {
+	rsp, err := c.CreateDeploymentPipelineControlWithBody(ctx, orgId, deploymentId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateDeploymentPipelineControlResponse(rsp)
+}
+
+// CreateDeploymentPipelineControlWithResponse Queue an immutable signed control for the accepted Native execution.
+//
+// Returns a retained receipt, initially pending. Delivery may be disconnected;
+// acceptance does not mean the site applied the action. Retry the same intent
+// with the same Idempotency-Key. The key binds org, Deployment and actor across
+// actions, so changed intent conflicts. Actor and target are server captured.
+// New controls inherit the original execution expiry. Expired undelivered
+// controls remain pending uncertainty until an authenticated result arrives.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls (the `CreateDeploymentPipelineControl` operationId).
+func (c *ClientWithResponses) CreateDeploymentPipelineControlWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CreateDeploymentPipelineControlParams, body CreateDeploymentPipelineControlJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateDeploymentPipelineControlResponse, error) {
+	rsp, err := c.CreateDeploymentPipelineControl(ctx, orgId, deploymentId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateDeploymentPipelineControlResponse(rsp)
+}
+
+// GetDeploymentPipelineControlWithResponse Read retained control delivery or the immutable applied/refused result.
+//
+// Current Environment read permission is required, including after Deployment retention.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/deployments/{deploymentId}/pipeline/controls/{controlId} (the `GetDeploymentPipelineControl` operationId).
+func (c *ClientWithResponses) GetDeploymentPipelineControlWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, controlId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDeploymentPipelineControlResponse, error) {
+	rsp, err := c.GetDeploymentPipelineControl(ctx, orgId, deploymentId, controlId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDeploymentPipelineControlResponse(rsp)
 }
 
 // ListDeploymentResourceNodesWithResponse List resource nodes for a deployment
@@ -8723,6 +10784,19 @@ func (c *ClientWithResponses) GetExternalDeploymentOutputsWithResponse(ctx conte
 		return nil, err
 	}
 	return ParseGetExternalDeploymentOutputsResponse(rsp)
+}
+
+// ListDeploymentPipelinesWithResponse List project pipelines qualified for the Environment's selected Runner.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /orgs/{orgId}/projects/{projectId}/envs/{envId}/deployment-pipelines (the `ListDeploymentPipelines` operationId).
+func (c *ClientWithResponses) ListDeploymentPipelinesWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId string, envId string, reqEditors ...RequestEditorFn) (*ListDeploymentPipelinesResponse, error) {
+	rsp, err := c.ListDeploymentPipelines(ctx, orgId, projectId, envId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDeploymentPipelinesResponse(rsp)
 }
 
 // ParseGetJwksResponse parses an HTTP response from a GetJwksWithResponse call
@@ -9483,6 +11557,307 @@ func ParseGetDeploymentEncryptedOutputsResponse(rsp *http.Response) (*GetDeploym
 	return response, nil
 }
 
+// ParseGetDeploymentPipelineResponse parses an HTTP response from a GetDeploymentPipelineWithResponse call
+func ParseGetDeploymentPipelineResponse(rsp *http.Response) (*GetDeploymentPipelineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDeploymentPipelineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentPipelineExecution
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApplyDeploymentPipelinePlanResponse parses an HTTP response from a ApplyDeploymentPipelinePlanWithResponse call
+func ParseApplyDeploymentPipelinePlanResponse(rsp *http.Response) (*ApplyDeploymentPipelinePlanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApplyDeploymentPipelinePlanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest DeploymentPipelineActionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 413:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON413 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503Unavailable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReplanDeploymentPipelinePlanResponse parses an HTTP response from a ReplanDeploymentPipelinePlanWithResponse call
+func ParseReplanDeploymentPipelinePlanResponse(rsp *http.Response) (*ReplanDeploymentPipelinePlanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReplanDeploymentPipelinePlanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest DeploymentPipelineActionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 413:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON413 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503Unavailable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateDeploymentPipelineControlResponse parses an HTTP response from a CreateDeploymentPipelineControlWithResponse call
+func ParseCreateDeploymentPipelineControlResponse(rsp *http.Response) (*CreateDeploymentPipelineControlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateDeploymentPipelineControlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DeploymentPipelineControlReceipt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case rsp.StatusCode == 413:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest N503Unavailable
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDeploymentPipelineControlResponse parses an HTTP response from a GetDeploymentPipelineControlWithResponse call
+func ParseGetDeploymentPipelineControlResponse(rsp *http.Response) (*GetDeploymentPipelineControlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDeploymentPipelineControlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentPipelineControlReceipt
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListDeploymentResourceNodesResponse parses an HTTP response from a ListDeploymentResourceNodesWithResponse call
 func ParseListDeploymentResourceNodesResponse(rsp *http.Response) (*ListDeploymentResourceNodesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -10170,6 +12545,60 @@ func ParseGetExternalDeploymentOutputsResponse(rsp *http.Response) (*GetExternal
 			return nil, err
 		}
 		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDeploymentPipelinesResponse parses an HTTP response from a ListDeploymentPipelinesWithResponse call
+func ParseListDeploymentPipelinesResponse(rsp *http.Response) (*ListDeploymentPipelinesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDeploymentPipelinesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentPipelineCatalogue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

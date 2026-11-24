@@ -93,6 +93,8 @@ func resetCommandTree(cmd *cobra.Command) {
 }
 
 func resetFlags(fs *pflag.FlagSet) {
+	// pflag v1.0.7 retains positional arguments when parsing an empty slice.
+	_ = fs.Parse([]string{"--"})
 	fs.VisitAll(func(f *pflag.Flag) {
 		if slice, ok := f.Value.(pflag.SliceValue); ok {
 			_ = slice.Replace(nil)

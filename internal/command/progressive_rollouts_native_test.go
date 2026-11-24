@@ -94,20 +94,21 @@ func TestNativeProgressiveRolloutOperationCatalogueMatchesCLIFlows(t *testing.T)
 		mutating bool
 	}
 	want := map[string]transportMetadata{
-		"listProgressiveRollouts":           {method: http.MethodGet},
-		"getProgressiveRollout":             {method: http.MethodGet},
-		"previewProgressiveRollout":         {method: http.MethodPost},
-		"createProgressiveRollout":          {method: http.MethodPost, mutating: true},
-		"updateProgressiveRolloutDraft":     {method: http.MethodPatch, mutating: true},
-		"prepareProgressiveRollout":         {method: http.MethodPost, mutating: true},
-		"commandProgressiveRollout":         {method: http.MethodPost, mutating: true},
-		"approveProgressiveRolloutScope":    {method: http.MethodPost, mutating: true},
-		"revokeProgressiveRolloutApproval":  {method: http.MethodDelete, mutating: true},
-		"resolveProgressiveRolloutConflict": {method: http.MethodPost, mutating: true},
-		"listProgressiveRolloutApprovals":   {method: http.MethodGet},
-		"listProgressiveRolloutConflicts":   {method: http.MethodGet},
-		"getProgressiveRolloutPlan":         {method: http.MethodGet},
-		"listProgressiveRolloutEvents":      {method: http.MethodGet},
+		"listProgressiveRolloutPipelineChoices": {method: http.MethodGet},
+		"listProgressiveRollouts":               {method: http.MethodGet},
+		"getProgressiveRollout":                 {method: http.MethodGet},
+		"previewProgressiveRollout":             {method: http.MethodPost},
+		"createProgressiveRollout":              {method: http.MethodPost, mutating: true},
+		"updateProgressiveRolloutDraft":         {method: http.MethodPatch, mutating: true},
+		"prepareProgressiveRollout":             {method: http.MethodPost, mutating: true},
+		"commandProgressiveRollout":             {method: http.MethodPost, mutating: true},
+		"approveProgressiveRolloutScope":        {method: http.MethodPost, mutating: true},
+		"revokeProgressiveRolloutApproval":      {method: http.MethodDelete, mutating: true},
+		"resolveProgressiveRolloutConflict":     {method: http.MethodPost, mutating: true},
+		"listProgressiveRolloutApprovals":       {method: http.MethodGet},
+		"listProgressiveRolloutConflicts":       {method: http.MethodGet},
+		"getProgressiveRolloutPlan":             {method: http.MethodGet},
+		"listProgressiveRolloutEvents":          {method: http.MethodGet},
 	}
 	require.Len(t, nativeRolloutOperations, len(want))
 	for operationID, metadata := range want {
@@ -374,4 +375,28 @@ func testRolloutEvidencePresentation(t *testing.T, kind string, flags []string, 
 	} else {
 		assert.Equal(t, body+"\n", output.String())
 	}
+}
+
+func TestRolloutPipelineChoicesUsesScopedReadEnvelope(t *testing.T) {
+	records := make(chan cp.PluginInvocation, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/orgs/demo/plugins/"+progressiveRolloutsPluginID+"/invoke", r.URL.Path)
+		var request cp.PluginInvocation
+		if !assert.NoError(t, json.NewDecoder(r.Body).Decode(&request)) {
+			http.Error(w, "invalid invocation", http.StatusBadRequest)
+			return
+		}
+		records <- request
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"status":200,"body":{"versions":[],"default_source":"none"}}`)
+	}))
+	t.Cleanup(server.Close)
+	result, err := invokeNativeProgressiveRollout[rollouts.ProgressiveRolloutPipelineChoices](cpClientContext(t, server), "demo", "listProgressiveRolloutPipelineChoices", nil, map[string][]string{rolloutProjectQueryParameter: {"project"}, rolloutEnvironmentQueryParameter: {"production"}}, nil, "", http.StatusOK)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	request := <-records
+	require.Equal(t, "listProgressiveRolloutPipelineChoices", request.OperationId)
+	require.Equal(t, map[string][]string{rolloutProjectQueryParameter: {"project"}, rolloutEnvironmentQueryParameter: {"production"}}, *request.Query)
+	require.Nil(t, request.Body)
+	require.Nil(t, request.IdempotencyKey)
 }

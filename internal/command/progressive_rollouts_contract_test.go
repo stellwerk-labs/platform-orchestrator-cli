@@ -231,7 +231,7 @@ func TestProgressiveRolloutsContractCoversCLIOperations(t *testing.T) {
 		_, used := nativeRolloutOperations[id]
 		return used
 	})
-	assert.Equal(t, []string{"listProgressiveRolloutTargetEnvironments"}, unused, "the CLI deliberately offers no target discovery command")
+	assert.Equal(t, []string{"listProgressiveRolloutTargetEnvironments", "resolveDeploymentSource"}, unused, "the CLI has no target picker or Console source navigation command")
 
 	safety := operations["commandProgressiveRollout"]["x-safety-path-values"].(map[string]any)["rolloutCommand"].([]any)
 	for _, raw := range operations["commandProgressiveRollout"]["parameters"].([]any) {

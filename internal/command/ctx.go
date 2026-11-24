@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/stellwerk-labs/platform-orchestrator-cli/clients"
+	"github.com/stellwerk-labs/platform-orchestrator-cli/clients/pipelines"
 	cp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-cp"
 	dp "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-dp"
 	iam "github.com/stellwerk-labs/platform-orchestrator-cli/clients/platform-orchestrator-iam"
@@ -30,12 +31,21 @@ const (
 	AuthTokenEnvVar           = "PO_AUTH_TOKEN" // #nosec G101
 	CAFileEnvVar              = "PO_CA_FILE"
 
-	CpClientContextKey  contextKey = "cp-client"
-	DpClientContextKey  contextKey = "dp-client"
-	IamClientContextKey contextKey = "iam-client"
-	ConfigContextKey    contextKey = "config"
-	PrinterContextKey   contextKey = "printer"
+	PipelineClientContextKey contextKey = "pipeline-client"
+	CpClientContextKey       contextKey = "cp-client"
+	DpClientContextKey       contextKey = "dp-client"
+	IamClientContextKey      contextKey = "iam-client"
+	ConfigContextKey         contextKey = "config"
+	PrinterContextKey        contextKey = "printer"
 )
+
+func MustPipelineClient(ctx context.Context) pipelines.ClientWithResponsesInterface {
+	client, ok := ctx.Value(PipelineClientContextKey).(pipelines.ClientWithResponsesInterface)
+	if !ok {
+		panic("no pipeline client in context")
+	}
+	return client
+}
 
 func MustCpClient(c context.Context) cp.ClientWithResponsesInterface {
 	v, ok := c.Value(CpClientContextKey).(cp.ClientWithResponsesInterface)
@@ -185,12 +195,20 @@ func withClients(ctx context.Context, apiPrefix, org, authToken string) (context
 		}
 	}
 
-	slog.Debug("Setting up cp client", slog.String("url", apiPrefix))
+	slog.Debug("Setting up cp client", slog.String("url", apiPrefix)) // #nosec G706 -- The message is constant and the CLI handler quotes the URL attribute.
 	cpc, err := cp.NewClientWithResponses(apiPrefix, cp.WithRequestEditorFn(extraHeadersEditor), cp.WithHTTPClient(client))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup cp client")
 	}
 	ctx = context.WithValue(ctx, CpClientContextKey, cpc)
+	pipelineHTTP := *client
+	pipelineHTTP.Transport = retryhttp.New(retryhttp.WithTransport(transport))
+	pipelineHTTP.CheckRedirect = func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
+	pipelineClient, err := pipelines.NewClientWithResponses(apiPrefix, pipelines.WithRequestEditorFn(extraHeadersEditor), pipelines.WithHTTPClient(&pipelineHTTP))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to setup pipeline client")
+	}
+	ctx = context.WithValue(ctx, PipelineClientContextKey, pipelineClient)
 
 	// For testing and development, allow a separate DP api url to be set
 	apiDpPrefix := apiPrefix

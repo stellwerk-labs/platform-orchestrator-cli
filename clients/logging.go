@@ -2,10 +2,7 @@ package clients
 
 import (
 	"log/slog"
-	"maps"
 	"net/http"
-	"net/http/httputil"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -25,25 +22,12 @@ func (t *DebuggingTransport) RoundTrip(req *http.Request) (*http.Response, error
 		return t.Inner.RoundTrip(req)
 	}
 
-	oldHeaders := maps.Clone(req.Header)
-	if x := req.Header.Get("Authorization"); x != "" {
-		req.Header.Set("Authorization", strings.Repeat("*", len(x)))
-	}
-	dump, err := httputil.DumpRequestOut(req, true)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to dump request")
-	}
-	req.Header = oldHeaders
-	slog.Debug("http request", slog.String("dump", string(dump))) //nolint:gosec // G706: intentional debug-only HTTP dump
+	slog.Debug("http request")
 	res, err := t.Inner.RoundTrip(req)
 	if err != nil {
-		slog.Debug("http error", slog.Any("err", err))
+		slog.Debug("http error")
 		return nil, errors.Wrap(err, "failed to execute request")
 	}
-	dump, err = httputil.DumpResponse(res, true)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to dump response")
-	}
-	slog.Debug("http response", slog.String("dump", string(dump))) //nolint:gosec // G706: intentional debug-only HTTP dump
+	slog.Debug("http response", slog.Int("status", res.StatusCode)) // #nosec G706 -- The message is constant and status is an integer attribute.
 	return res, nil
 }

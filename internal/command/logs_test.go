@@ -32,11 +32,12 @@ const (
 // logsServer is a Data Plane that answers the runner logs route of one
 // deployment and records the DecryptKey header of every request.
 type logsServer struct {
-	mu      sync.Mutex
-	status  int
-	body    any
-	keys    []string
-	decrypt []string
+	mu        sync.Mutex
+	status    int
+	body      any
+	keys      []string
+	decrypt   []string
+	selectors []map[string]string
 }
 
 func newLogsServer(t *testing.T, status int, body any) (*logsServer, context.Context) {
@@ -48,6 +49,13 @@ func newLogsServer(t *testing.T, status int, body any) (*logsServer, context.Con
 		assert.Equal(t, "GET /orgs/"+logsTestOrg+"/deployments/"+logsTestDeployment+"/actions/get-logs", r.Method+" "+r.URL.Path)
 		fixture.keys = append(fixture.keys, r.Header.Get("DecryptKey"))
 		fixture.decrypt = append(fixture.decrypt, r.URL.Query().Get("decrypt"))
+		selectors := map[string]string{}
+		for _, name := range []string{"phase", "execution_id", "capture_revision", "subject"} {
+			if r.URL.Query().Has(name) {
+				selectors[name] = r.URL.Query().Get(name)
+			}
+		}
+		fixture.selectors = append(fixture.selectors, selectors)
 		if text, ok := fixture.body.(string); ok {
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(fixture.status)
@@ -238,4 +246,25 @@ func TestLogsRejectsEncryptedWithCallerKey(t *testing.T) {
 	_, _, err := runLogs(ctx, t, "", "--encrypted", keyFileFlag, "-")
 	require.ErrorContains(t, err, "none of the others can be")
 	assert.Empty(t, fixture.requestKeys())
+}
+
+func TestLogsNativeSelectorsUseNormalAuthenticatedAPI(t *testing.T) {
+	fixture, ctx := newLogsServer(t, http.StatusOK, logsTestText)
+	stdout, _, err := runLogs(ctx, t, "", "--phase", "plan", "--execution-id", "captured:execution", "--capture-revision", "2", "--subject", strings.Repeat("a", 64), "--raw")
+	require.NoError(t, err)
+	require.Equal(t, logsTestText, stdout)
+	fixture.mu.Lock()
+	defer fixture.mu.Unlock()
+	require.Equal(t, []map[string]string{{"phase": "plan", "execution_id": "captured:execution", "capture_revision": "2", "subject": strings.Repeat("a", 64)}}, fixture.selectors)
+	require.Equal(t, []string{"true"}, fixture.decrypt)
+	require.Equal(t, []string{""}, fixture.keys)
+}
+
+func TestLogsNativeSelectorsRefuseInvalidInputBeforeHTTP(t *testing.T) {
+	for _, args := range [][]string{{"--phase", "PLAN"}, {"--phase", ""}, {"--capture-revision", "0"}, {"--capture-revision", "-1"}, {"--execution-id", "../foreign"}, {"--execution-id", ""}, {"--subject", "wrong-subject"}} {
+		fixture, ctx := newLogsServer(t, http.StatusOK, logsTestText)
+		_, _, err := runLogs(ctx, t, "", args...)
+		require.Error(t, err)
+		require.Empty(t, fixture.requestKeys())
+	}
 }

@@ -1,16 +1,19 @@
-# Orchestrator Data Plane API contract
+# Orchestrator Data Plane API contract, public source
 
-The immutable source commit below is publicly reachable through shared/v3.3.0.
-`spec.yaml` is a byte-identical copy of its `openapi/spec.yaml`.
+`spec.yaml` is byte-identical to the immutable public source below, verified by
+anonymous HTTP readback. It is the input of the existing pinned official client
+generator. This records public source provenance, not a released client or server.
 
 - Repository: `stellwerk-labs/platform-orchestrator-dp`
-- Commit: `6eea87239038c8f6208c9c9b68dc98797d407a7b`
+- Commit: `e31b51422403c7b1aee3ee033bb645a304009b94`
+- Qualification: `public-source`
 - File: `openapi/spec.yaml`
-- Git blob: `d95247ac045fd16aaf6e0c653702501a7d86b0b1`
-- File SHA-256: `9421b3f94b36cab8e66653db258a0172c61bfc0c812a76b63024a462fa2cd24c`
+- Git blob: `5d3a805e0b742fda21026e5af9cee7aa532696ab`
+- File SHA-256: `43a4ad79fc8e1ad2f8dcc8410c3eb6e884f829325f9c18abecfcc5e55885dfef`
+- Public URL: `https://raw.githubusercontent.com/stellwerk-labs/platform-orchestrator-dp/e31b51422403c7b1aee3ee033bb645a304009b94/openapi/spec.yaml`
 
-This contract adds `managed_logs` and authenticated `decrypt=true` log retrieval.
-The pinned official generator produces `client.gen.go`; neither the snapshot nor
-generated code is hand edited. `make check-api-specs` verifies public source
-parity. The SDK source pin does not establish server availability; publication
-requires the qualified coordinated server release.
+The public canonical contract includes deployment pipeline controls, phase-log selectors and observation metadata. Source availability and generated client checks are separate from server/runtime qualification.
+
+Regenerate through the existing repository toolchain. Normal source verification
+fetches this public revision with every local source override unset. Do not
+hand-edit the snapshot or generated client.

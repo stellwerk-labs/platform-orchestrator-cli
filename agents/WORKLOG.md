@@ -121,3 +121,7 @@ Updated the coordinated upgrade prerequisite from IAM2.8.0 to2.8.1 after the
 unsigned2.8.0 source producer was cancelled before image publication. This is a
 release-note correction only; API snapshots, generated clients and behavior are
 unchanged. The existing2.5.0 source qualification remains recorded separately.
+
+## Native pipeline source export
+
+Prepared the Native pipeline application source export. Public artifact publication and hosted qualification are separate release steps.

@@ -147,7 +147,7 @@ func readSetFlagsIntoType[T any](cmd *cobra.Command) (*T, error) {
 			}
 		}
 	}
-	slog.Debug("read input fields", slog.Any("input", intermediate))
+	slog.Debug("read input fields", slog.Int("field_count", len(intermediate)))
 	var typed T
 	raw, _ := json.Marshal(intermediate)
 	dec := json.NewDecoder(bytes.NewReader(raw))

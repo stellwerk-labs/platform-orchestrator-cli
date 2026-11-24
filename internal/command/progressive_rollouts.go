@@ -33,6 +33,24 @@ const (
 
 var rolloutAliases = []string{"ro"}
 
+var GetProgressiveRolloutPipelines = &cobra.Command{
+	Use:   "rollout-pipelines <project-id> <environment-id>",
+	Short: "List eligible deployment and rollback pipelines for a Rollout target",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		orgID, err := ShouldOrg(cmd.Context())
+		if err != nil {
+			return err
+		}
+		query := map[string][]string{rolloutProjectQueryParameter: {args[0]}, rolloutEnvironmentQueryParameter: {args[1]}}
+		result, err := invokeNativeProgressiveRollout[rollouts.ProgressiveRolloutPipelineChoices](cmd.Context(), orgID, "listProgressiveRolloutPipelineChoices", nil, query, nil, "", http.StatusOK)
+		if err != nil {
+			return err
+		}
+		return writeRolloutValue(cmd, *result)
+	},
+}
+
 func rolloutID(value string) (uuid.UUID, error) {
 	id, err := uuid.Parse(value)
 	if err != nil {
@@ -667,10 +685,11 @@ func newProgressiveRolloutEvidenceCommand(kind string) *cobra.Command {
 func init() {
 	CreateProgressiveRollout.Short += progressiveRolloutsHelp
 	GetProgressiveRollout.Short += progressiveRolloutsHelp
+	GetProgressiveRolloutPipelines.Short += progressiveRolloutsHelp
 	ListProgressiveRollouts.Short += progressiveRolloutsHelp
 	UpdateProgressiveRollout.Short += progressiveRolloutsHelp
 	CreateCmd.AddCommand(CreateProgressiveRollout)
-	GetCmd.AddCommand(GetProgressiveRollout, ListProgressiveRollouts)
+	GetCmd.AddCommand(GetProgressiveRollout, ListProgressiveRollouts, GetProgressiveRolloutPipelines)
 	UpdateCmd.AddCommand(UpdateProgressiveRollout)
 	ListProgressiveRollouts.Flags().StringSlice("state", nil, "Filter by Rollout state")
 	ListProgressiveRollouts.Flags().String("project", "", "Filter by frozen target Project ID")
@@ -745,7 +764,8 @@ func init() {
 		command.RunE = requireProgressiveRolloutsPlugin(progressiveRolloutsMutate, operation, command.RunE)
 	}
 	for command, operation := range map[*cobra.Command]string{
-		GetProgressiveRollout: "getProgressiveRollout", ListProgressiveRollouts: "listProgressiveRollouts",
+		GetProgressiveRolloutPipelines: "listProgressiveRolloutPipelineChoices",
+		GetProgressiveRollout:          "getProgressiveRollout", ListProgressiveRollouts: "listProgressiveRollouts",
 		approvals: "listProgressiveRolloutApprovals", conflicts: "listProgressiveRolloutConflicts",
 		ProgressiveRolloutEvents: "listProgressiveRolloutEvents", ProgressiveRolloutPlan: "getProgressiveRolloutPlan",
 		logs: "", outputs: "",
