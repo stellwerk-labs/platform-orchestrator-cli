@@ -4,6 +4,20 @@
 
 The Stellwerk CLI for platform-orchestrator-cp, platform-orchestrator-dp and platform-orchestrator-iam.
 
+## Deployment Pipelines availability (RC)
+
+Deployment Pipelines are an RC feature in [v2.6.0-rc.1](docs/releases/v2.6.0-rc.1.md),
+part of the coordinated Pipeline release candidate. The current stable release
+from `main` does not include Pipelines. Use the matching RC services and clients
+when following Pipeline documentation.
+
+Upgrading alone does not activate Native execution or change existing deployment
+behavior. On an explicitly enabled Pipeline installation, the built-in **Apply**
+default runs Apply directly, with no additional Plan, approval, pre-deployment or
+post-deployment steps. Planning remains an explicit action or part of a selected
+recipe. Publishing a recipe alone does not change any default; an authorized
+operator must select it or update deployment-use policy.
+
 ## License
 
 Release archives and the CLI release image include `licenses/`: the application's EUPL

@@ -1,5 +1,10 @@
 # Author, publish and select project pipelines
 
+> **RC feature:** This page describes Deployment Pipelines in the coordinated
+> release candidate (CLI `2.6.0-rc.1`). Pipelines are not available in the
+> current stable release from `main`. Use matching Pipeline RC components; Native
+> execution requires explicit operator activation.
+
 Pipeline documents use the same `{slug, name, definition}` shape as the Console and API. Creating or editing a pipeline only changes its draft. Validate, export and update the reviewed revision, then publish explicitly:
 
 ```sh
@@ -50,8 +55,6 @@ octl delete pipeline my-project DRAFT_UUID --expected-version 2
 Lifecycle and discovery commands return JSON by default; use `--out yaml` for YAML. Draft source limits remain 32 KiB; project policy accepts up to 256 KiB for bounded per-environment exceptions. Secrets belong in runner-side references, not pipeline documents.
 
 Draft slugs are immutable. Export omits server identity unless `--details` is selected; YAML comments are not retained. Conflicts never auto-adopt an existing draft or overwrite a newer revision.
-
-Regenerate the focused client with `go generate ./clients/pipelines`. Live lifecycle tests require an isolated `PIPELINE_TEST_PROJECT`, normal `PO_API_URL`, `PO_ORG_ID`, `PO_AUTH_TOKEN`, and optional private `PO_CA_FILE`.
 
 Choose an immutable published version for ordinary deployment entrypoints with one selector:
 

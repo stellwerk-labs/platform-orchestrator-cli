@@ -24,4 +24,7 @@ hand. Then update the SHA-256 here and run `make generate` and
 `make check-api-specs`. The plugin implementation is commercial and not part
 of this repository.
 
-Feature branch qualification uses the local candidate from `spike/plugin-pipelines-20261118`, based on qualified Rollouts `aff263b`. This candidate is not a published or released plugin contract. Its canonical owner is `rollouts/api/progressive-rollouts-v1alpha.openapi.yaml`; release requires coordinated qualification and publication.
+Pipeline selection in this contract belongs to the coordinated Pipeline RC.
+The plugin owns its canonical `progressive-rollouts-v1alpha.openapi.yaml`
+contract; this vendored copy and its checksum do not publish or install the
+commercial plugin. Use a compatible plugin release advertised by Core discovery.
