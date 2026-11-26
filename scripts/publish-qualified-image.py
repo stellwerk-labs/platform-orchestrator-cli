@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 import client_image
 import client_oci
@@ -16,6 +17,10 @@ import qualify_release as release
 
 
 SLSA_PREDICATE_TYPE = "https://slsa.dev/provenance/v1"
+# Every failing attempt still lands at least one manifest, so six attempts cover the published graph.
+COPY_ATTEMPTS = 6
+REGISTRY_LAG = re.compile(r"Error response from registry: sha256:[0-9a-f]{64}: not found")
+READBACK_ATTEMPTS = 12
 
 
 def verify_attestation(reference, kind, predicate, producer):
@@ -39,6 +44,44 @@ def verify_attestation(reference, kind, predicate, producer):
                     for subject in statement.get("subject", []))):
             return
     raise ValueError("verified attestation does not bind the qualified predicate and subject")
+
+
+def copy_index(source, reference, pause=10):
+    """Copy the inspected index to its new tag, repeating only while the registry lags behind its push.
+
+    `oras cp --no-tty` reads every manifest it has just pushed back from the destination to print its
+    status, and GHCR can answer that read with 404 for a moment (Data Plane v4.5.0-rc.3 lost a candidate
+    to it). The copy is content-addressed and only ever points the tag at the inspected index, so it is
+    repeated for exactly that error; oras already retries 408, 429 and 5xx itself. Anything else, a
+    timeout included, fails at once. A failed attempt may already have written the correct tag, so the
+    destination's absence is checked once, before the first copy, never between attempts. ORAS output
+    is only classified here, never printed.
+    """
+    for attempt in range(1, COPY_ATTEMPTS + 1):
+        result = subprocess.run(["oras", "cp", "--no-tty", "--from-oci-layout", source, reference],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300, check=False)
+        if result.returncode == 0:
+            return
+        last_line = (result.stderr.decode(errors="replace").splitlines() or [""])[-1]
+        if result.returncode != 1 or not REGISTRY_LAG.fullmatch(last_line) or attempt == COPY_ATTEMPTS:
+            raise release.CheckedToolFailure("oras", result.returncode)
+        print(f"registry did not yet serve a manifest it had just accepted; copy attempt {attempt} of {COPY_ATTEMPTS}, retrying",
+              file=sys.stderr)
+        time.sleep(pause)
+
+
+def read_back_index(reference, digest, interval=5):
+    """Wait for the new tag to resolve; it was proven absent first, so any other digest fails at once."""
+    for attempt in range(1, READBACK_ATTEMPTS + 1):
+        try:
+            descriptor = json.loads(release.checked(["oras", "manifest", "fetch", "--descriptor", reference]))
+            break
+        except release.CheckedToolFailure:
+            if attempt == READBACK_ATTEMPTS:
+                raise
+            time.sleep(interval)
+    if descriptor["digest"] != digest:
+        raise ValueError("published index differs from qualified bytes")
 
 
 def main():
@@ -76,12 +119,9 @@ def main():
             # No build command exists in this publisher. Copy the inspected index,
             # including its original platform manifests and BuildKit attestations.
             phase = "image-copy"
-            release.checked(["oras", "cp", "--no-tty", "--from-oci-layout",
-                             str(layout) + ":" + source_tag, reference])
+            copy_index(str(layout) + ":" + source_tag, reference)
             phase = "published-index-check"
-            descriptor = json.loads(release.checked(["oras", "manifest", "fetch", "--descriptor", reference]))
-            if descriptor["digest"] != report["index"]:
-                raise ValueError("published index differs from qualified bytes")
+            read_back_index(reference, report["index"])
             immutable = client_image.IMAGE + "@" + report["index"]
             subjects = [immutable] + [client_image.IMAGE + "@" + value["manifest"] for value in report["payloads"].values()]
             for subject in subjects:

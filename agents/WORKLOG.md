@@ -121,3 +121,14 @@ Updated the coordinated upgrade prerequisite from IAM2.8.0 to2.8.1 after the
 unsigned2.8.0 source producer was cancelled before image publication. This is a
 release-note correction only; API snapshots, generated clients and behavior are
 unchanged. The existing2.5.0 source qualification remains recorded separately.
+
+## 2026-11-26: Ride out GHCR read-after-write lag in the image publisher
+
+`publish-qualified-image.py` now copies through `copy_index` (at most 6 attempts, 10 s apart,
+each under 300 s, repeated only for the registry lag 404) and reads back through
+`read_back_index` (up to 12 fetches 5 s apart; a different digest fails at once). Phases and the
+closed failure diagnostic are unchanged. `publish-qualified-image_test.py` runs the pinned ORAS
+1.3.4 against a loopback registry that lags (retried), denies pushes (1 attempt) or is read back
+with a different expected digest (fails after 1 copy); the unit job runs it. The publisher order
+contract in `client_oci_test.py` follows the helpers and allows exactly one absence check. All
+Python release suites and `go test ./scripts/` pass. See DECISIONS.md.

@@ -270,6 +270,7 @@ jobs:
           python3 scripts/release_content_test.py
           python3 scripts/qualify_release_test.py
           python3 scripts/client_oci_test.py
+          python3 scripts/publish-qualified-image_test.py
 
       - name: Check vendored API specifications
         run: make check-api-specs

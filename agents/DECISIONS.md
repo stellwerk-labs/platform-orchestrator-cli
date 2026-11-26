@@ -78,3 +78,8 @@ Managed deployment logs default to server-owned encryption. `--print-logs-key` e
 ## 2026-11-13: CLI 2.5.0 public contracts
 
 Consolidate managed-log behavior into 2.5.0 notes and remove the superseded draft. Pin the public CP c5d1b57 contract and regenerate with existing oapi-codegen v2.8.0, preserving optional catalogue fields. Mark DP 6eea872 as public after shared/v3.3.0 qualification. IAM dc0f37d retains byte-identical schema, so only its verification revision changes. Keep coordinated server qualification separate from SDK public availability.
+
+
+## 2026-11-26: Retry only the demonstrated registry lag
+
+Repeat the first image copy only when ORAS exits 1 with `Error response from registry: sha256:<digest>: not found` as its last stderr line, the read-after-write lag of its own status output that cost Data Plane v4.5.0-rc.3 its candidate. ORAS already retries 408, 429 and 5xx; authentication, layout and timeout failures stop at once. The copy only points the new version tag at the qualified index, so a repeat cannot publish other bytes, and a failed attempt may already have written that tag; destination absence stays a single check before the first copy. The copy runs ORAS directly so its stderr can be classified without ever entering `CheckedToolFailure`, which stays free of child output. Stable alias moves keep their single readback: a moving tag can still serve the previous digest, so a different digest there is not evidence of another writer.
