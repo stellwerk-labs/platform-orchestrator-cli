@@ -2,7 +2,8 @@
 """The first image copy and its readback, with the pinned ORAS against a real loopback registry.
 
 The registry can lag like GHCR did for Data Plane v4.5.0-rc.3 (404 for the first read of a manifest it
-has just accepted) or deny every push. ORAS talks plain HTTP to localhost, so no TLS fixture is needed.
+has just accepted), lag the same way on the first read of a tag it has just set, or deny every push.
+ORAS talks plain HTTP to localhost, so no TLS fixture is needed.
 """
 import contextlib
 import hashlib
@@ -73,9 +74,14 @@ class RegistryHandler(BaseHTTPRequestHandler):
             state["manifests"][digest] = (self.headers["Content-Type"], data)
             if not reference.startswith("sha256:"):
                 state["tags"][reference] = digest
+                if state["mode"] == "tag-lag":
+                    state["lagging_tags"].add(reference)
             if state["mode"] == "lag":
                 state["lagging"].add(digest)
             return self.reply(201, {"Docker-Content-Digest": digest})
+        if reference in state["lagging_tags"]:
+            state["lagging_tags"].discard(reference)
+            return self.reply(404, {"Content-Type": "application/json"}, UNKNOWN)
         digest = state["tags"].get(reference, reference)
         if digest not in state["manifests"] or (self.command == "GET" and digest in state["lagging"]):
             state["lagging"].discard(digest)
@@ -118,13 +124,13 @@ class PublishIndexTest(unittest.TestCase):
             raise RuntimeError("pinned ORAS 1.3.4 is required, run scripts/install-oras.sh")
 
     def setUp(self):
-        directory = self.enterContext(tempfile.TemporaryDirectory())
-        self.layout, self.root = directory + ":v1", write_layout(Path(directory))
+        self.directory = self.enterContext(tempfile.TemporaryDirectory())
+        self.layout, self.root = self.directory + ":v1", write_layout(Path(self.directory))
         self.stderr = self.enterContext(contextlib.redirect_stderr(io.StringIO()))
 
     def registry(self, mode):
         server = ThreadingHTTPServer(("127.0.0.1", 0), RegistryHandler)
-        server.state = {"mode": mode, "blobs": {}, "manifests": {}, "tags": {}, "lagging": set()}
+        server.state = {"mode": mode, "blobs": {}, "manifests": {}, "tags": {}, "lagging": set(), "lagging_tags": set()}
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         self.addCleanup(thread.join, 2)
@@ -135,7 +141,7 @@ class PublishIndexTest(unittest.TestCase):
     def publish(self, reference, expected):
         """The copy and its readback, as main() runs them, without pauses."""
         publisher.copy_index(self.layout, reference, pause=0)
-        publisher.read_back_index(reference, expected, interval=0)
+        publisher.read_back_index(reference, expected, pause=0)
 
     def test_copy_repeats_while_the_registry_lags_behind_its_push(self):
         registry, reference = self.registry("lag")
@@ -143,10 +149,26 @@ class PublishIndexTest(unittest.TestCase):
         self.assertEqual(registry["tags"], {"v1": self.root})
         self.assertIn("copy attempt 1 of 6, retrying", self.stderr.getvalue())
 
+    def test_readback_waits_while_the_new_tag_lags(self):
+        registry, reference = self.registry("tag-lag")
+        self.publish(reference, self.root)
+        self.assertEqual(registry["tags"], {"v1": self.root})
+        self.assertEqual(registry["lagging_tags"], set(), "the readback never met the lagging tag")
+        self.assertNotIn("retrying", self.stderr.getvalue())
+
     def test_denied_push_is_not_repeated(self):
         registry, reference = self.registry("deny")
         with self.assertRaises(publisher.release.CheckedToolFailure) as failure:
             self.publish(reference, self.root)
+        self.assertEqual((failure.exception.tool, failure.exception.returncode), ("oras", 1))
+        self.assertNotIn("retrying", self.stderr.getvalue())
+        self.assertEqual(registry["tags"], {})
+
+    def test_missing_layout_tag_is_not_mistaken_for_registry_lag(self):
+        # ORAS also ends this deterministic source error with "not found"; only the registry form retries.
+        registry, reference = self.registry("normal")
+        with self.assertRaises(publisher.release.CheckedToolFailure) as failure:
+            publisher.copy_index(self.directory + ":v2", reference, pause=0)
         self.assertEqual((failure.exception.tool, failure.exception.returncode), ("oras", 1))
         self.assertNotIn("retrying", self.stderr.getvalue())
         self.assertEqual(registry["tags"], {})

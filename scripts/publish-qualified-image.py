@@ -21,6 +21,8 @@ SLSA_PREDICATE_TYPE = "https://slsa.dev/provenance/v1"
 COPY_ATTEMPTS = 6
 REGISTRY_LAG = re.compile(r"Error response from registry: sha256:[0-9a-f]{64}: not found")
 READBACK_ATTEMPTS = 12
+# Only the remote tag is fetched on readback, so no layout error can reach this bare suffix.
+TAG_MISSING = ": not found"
 
 
 def verify_attestation(reference, kind, predicate, producer):
@@ -46,6 +48,18 @@ def verify_attestation(reference, kind, predicate, producer):
     raise ValueError("verified attestation does not bind the qualified predicate and subject")
 
 
+def run_oras(*arguments):
+    """Run one ORAS attempt and return its exit code, stdout and last stderr line.
+
+    ORAS stderr is only classified, never printed, so `CheckedToolFailure` stays free of child output.
+    Each attempt is bounded at 120 s so 6 copies plus pauses fit the 30 min publisher jobs; a timeout
+    raises at once.
+    """
+    result = subprocess.run(["oras", *arguments], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            timeout=120, check=False)
+    return result.returncode, result.stdout, (result.stderr.decode(errors="replace").splitlines() or [""])[-1]
+
+
 def copy_index(source, reference, pause=10):
     """Copy the inspected index to its new tag, repeating only while the registry lags behind its push.
 
@@ -54,34 +68,34 @@ def copy_index(source, reference, pause=10):
     to it). The copy is content-addressed and only ever points the tag at the inspected index, so it is
     repeated for exactly that error; oras already retries 408, 429 and 5xx itself. Anything else, a
     timeout included, fails at once. A failed attempt may already have written the correct tag, so the
-    destination's absence is checked once, before the first copy, never between attempts. ORAS output
-    is only classified here, never printed.
+    destination's absence is checked once, before the first copy, never between attempts.
     """
     for attempt in range(1, COPY_ATTEMPTS + 1):
-        result = subprocess.run(["oras", "cp", "--no-tty", "--from-oci-layout", source, reference],
-                                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300, check=False)
-        if result.returncode == 0:
+        returncode, _, last_line = run_oras("cp", "--no-tty", "--from-oci-layout", source, reference)
+        if returncode == 0:
             return
-        last_line = (result.stderr.decode(errors="replace").splitlines() or [""])[-1]
-        if result.returncode != 1 or not REGISTRY_LAG.fullmatch(last_line) or attempt == COPY_ATTEMPTS:
-            raise release.CheckedToolFailure("oras", result.returncode)
+        if returncode != 1 or not REGISTRY_LAG.fullmatch(last_line) or attempt == COPY_ATTEMPTS:
+            raise release.CheckedToolFailure("oras", returncode)
         print(f"registry did not yet serve a manifest it had just accepted; copy attempt {attempt} of {COPY_ATTEMPTS}, retrying",
               file=sys.stderr)
         time.sleep(pause)
 
 
-def read_back_index(reference, digest, interval=5):
-    """Wait for the new tag to resolve; it was proven absent first, so any other digest fails at once."""
+def read_back_index(reference, digest, pause=5):
+    """Wait for the new tag to read back the qualified index; it was proven absent before the copy.
+
+    The tag can lag behind the copy the same way, so the fetch repeats only while ORAS exits 1 with a
+    last line ending in `: not found`. Any other failure, and any other digest, fails at once.
+    """
     for attempt in range(1, READBACK_ATTEMPTS + 1):
-        try:
-            descriptor = json.loads(release.checked(["oras", "manifest", "fetch", "--descriptor", reference]))
-            break
-        except release.CheckedToolFailure:
-            if attempt == READBACK_ATTEMPTS:
-                raise
-            time.sleep(interval)
-    if descriptor["digest"] != digest:
-        raise ValueError("published index differs from qualified bytes")
+        returncode, descriptor, last_line = run_oras("manifest", "fetch", "--descriptor", reference)
+        if returncode == 0:
+            if json.loads(descriptor)["digest"] != digest:
+                raise ValueError("published index differs from qualified bytes")
+            return
+        if returncode != 1 or not last_line.endswith(TAG_MISSING) or attempt == READBACK_ATTEMPTS:
+            raise release.CheckedToolFailure("oras", returncode)
+        time.sleep(pause)
 
 
 def main():
