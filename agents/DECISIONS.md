@@ -11,7 +11,6 @@ Distroless nonroot layer metadata on either target architecture. All other
 paths, bytes, and scanner checks remain mandatory. The public CI test job must
 install the already-pinned ORAS binary before running the real regression.
 
-
 ## 2026-10-12: inspect exact OCI JSON without ambiguity
 
 Retain original layout marker, transport index, image index, manifests and
@@ -74,7 +73,10 @@ additional tag or manual publisher. Keep the previously released CLI immutable.
 
 Managed deployment logs default to server-owned encryption. `--print-logs-key` explicitly selects caller-owned encryption; context fixture keys never implicitly select it. `octl logs` requests authenticated decryption, while `--encrypted` preserves ciphertext downloads. No automatic fallback changes key ownership.
 
-
 ## 2026-11-13: CLI 2.5.0 public contracts
 
 Consolidate managed-log behavior into 2.5.0 notes and remove the superseded draft. Pin the public CP c5d1b57 contract and regenerate with existing oapi-codegen v2.8.0, preserving optional catalogue fields. Mark DP 6eea872 as public after shared/v3.3.0 qualification. IAM dc0f37d retains byte-identical schema, so only its verification revision changes. Keep coordinated server qualification separate from SDK public availability.
+
+## 2026-11-26: Retry only the demonstrated registry lag
+
+Repeat the first image copy only when ORAS exits 1 with `Error response from registry: sha256:<digest>: not found` as its last stderr line, the read-after-write lag of its own status output that cost Data Plane v4.5.0-rc.3 its candidate. ORAS already retries 408, 429 and 5xx; authentication, layout and timeout failures stop at once. The copy only points the new version tag at the qualified index, so a repeat cannot publish other bytes, and a failed attempt may already have written that tag; destination absence stays a single check before the first copy. The readback repeats only while ORAS ends with `: not found`; it resolves just the remote tag, so no layout error can reach that suffix, and any other failure stops at once. Both run ORAS directly so its stderr can be classified without ever entering `CheckedToolFailure`, which stays free of child output. Each attempt is bounded at 120 s, like Console, because 6 copies of 300 s plus pauses would outlast the 30 minute publisher jobs. Stable alias moves keep their single readback: a moving tag can still serve the previous digest, so a different digest there is not evidence of another writer.

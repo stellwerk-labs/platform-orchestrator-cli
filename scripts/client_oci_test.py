@@ -209,24 +209,23 @@ class OCITest(unittest.TestCase):
         ]
         copy_statements = [
             index for index, statement in enumerate(body)
-            if any(isinstance(node, ast.Call) and command_call(node, "oras", "cp")
+            if any(isinstance(node, ast.Call) and call_name(node) == "copy_index"
                    for node in ast.walk(statement))
         ]
         self.assertEqual(len(statements), 1)
         self.assertEqual(len(copy_statements), 1)
         self.assertEqual(copy_statements[0], statements[0] + 2)
+        # A failed copy attempt may already have written the correct tag: absence is never re-checked.
+        self.assertEqual(source.count("assert_image_absent"), 1)
 
         calls = sorted((node for node in ast.walk(main) if isinstance(node, ast.Call)), key=lambda node: node.lineno)
         guard_line = next(node.lineno for node in calls if call_name(node) == "candidate.assert_image_absent")
         reinspection_line = next(node.lineno for node in calls if call_name(node) == "client_image.reinspect")
         source_reference_line = next(node.lineno for node in calls if call_name(node) == "client_oci.oci_reference")
-        copy_line = next(node.lineno for node in calls if command_call(node, "oras", "cp"))
+        copy_line = next(node.lineno for node in calls if call_name(node) == "copy_index")
         sign_line = next(node.lineno for node in calls if command_call(node, "cosign", "sign"))
         attest_line = next(node.lineno for node in calls if command_call(node, "cosign", "attest"))
-        verify_descriptor_line = next(
-            node.lineno for node in calls if call_name(node) == "release.checked"
-            and any(isinstance(item, ast.Constant) and item.value == "fetch" for item in ast.walk(node.args[0]))
-        )
+        verify_descriptor_line = next(node.lineno for node in calls if call_name(node) == "read_back_index")
         self.assertLess(reinspection_line, source_reference_line)
         self.assertLess(source_reference_line, guard_line)
         self.assertLess(guard_line, copy_line)
